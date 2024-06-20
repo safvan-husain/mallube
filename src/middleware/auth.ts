@@ -1,0 +1,75 @@
+import jwt from "jsonwebtoken";
+import asyncHandler from "express-async-handler";
+import { NextFunction, Response } from "express";
+import {
+  RequestWithAdmin,
+  RequestWithStaff,
+} from "../utils/interfaces/interfaces";
+
+export const admin = asyncHandler(
+  async (req: RequestWithAdmin | any, res: Response, next: NextFunction) => {
+    let token = req.headers.authorization;
+
+    if (!token) {
+      res.status(401);
+      throw new Error("Not authorized, no token available");
+    }
+
+    try {
+      const decoded = jwt.verify(token, "adminSecrete") as {
+        _id: string;
+      };
+      req.user = decoded;
+      next();
+    } catch (error) {
+      res.status(401);
+      console.log("Error decoding", error);
+      throw new Error("Not authorized as admin, You cant access this resource");
+    }
+  }
+);
+
+export const staff = asyncHandler(
+  async (req: RequestWithStaff | any, res: Response, next: NextFunction) => {
+    let token = req.headers.authorization;
+
+    if (!token) {
+      res.status(401);
+      throw new Error("Not authorized, no token available");
+    }
+
+    try {
+      const decoded = jwt.verify(token, "staffSecrete") as {
+        _id: string;
+      };
+      req.user = decoded;
+      next();
+    } catch (error) {
+      res.status(401);
+      console.log("Error decoding", error);
+      throw new Error("Not authorized as staff, You cant access this resource");
+    }
+  }
+);
+export const store = asyncHandler(
+  async (req: RequestWithStaff | any, res: Response, next: NextFunction) => {
+    let token = req.headers.authorization;
+
+    if (!token) {
+      res.status(401);
+      throw new Error("Not authorized, no token available");
+    }
+
+    try {
+      const decoded = jwt.verify(token, "storeSecrete") as {
+        _id: string;
+      };
+      req.store = decoded;
+      next();
+    } catch (error) {
+      res.status(401);
+      console.log("Error decoding", error);
+      throw new Error("Not authorized as staff, You cant access this resource");
+    }
+  }
+);
