@@ -8,6 +8,7 @@ import mongoose from "mongoose";
 import Advertisement from "../../models/advertisementModel";
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
+  console.log("admin")
   try {
     const { name, email, password } = req.body;
     const user = await Admin.findOne({ email });

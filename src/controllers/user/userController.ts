@@ -13,7 +13,7 @@ const twilioclient = twilio(accountSid, authToken);
 
 export const register = asyncHandler(async (req: Request, res: Response) => {
   const { fullName, email, password, phone } = req.body;
-
+try {
   const exist = await User.findOne({ email });
 
   if (exist) {
@@ -27,7 +27,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
 
   //generate otp
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  console.log("otp : ", otp);
+  // console.log("otp : ", otp);
 
   //create new user
   const user = new User({
@@ -36,28 +36,32 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
     password: hashedPassword,
     phone,
     otp,
-    isVerified: false,
+    isVerified: true,
   });
 
   //save user to database
   await user.save();
-
+  res.status(201).json({ message: "User registered successfully" })
   //send otp
-  twilioclient.messages
-    .create({
-      body: `Your OTP is ${otp}`,
-      from: "+19894037895", //for testing purpose only, need to change
-      to: `+91 97474 03386,
-`,
-    })
-    .then((response) => {
-      console.log(response);
-      res.status(200).json({ message: "OTP sent successfully" });
-    })
-    .catch((err) => {
-      console.log(err);
-      res.status(500).json({ message: "Error sending OTP", error: err });
-    });
+//   twilioclient.messages
+//     .create({
+//       body: `Your OTP is ${otp}`,
+//       from: "+19894037895", //for testing purpose only, need to change
+//       to: `+91 97474 03386,
+// `,
+//     })
+//     .then((response) => {
+//       console.log(response);
+//       res.status(200).json({ message: "OTP sent successfully" });
+//     })
+//     .catch((err) => {
+//       console.log(err);
+//       res.status(500).json({ message: "Error sending OTP", error: err });
+//     });
+} catch (error) {
+  console.log(error)
+}
+  
 });
 
 //verify otp
