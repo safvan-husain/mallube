@@ -55,6 +55,7 @@ const storeSchema = new Schema<IStore>({
   phone: {
     type: String,
     required: true,
+    unique:true
   },
   bio:{
     type:String,
