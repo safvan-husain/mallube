@@ -1,20 +1,27 @@
+import "dotenv/config";
 import express from "express";
+import cors from "cors";
+
+import connectDb from "./config/db";
+
 import adminRoutes from "./routes/adminRoutes";
 import userRoutes from "./routes/userRoutes";
 import staffRoutes from "./routes/staffRoutes";
 import productRoutes from "./routes/productRoutes";
 import categoryRoutes from "./routes/categoryRoutes";
 import StoreRoutes from "./routes/storeRoutes";
-import advertisementRoutes from './routes/advertisementRoutes'
-import cors from "cors";
-import connectDb from "./config/db";
+import advertisementRoutes from "./routes/advertisementRoutes";
+
+import { errorHandler, notFound } from "./middleware/error.middleware";
+import { config } from "./config/vars";
 
 const app = express();
-const port = 4000;
+
+connectDb();
 
 app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true }));
 app.use(cors());
-connectDb();
 
 //header
 // app.use((req,res,next)=>{
@@ -23,14 +30,20 @@ connectDb();
 //   next()
 // })
 
+app.use("/api/healthcheck", (req, res) => {
+  res.status(200).send("Server is healthy");
+});
+
 app.use("/api/admin", adminRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/staff", staffRoutes);
 app.use("/api/product", productRoutes);
 app.use("/api/category", categoryRoutes);
 app.use("/api/store", StoreRoutes);
-app.use("/api/advertisement",advertisementRoutes)
+app.use("/api/advertisement", advertisementRoutes);
 
-app.listen(port, () => {
-  console.log(`Server is running on https://localhost:${port}`);
-});
+app.use(notFound);
+app.use(errorHandler);
+
+const PORT = config.port || 4000;
+app.listen(PORT, () => console.log(`API server listening at ${PORT}`));

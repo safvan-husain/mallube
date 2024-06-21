@@ -1,26 +1,24 @@
 import { Schema, model } from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { config } from "../config/vars";
 
 export interface IUser {
   _id: string;
-  username:string;
+  username: string;
   fullName: string;
   email: string;
   password: string;
   generateAuthToken: (userId: string) => string;
-  phone:string;
-  otp:string;
+  phone: string;
+  otp: string;
   isVerified: boolean;
-  order:Schema.Types.ObjectId[];
-
 }
 
 const userSchema = new Schema<IUser>(
   {
-    username:{
-      type:String,
-
+    username: {
+      type: String,
     },
     fullName: {
       type: String,
@@ -35,26 +33,18 @@ const userSchema = new Schema<IUser>(
       type: String,
       required: true,
     },
-    phone:{
-      type:String,
-      required:true,
+    phone: {
+      type: String,
+      required: true,
     },
-    otp:{
-      type:String,
+    otp: {
+      type: String,
     },
     isVerified: {
-      type:Boolean,
+      type: Boolean,
       default: false,
-      required:true
+      required: true,
     },
-    order:[
-      {
-        type:Schema.Types.ObjectId,
-        ref:"Order"
-      }
-    ]
-   
-
   },
   {
     timestamps: true,
@@ -71,7 +61,8 @@ const userSchema = new Schema<IUser>(
 
 // generate auth token
 userSchema.methods.generateAuthToken = function (userId: string): string {
-  return jwt.sign({ _id: userId }, "userSecrete", { expiresIn: "7d" });
+  const jwte = config.jwtSecret
+  return jwt.sign({ _id: userId }, jwte, { expiresIn: "7d" });
 };
 
 const User = model<IUser>("users", userSchema);
