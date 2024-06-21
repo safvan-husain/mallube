@@ -1,7 +1,6 @@
 export const config = {
-    dbUrl: process.env.JWT_SECRET!,
-    jwtSecret: process.env.JWT_SECRET!,
-    port: process.env.PORT!,
+    jwtSecret: process.env.JWT_SECRET! || "mallumart@12345" ,
+    port: process.env.PORT! || "4000",
     // environment,
     // frontendHost: process.env.FRONTEND_HOST!,
     // fattureCompanyId: process.env.FATTURE_COMPANY_ID!,

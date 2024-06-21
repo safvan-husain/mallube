@@ -93,9 +93,11 @@ export const verifyOtp = async (req: Request, res: Response) => {
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
   try {
+    console.log("Req.body ",req.body)
     const { email, password } = req.body;
-
+    console.log("email ",email)
     const user: any = await User.findOne({ email });
+    console.log("user ",user)
     if (!user) {
       res
         .status(404)
