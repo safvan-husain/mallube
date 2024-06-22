@@ -1,5 +1,5 @@
 import express from "express";
-import { login ,fetchStore,updateLiveStatus,AddAdvertisement, deleteAdvertisement, fetchAllAdvertisement, fetchStoresNearBy,fetchStoreById, fetchAllStore, fetchStoreByCategory, searchStoresByProductName } from "../controllers/store/storeController";
+import { login ,fetchStore,updateLiveStatus,AddAdvertisement, deleteAdvertisement, fetchAllAdvertisement, fetchStoresNearBy,fetchStoreById, fetchAllStore, fetchStoreByCategory, searchStoresByProductName, changePassword } from "../controllers/store/storeController";
 import { store } from "../middleware/auth";
 const router = express.Router();
 
@@ -14,4 +14,5 @@ router.route("/advertisement").post(store,AddAdvertisement).delete(store,deleteA
 router.route("/advertisement/:advertisementId").delete(store,deleteAdvertisement)
 router.route("/near-by-shop/:longitude/:latitude").get(fetchStoresNearBy)
 router.route("/:id").get(fetchStoreById)
+router.route("/change-password").put(store,changePassword)
 export default router;

@@ -144,7 +144,7 @@ export const fetchStoresNearBy = async (req: Request, res: Response) => {
             type: "Point",
             coordinates: [parseFloat(longitude), parseFloat(latitude)],
           },
-          $maxDistance: 10000, // in meters
+          $maxDistance: 10000000, // in meters
         },
       },
     }).populate("category", "name icon");
@@ -241,53 +241,107 @@ export const fetchStoreByCategory = asyncHandler(
 );
 
 export const searchStoresByProductName = asyncHandler(
-  async(req:Request,res:Response) => {
+  async (req: Request, res: Response) => {
     try {
+      let productName: any = req.query.searchTerm;
+      console.log("req.query ", req.query);
+      console.log("reqched back ", productName);
 
-      let  productName:any  = req.query.searchTerm;
-      console.log("req.query ",req.query)
-      console.log("reqched back ",productName)
-
-      if(!productName){
-         res.status(400).json({message:"Product name is required"})
+      if (!productName) {
+        res.status(400).json({ message: "Product name is required" });
       }
 
-      if(productName){
-          const trimmedSearchTerm = productName.trim()
-          const productSearch = await ProductSearch.findOne({
-            productName:trimmedSearchTerm
+      if (productName) {
+        const trimmedSearchTerm = productName.trim();
+        const productSearch = await ProductSearch.findOne({
+          productName: trimmedSearchTerm,
+        });
+        if (productSearch) {
+          await ProductSearch.findOneAndUpdate(
+            { productName: trimmedSearchTerm },
+            { $inc: { searchCount: 1 } }
+          );
+        } else {
+          await ProductSearch.create({
+            productName: trimmedSearchTerm,
+            searchCount: 1,
           });
-          if(productSearch){
-            await ProductSearch.findOneAndUpdate(
-              {productName:trimmedSearchTerm},
-              {$inc:{searchCount:1}}
-            )
-          }else{
-            await ProductSearch.create({productName:trimmedSearchTerm,searchCount:1})
-          }
+        }
       }
 
       //ensure product name is a string
-      productName = typeof productName === 'string' ? decodeURIComponent(productName).trim() : "";
+      productName =
+        typeof productName === "string"
+          ? decodeURIComponent(productName).trim()
+          : "";
       //finding the product that mathc the product name
       const products = await Product.find({
-        name: { $regex: productName, $options: 'i' } // Case-insensitive search
+        name: { $regex: productName, $options: "i" }, // Case-insensitive search
       });
-  
+
       //extracts store ids from the product
-      const storeIds = products.map(product => product.store)
+      const storeIds = products.map((product) => product.store);
 
-      const stores = await Store.find({_id:{$in:storeIds}}).populate("category",'name')
+      const stores = await Store.find({ _id: { $in: storeIds } }).populate(
+        "category",
+        "name"
+      );
 
-      if(stores.length === 0 ){
-        res.status(404).json({message:"No stores found for the given product"})
+      if (stores.length === 0) {
+        res
+          .status(404)
+          .json({ message: "No stores found for the given product" });
       }
 
-      res.status(200).json(stores)
-
+      res.status(200).json(stores);
     } catch (error) {
-      console.log(error)
-      res.status(500).json({message:"Internal server error"})
+      console.log(error);
+      res.status(500).json({ message: "Internal server error" });
     }
   }
-)
+);
+
+export const changePassword = async (
+  req: any,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { password, newPassword, reEnterPassword } = req.body;
+    const user = req.store._id;
+
+    if (newPassword !== reEnterPassword) {
+      res
+        .status(400)
+        .json({ message: "Password mismatch. Please type same password" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(user)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+    const userData: any = await Store.findById(user);
+    if (!userData) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const match = await bcrypt.compare(password, userData.password);
+    if (match) {
+      const hashPassword = await bcrypt.hash(reEnterPassword, 10);
+
+      await Store.findByIdAndUpdate(
+        user,
+        {
+          password: hashPassword,
+        },
+        { new: true }
+      );
+
+      res.status(200).json({ message: "Password updated successfully" });
+    } else {
+      res.status(400).json({ message: "Current password is incorrect" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
