@@ -14,7 +14,6 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   const { phone, password } = req.body;
 
   const storeOwner = await Store.findOne({ phone });
-  console.log("storeowner ", storeOwner);
   if (storeOwner) {
     console.log("password ", password);
     console.log("storeowner.password ", storeOwner.password);
@@ -145,7 +144,7 @@ export const fetchStoresNearBy = async (req: Request, res: Response) => {
             type: "Point",
             coordinates: [parseFloat(longitude), parseFloat(latitude)],
           },
-          $maxDistance: 1000000, // in meters
+          $maxDistance: 10000, // in meters
         },
       },
     }).populate("category", "name icon");
