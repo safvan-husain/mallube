@@ -144,7 +144,7 @@ export const fetchStoresNearBy = async (req: Request, res: Response) => {
             type: "Point",
             coordinates: [parseFloat(longitude), parseFloat(latitude)],
           },
-          $maxDistance: 10000000, // in meters
+          $maxDistance: 10000, // in meters
         },
       },
     }).populate("category", "name icon");
