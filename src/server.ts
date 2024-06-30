@@ -11,7 +11,7 @@ import productRoutes from "./routes/productRoutes";
 import categoryRoutes from "./routes/categoryRoutes";
 import StoreRoutes from "./routes/storeRoutes";
 import advertisementRoutes from "./routes/advertisementRoutes";
-
+require("dotenv").config();
 import { errorHandler, notFound } from "./middleware/error.middleware";
 import { config } from "./config/vars";
 
@@ -22,13 +22,6 @@ connectDb();
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
-
-//header
-// app.use((req,res,next)=>{
-//   res.header('Access-Control-Allow-Origin', "*")
-//   res.header("Access-Control-Allow-Header","*")
-//   next()
-// })
 
 app.use("/api/healthcheck", (req, res) => {
   res.status(200).send("Server is healthy");

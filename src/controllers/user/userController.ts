@@ -8,30 +8,28 @@ import { ICustomRequest } from "../../types/requestion";
 import { IAddCartSchema } from "../../schemas/cart.schema";
 import Product from "../../models/productModel";
 
-//twilio configuration
-// const accountSid = "AC727f3bdadb360837a5a69a43a2fdd9d0";
-// const authToken = "935ce77df01bc438cdda8f66b2b8c9a2";
-const accountSid = "ACfe2138bbce21759c477759a9ec72b510";
-const authToken = "5b9b15da446ed236a8d8e28bb759a552";
-const twilioclient = twilio(accountSid, authToken);
+const { TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN } = process.env;
+const twilioclient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN, {
+  lazyLoading: true,
+});
 
-export const register = asyncHandler(async (req: Request, res: Response) => {
+const twilioServiceId = process.env.TWILIO_SERVICE_ID;
+
+export const register = async (req: Request, res: Response) => {
   const { fullName, email, password, phone } = req.body;
   try {
     const exist = await User.findOne({ email });
 
     if (exist) {
       res.status(422).json({ message: "email already been used!" });
-      return;
     }
 
     //hash the password
     const hashedPassword = await bcrypt.hash(password, 12);
-    console.log("hashedpassword=========> ", hashedPassword);
 
     //generate otp
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    // console.log("otp : ", otp);
+    console.log("otp : ", otp);
 
     //create new user
     const user = new User({
@@ -40,64 +38,77 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
       password: hashedPassword,
       phone,
       otp,
-      isVerified: true,
+      isVerified: false,
     });
 
-    //save user to database
     await user.save();
-    res.status(201).json({ message: "User registered successfully" });
-    //send otp
-    //   twilioclient.messages
-    //     .create({
-    //       body: `Your OTP is ${otp}`,
-    //       from: "+19894037895", //for testing purpose only, need to change
-    //       to: `+91 97474 03386,
-    // `,
-    //     })
-    //     .then((response) => {
-    //       console.log(response);
-    //       res.status(200).json({ message: "OTP sent successfully" });
-    //     })
-    //     .catch((err) => {
-    //       console.log(err);
-    //       res.status(500).json({ message: "Error sending OTP", error: err });
-    //     });
+
+    if (!twilioServiceId) {
+      return res
+        .status(500)
+        .json({ message: "Twilio service ID is not configured." });
+    }
+    const otpResponse = await twilioclient.verify.v2
+      .services(twilioServiceId)
+      .verifications.create({
+        to: `+91${phone}`,
+        channel: "sms",
+      });
+    res.status(201).json({
+      message: `otp send successfully : ${JSON.stringify(otpResponse)}`,
+      otpSend: true,
+    });
   } catch (error) {
     console.log(error);
   }
-});
+};
 
 //verify otp
 export const verifyOtp = async (req: Request, res: Response) => {
-  const { email, otp } = req.body;
-  //find user by email
-  const user = await User.findOne({ email });
-  if (!user) {
-    return res.status(404).json({ message: "User not found" });
+  if (!twilioServiceId) {
+    return res
+      .status(500)
+      .json({ message: "Twilio service ID is not configured." });
   }
+  try {
+    const { phone, otp } = req.body;
+    //find user by email
+    const user = await User.findOne({ phone });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-  //verify otp
-  if (user.otp !== otp) {
-    return res.status(400).json({ message: "Invalid OTP" });
+    const verifiedResponse = await twilioclient.verify.v2
+      .services(twilioServiceId)
+      .verificationChecks.create({
+        to: `+91${phone}`,
+        code: otp,
+      });
+
+    //mark user as verified if otp is verified true
+    if (verifiedResponse.status === "approved") {
+      user.isVerified = true;
+      await user.save();
+      res.status(200).json({
+        message: `OTP verified successfully : ${JSON.stringify(
+          verifiedResponse
+        )}`,
+        verified: true,
+      });
+    } else {
+      res
+        .status(400)
+        .json({ message: "Wrong OTP , please check again", verified: false });
+    }
+  } catch (error) {
+    console.log(error);
   }
-
-  //mark user as verified
-  user.isVerified = true;
-  await user.save();
-
-  //generate jwt token
-  const token = user.generateAuthToken(user._id);
-
-  res.status(200).json({ message: "OTP verified", token, statusText: "ok" });
 };
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
   try {
-    console.log("Req.body ",req.body)
     const { email, password } = req.body;
-    console.log("email ",email)
     const user: any = await User.findOne({ email });
-    console.log("user ",user)
     if (!user) {
       res
         .status(404)
