@@ -171,11 +171,13 @@ export const fetchStoresNearBy = async (req: Request, res: Response) => {
   }
 };
 
-export const fetchStoreById = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params; // Destructure the id from req.params
+export const fetchStoreByUniqueName = async (req: Request, res: Response) => {
 
-    const store: any = await Store.findById(id).populate("category", "name"); // Correctly pass the id to findById method
+  try {
+    const { uniqueName } = req.params; // Destructure the id from req.params
+    console.log("unique name ",uniqueName)
+    const store: any = await Store.findOne({uniqueName:uniqueName}).populate("category", "name"); // Correctly pass the id to findById method
+    console.log("Reached be ",store)
 
     if (!store) {
       return res.status(404).json({ message: "Store not found" });
