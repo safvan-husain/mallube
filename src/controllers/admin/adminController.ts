@@ -415,3 +415,24 @@ export const mostSearchedProducts = async(req:Request,res:Response)=>{
     res.status(500).json({message:"Internal server error"})
   }
 }
+
+export const deleteStoreById = asyncHandler(
+  async (req: Request, res: Response) => {
+    try {
+      const storeId = req.params.storeId;
+
+      const advertisement = await Store.findByIdAndDelete(
+        storeId
+      );
+
+      if (!advertisement) {
+        res.status(404).json({ message: "Advertisement not found" });
+        return;
+      }
+
+      res.status(200).json({ message: "Advertisement deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+);

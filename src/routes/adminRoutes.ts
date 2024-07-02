@@ -17,6 +17,7 @@ import {
   fetchTotalStoreByCategory,
   addTarget,
   mostSearchedProducts,
+  deleteStoreById,
 } from "../controllers/admin/adminController";
 import { admin } from "../middleware/auth";
 const router = express.Router();
@@ -30,7 +31,7 @@ router
 router.route("/staff/:staffId").delete(admin, deleteStaff);
 router.route("/store").get(admin, fetchAllStore);
 router.route("/store/subscription").put(admin, updateSubscription);
-router.route("/store/:storeId").put(admin, updateStore);
+router.route("/store/:storeId").put(admin, updateStore).delete(admin,deleteStoreById)
 router.route("/store/status-update/:storeId").put(admin, updateStoreStatus);
 router.route("/change-password").put(admin, changePassword);
 router
