@@ -33,8 +33,9 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
-export const addStore = asyncHandler(async (req: any, res: Response) => {
-  const {
+export const addStore = (async (req: any, res: Response) => {
+  const staff = req.user._id;
+  let {
     storeName,
     uniqueName,
     storeOwnerName,
@@ -51,7 +52,21 @@ export const addStore = asyncHandler(async (req: any, res: Response) => {
   } = req.body;
 
   try {
-    const staff = req.user._id;
+        if(location && location.coordinates){
+      const { coordinates } = location;
+      if(Array.isArray(coordinates) && coordinates.length ===2){
+        const [longitude , latitude] = coordinates;
+        if(typeof longitude === 'number' && typeof latitude === 'number'){
+          location = {
+            type:"Point",
+            coordinates:[longitude,latitude],
+          }
+        }else{
+          return res.status(400).json({message:"Invalid coordinates"})
+        }
+      }
+    }
+
     const salt = await bcrypt.genSalt(10);
     const password = await bcrypt.hash(phone, salt);
     const store = new Store({
@@ -59,10 +74,7 @@ export const addStore = asyncHandler(async (req: any, res: Response) => {
       uniqueName,
       storeOwnerName,
       address,
-      location: {
-        type: "Point",
-        coordinates: [location.longitude, location.latitude],
-      },
+      location,
       phone,
       email,
       password: password,
@@ -118,8 +130,13 @@ export const fetchAllStore = asyncHandler(async (req: any, res: Response) => {
 
   try {
     const staff: any = await Staff.findById(userId);
-    const storesAddedByStaff = await Store.find({ addedBy: userId });
+    
+    if (!staff) {
+      res.status(400).json({message:"You are not a staff"})
+    }
 
+    const storesAddedByStaff = await Store.find({ addedBy: userId });
+    console.log("storesAddedbustaff ",storesAddedByStaff)
     const addedStores = storesAddedByStaff.map((item) => {
       return item.id;
     });
