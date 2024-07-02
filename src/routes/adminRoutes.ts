@@ -16,6 +16,7 @@ import {
   updateAdvertisementDisplay,
   fetchTotalStoreByCategory,
   addTarget,
+  mostSearchedProducts,
 } from "../controllers/admin/adminController";
 import { admin } from "../middleware/auth";
 const router = express.Router();
@@ -42,5 +43,6 @@ router
   .delete(admin, deleteAdvertisement);
 router.route("/total-store").get(admin, fetchTotalStoreByCategory);
 router.route("/staff/target").post(admin, addTarget);
+router.route("/most-searched-products").get(admin,mostSearchedProducts)
 
 export default router;

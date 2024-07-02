@@ -6,6 +6,7 @@ import Staff from "../../models/staffModel";
 import Store from "../../models/storeModel";
 import mongoose from "mongoose";
 import Advertisement from "../../models/advertisementModel";
+import ProductSearch from "../../models/productSearch";
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
   console.log("admin")
@@ -398,3 +399,19 @@ export const addTarget = async (req: any, res: Response) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export const mostSearchedProducts = async(req:Request,res:Response)=>{
+  try {
+    const response = await ProductSearch.aggregate([
+      {"$sort":{"searchCount":-1}},
+    {"$limit":10}
+    ])
+    if(!response || response.length ===0){
+      res.status(404).json({message:"No Search history."})
+    }
+    res.status(200).json(response)
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({message:"Internal server error"})
+  }
+}
