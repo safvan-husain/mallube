@@ -33,7 +33,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
-export const addStore = (async (req: any, res: Response) => {
+export const addStore = async (req: any, res: Response) => {
   const staff = req.user._id;
   let {
     storeName,
@@ -52,17 +52,22 @@ export const addStore = (async (req: any, res: Response) => {
   } = req.body;
 
   try {
-        if(location && location.coordinates){
+    const phoneExist = await Store.find({ phone });
+    if (phoneExist.length > 0) {
+      return res.status(400).json({ message: "Phone number already exist." });
+    }
+
+    if (location && location.coordinates) {
       const { coordinates } = location;
-      if(Array.isArray(coordinates) && coordinates.length ===2){
-        const [longitude , latitude] = coordinates;
-        if(typeof longitude === 'number' && typeof latitude === 'number'){
+      if (Array.isArray(coordinates) && coordinates.length === 2) {
+        const [longitude, latitude] = coordinates;
+        if (typeof longitude === "number" && typeof latitude === "number") {
           location = {
-            type:"Point",
-            coordinates:[longitude,latitude],
-          }
-        }else{
-          return res.status(400).json({message:"Invalid coordinates"})
+            type: "Point",
+            coordinates: [longitude, latitude],
+          };
+        } else {
+          return res.status(400).json({ message: "Invalid coordinates" });
         }
       }
     }
@@ -93,8 +98,9 @@ export const addStore = (async (req: any, res: Response) => {
     await Staff.updateOne(
       { _id: staffId },
       {
-        //  $push: { addedStores: store._id }, 
-      $inc: { addedStoresCount: +1 } }
+        //  $push: { addedStores: store._id },
+        $inc: { addedStoresCount: +1 },
+      }
     );
 
     res.status(201).json({
@@ -103,7 +109,7 @@ export const addStore = (async (req: any, res: Response) => {
   } catch (error) {
     console.log(error);
   }
-});
+};
 
 export const searchUniqueNameExitst = asyncHandler(
   async (req: Request, res: Response) => {
@@ -132,9 +138,9 @@ export const fetchAllStore = asyncHandler(async (req: any, res: Response) => {
 
   try {
     const staff: any = await Staff.findById(userId);
-    
+
     if (!staff) {
-      res.status(400).json({message:"You are not a staff"})
+      res.status(400).json({ message: "You are not a staff" });
     }
 
     const storesAddedByStaff = await Store.find({ addedBy: userId });
@@ -317,30 +323,28 @@ export const getStaffById = async (req: any, res: Response) => {
   }
 };
 
-export const deleteStore = asyncHandler(
-  async (req: any, res: Response) => {  
-    try {
-      const staffId = req.user._id
-      const storeId = req.params.storeId;
+export const deleteStore = asyncHandler(async (req: any, res: Response) => {
+  try {
+    const staffId = req.user._id;
+    const storeId = req.params.storeId;
 
-      const store:any  = await Store.findById(storeId)
-      
-      if(!store){
-         res.status(404).json({message:"Store not found"})
-      }
-      
-      await Store.findByIdAndDelete(storeId);
-       
-      await Staff.findByIdAndUpdate(
-        staffId,
-        {$inc:{addedStoresCount:-1}},
-        {new:true}
-      )
+    const store: any = await Store.findById(storeId);
 
-      res.status(200).json({ message: "store deleted successfully" });
-    } catch (error) {
-      console.log(error)
-      res.status(500).json({ message: "Internal Server Error" });
+    if (!store) {
+      res.status(404).json({ message: "Store not found" });
     }
+
+    await Store.findByIdAndDelete(storeId);
+
+    await Staff.findByIdAndUpdate(
+      staffId,
+      { $inc: { addedStoresCount: -1 } },
+      { new: true }
+    );
+
+    res.status(200).json({ message: "store deleted successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
-);
+});
