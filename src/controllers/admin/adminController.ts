@@ -421,16 +421,16 @@ export const deleteStoreById = asyncHandler(
     try {
       const storeId = req.params.storeId;
 
-      const advertisement = await Store.findByIdAndDelete(
+      const store = await Store.findByIdAndDelete(
         storeId
       );
 
-      if (!advertisement) {
-        res.status(404).json({ message: "Advertisement not found" });
+      if (!store) {
+        res.status(404).json({ message: "store not found" });
         return;
       }
 
-      res.status(200).json({ message: "Advertisement deleted successfully" });
+      res.status(200).json({ message: "store deleted successfully" });
     } catch (error) {
       res.status(500).json({ message: "Internal Server Error" });
     }

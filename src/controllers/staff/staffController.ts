@@ -92,7 +92,9 @@ export const addStore = (async (req: any, res: Response) => {
     const staffId = (req as RequestWithStaff).user._id;
     await Staff.updateOne(
       { _id: staffId },
-      { $push: { addedStores: store._id }, $inc: { addedStoresCount: +1 } }
+      {
+        //  $push: { addedStores: store._id }, 
+      $inc: { addedStoresCount: +1 } }
     );
 
     res.status(201).json({
@@ -136,7 +138,6 @@ export const fetchAllStore = asyncHandler(async (req: any, res: Response) => {
     }
 
     const storesAddedByStaff = await Store.find({ addedBy: userId });
-    console.log("storesAddedbustaff ",storesAddedByStaff)
     const addedStores = storesAddedByStaff.map((item) => {
       return item.id;
     });
@@ -315,3 +316,31 @@ export const getStaffById = async (req: any, res: Response) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export const deleteStore = asyncHandler(
+  async (req: any, res: Response) => {  
+    try {
+      const staffId = req.user._id
+      const storeId = req.params.storeId;
+
+      const store:any  = await Store.findById(storeId)
+      
+      if(!store){
+         res.status(404).json({message:"Store not found"})
+      }
+      
+      await Store.findByIdAndDelete(storeId);
+       
+      await Staff.findByIdAndUpdate(
+        staffId,
+        {$inc:{addedStoresCount:-1}},
+        {new:true}
+      )
+
+      res.status(200).json({ message: "store deleted successfully" });
+    } catch (error) {
+      console.log(error)
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  }
+);
