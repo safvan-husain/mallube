@@ -50,19 +50,18 @@ export const addStore = asyncHandler(async (req: any, res: Response) => {
     retail,
   } = req.body;
 
-
   try {
     const staff = req.user._id;
-      const salt = await bcrypt.genSalt(10);
-      const password = await bcrypt.hash(phone, salt);
+    const salt = await bcrypt.genSalt(10);
+    const password = await bcrypt.hash(phone, salt);
     const store = new Store({
       storeName,
       uniqueName,
       storeOwnerName,
       address,
-      location:{
-        type:"Point",
-        coordinates:[location.longitude,location.latitude]
+      location: {
+        type: "Point",
+        coordinates: [location.longitude, location.latitude],
       },
       phone,
       email,
@@ -201,16 +200,41 @@ export const updateStore = async (
 
     const updatedFields = req.body;
 
+    // Check and format the location field
+    if (updatedFields.location && updatedFields.location.coordinates) {
+      const { coordinates } = updatedFields.location;
+      if (Array.isArray(coordinates) && coordinates.length === 2) {
+        const [longitude, latitude] = coordinates;
+        if (typeof longitude === "number" && typeof latitude === "number") {
+          updatedFields.location = {
+            type: "Point",
+            coordinates: [longitude, latitude],
+          };
+        } else {
+          return res
+            .status(400)
+            .json({ message: "Invalid coordinates format" });
+        }
+      } else {
+        return res.status(400).json({ message: "Invalid coordinates format" });
+      }
+    }
+
     const updatedStore = await Store.findByIdAndUpdate(storeId, updatedFields, {
       new: true,
       runValidators: true,
     });
+
+    if (!updatedStore) {
+      return res.status(404).json({ message: "Store not found" });
+    }
+
     res
       .status(200)
       .json({ message: "Store updated successfully", store: updatedStore });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "internal server error", error });
+    res.status(500).json({ message: "Internal server error", error });
   }
 };
 

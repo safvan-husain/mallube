@@ -91,7 +91,7 @@ const storeSchema = new Schema<IStore>({
   },
   password: {
     type: String,
-  },
+  }, 
   category: {
     type: Schema.Types.ObjectId,
     ref: "categories",
@@ -103,7 +103,7 @@ const storeSchema = new Schema<IStore>({
 type:{
   type:String,
   enum:['Point'],
-  required:true,
+  // required:true,
   default:'Point'
 },
 coordinates:{
