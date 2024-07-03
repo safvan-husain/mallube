@@ -6,7 +6,7 @@ export interface ICategory extends Document {
   isActive: boolean;
   isPending: boolean;
   isShowOnHomePage: boolean;
-  icon:string;
+  icon: string;
 }
 
 const categorySchema = new Schema(
@@ -34,10 +34,9 @@ const categorySchema = new Schema(
       default: false,
       required: true,
     },
-    icon:{
-      type:String,
-      unique:true
-    }
+    icon: {
+      type: String,
+    },
   },
   {
     timestamps: true,

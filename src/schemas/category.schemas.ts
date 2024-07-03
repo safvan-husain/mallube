@@ -3,7 +3,7 @@ import { Types } from "mongoose";
 import { z } from "zod";
 import { isParentCategory } from "../service/category";
 
-export const addCategorySchema = z.object({
+const addCategory = z.object({
   name: z.string().min(1, "category name cannot be empty"),
   parentId: z
     .string()
@@ -17,12 +17,25 @@ export const addCategorySchema = z.object({
       return isParentCategory(val);
     }),
   isActive: z.boolean(),
-  icon:z.string()
+  icon: z.string(),
 });
+
+export const addCategorySchema = addCategory.refine(
+  (val) => {
+    if (!val.parentId && !val.icon) {
+      return false;
+    }
+    return true;
+  },
+  {
+    message: "Icon shouldn't be empty for main category",
+    path: ["icon"],
+  }
+);
 
 export type IAddCategorySchema = z.infer<typeof addCategorySchema>;
 
-export const updateCategorySchema = addCategorySchema
+export const updateCategorySchema = addCategory
   .extend({
     isShowOnHomePage: z.boolean().default(false),
     isPending: z.boolean().default(false),

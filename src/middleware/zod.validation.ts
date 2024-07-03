@@ -1,13 +1,13 @@
 // src/middleware/validationMiddleware.ts
 import { Request, Response, NextFunction } from "express";
-import { z, ZodError } from "zod";
+import { ZodObject, ZodEffects, ZodError } from "zod";
 
 const StatusCodes = {
   BAD_REQUEST: 400,
   INTERNAL_SERVER_ERROR: 500,
 };
 
-export function validateData(schema: z.ZodObject<any, any>) {
+export function validateData(schema: ZodObject<any, any> | ZodEffects<ZodObject<any, any>>) {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       const validatedData = await schema.parseAsync(req.body);
