@@ -144,7 +144,7 @@ export const fetchStoresNearBy = async (req: Request, res: Response) => {
             type: "Point",
             coordinates: [parseFloat(longitude), parseFloat(latitude)],
           },
-          $maxDistance: 5000, // in meters
+          $maxDistance: 10000, // in meters
         },
       },
     }).populate("category", "name icon");
@@ -172,12 +172,14 @@ export const fetchStoresNearBy = async (req: Request, res: Response) => {
 };
 
 export const fetchStoreByUniqueName = async (req: Request, res: Response) => {
-
   try {
     const { uniqueName } = req.params; // Destructure the id from req.params
-    console.log("unique name ",uniqueName)
-    const store: any = await Store.findOne({uniqueName:uniqueName}).populate("category", "name"); // Correctly pass the id to findById method
-    console.log("Reached be ",store)
+    console.log("unique name ", uniqueName);
+    const store: any = await Store.findOne({ uniqueName: uniqueName }).populate(
+      "category",
+      "name"
+    ); // Correctly pass the id to findById method
+    console.log("Reached be ", store);
 
     if (!store) {
       return res.status(404).json({ message: "Store not found" });
@@ -223,24 +225,53 @@ export const fetchAllStore = asyncHandler(
   }
 );
 
-export const fetchStoreByCategory = asyncHandler(
-  async (req: Request, res: Response) => {
-    try {
-      const categoryId: any = req.query.categoryId;
-      let response;
+export const fetchStoreByCategory = async (req: Request, res: Response) => {
+  try {
+    const { categoryId, longitude, latitude }: any = req.query;
 
-      if (categoryId && mongoose.Types.ObjectId.isValid(categoryId)) {
-        response = await Store.find({ category: categoryId });
-      } else {
-        response = await Store.find();
-      }
-
-      res.status(200).json(response);
-    } catch (error) {
-      res.status(500).json({ message: "Internal server error" });
+    let response;
+    if (!longitude || !latitude) {
+      return res
+        .status(400)
+        .json({ message: "longitude and latitude are required" });
     }
+
+    if (categoryId && mongoose.Types.ObjectId.isValid(categoryId)) {
+      response = await Store.find({
+        category: categoryId,
+        location: {
+          $near: {
+            $geometry: {
+              type: "Point",
+              coordinates: [parseFloat(longitude), parseFloat(latitude)],
+            },
+            $maxDistance: 10000, // in meters
+          },
+        },
+      });
+    } else {
+      response = await Store.find({
+        location: {
+          $near: {
+            $geometry: {
+              type: "Point",
+              coordinates: [parseFloat(longitude), parseFloat(latitude)],
+            },
+            $maxDistance: 10000,
+          },
+        },
+      });
+    }
+    if (!response || response.length === 0) {
+      return res.status(404).json({ message: "No stores found" });
+    }
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
   }
-);
+};
 
 export const searchStoresByProductName = asyncHandler(
   async (req: Request, res: Response) => {
