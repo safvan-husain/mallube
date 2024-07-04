@@ -137,6 +137,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
         _id: user._id,
         name: user.fullName,
         email: user.email,
+        phone: user.phone,
         token: token,
         statusText: "ok",
       });
@@ -235,3 +236,30 @@ export const removeCart = asyncHandler(
     res.status(200).send("ok");
   }
 );
+
+export const updateProfile = async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+
+    if (!user || !user._id) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const updatingValues = req.body;
+
+    // Perform the update and log the response
+    const response = await User.findByIdAndUpdate(
+      user._id,
+      { $set: updatingValues },
+      { new: true }
+    ).exec(); // Add exec() to return a Promise
+
+    if (!response) {
+      return res.status(404).json({ message: "User not found after update" });
+    }
+
+    res.status(200).json(response);
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
