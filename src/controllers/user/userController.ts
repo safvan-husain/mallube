@@ -1,12 +1,13 @@
 import { Request, Response } from "express";
 import asyncHandler from "express-async-handler";
 import User from "../../models/userModel";
-import bcrypt from "bcryptjs";
+import bcrypt, { hash } from "bcryptjs";
 import twilio from "twilio";
 import Cart from "../../models/cartModel";
 import { ICustomRequest } from "../../types/requestion";
 import { IAddCartSchema } from "../../schemas/cart.schema";
 import Product from "../../models/productModel";
+import jwt, { decode } from "jsonwebtoken";
 
 const { TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN } = process.env;
 const twilioclient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN, {
@@ -29,7 +30,6 @@ export const register = async (req: Request, res: Response) => {
 
     //generate otp
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    console.log("otp : ", otp);
 
     //create new user
     const user = new User({
@@ -263,3 +263,150 @@ export const updateProfile = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export const forgetPasswordOtpSend = async (req: Request, res: Response) => {
+  try {
+    const { phone } = req.body;
+
+    const exist = await User.findOne({ phone });
+
+    if (!exist) {
+      return res.status(404).json({ message: "Invalid number" });
+    }
+
+    if (!twilioServiceId) {
+      return res
+        .status(500)
+        .json({ message: "Twilio service ID is not configured." });
+    }
+
+    const otpResponse = await twilioclient.verify.v2
+      .services(twilioServiceId)
+      .verifications.create({
+        to: `+91${phone}`,
+        channel: "sms",
+      });
+
+    const token = jwt.sign(
+      { phone },
+      process.env.JWT_SECRET_FOR_PASSWORD_RESET!,
+      { expiresIn: "10m" }
+    );
+    res.status(201).json({
+      message: `otp send successfully : ${JSON.stringify(otpResponse)} `,
+      otpSend: true,
+      token,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const verifyOtpForPasswrodReset = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { token, otp } = req.body;
+
+    const decodedPhone: any = jwt.verify(
+      token,
+      process.env.JWT_SECRET_FOR_PASSWORD_RESET!
+    );
+
+    const user = await User.findOne({ phone: decodedPhone.phone });
+
+    if (!user) {
+      return res.status(404).json({ message: "Invalid token" });
+    }
+    if (!twilioServiceId) {
+      return res
+        .status(500)
+        .json({ message: "Twilio service ID is not configured." });
+    }
+
+    const verifiedResponse = await twilioclient.verify.v2
+      .services(twilioServiceId)
+      .verificationChecks.create({
+        to: `+91${decodedPhone.phone}`,
+        code: otp,
+      });
+
+    //mark user as verified if otp is verified true
+    if (verifiedResponse.status === "approved") {
+      res.status(200).json({
+        message: `OTP verified successfully : ${JSON.stringify(
+          verifiedResponse
+        )}`,
+        verified: true,
+      });
+    } else {
+      res.status(400).json({ message: "Otp is wrong" });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const updatePassword = async (req: Request, res: Response) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    const decodedPhone: any = jwt.verify(
+      token,
+      process.env.JWT_SECRET_FOR_PASSWORD_RESET!
+    );
+
+    const user = await User.findOne({ phone: decodedPhone.phone });
+
+    if (!user) {
+      res.status(404).json({ message: "User not found for this number" });
+    }
+
+    const hashPassword = await bcrypt.hash(newPassword, 10);
+
+    const response = await User.findByIdAndUpdate(
+      user,
+      {
+        password: hashPassword,
+      },
+      { new: true }
+    );
+    res
+      .status(200)
+      .json({
+        message: "Password changed successfully",
+        response,
+        updated: true,
+      });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const updateProfilePassword = async (req:Request,res:Response)=>{
+  try {
+    const { currentPassword , confirmPassword} = req.body;
+
+    const userId = req.user?._id;
+
+    const user:any = await User.findOne({_id:userId})
+    if(!user){
+      return res.status(404).json({message:"User not found"})
+    }
+    const isMatch = await bcrypt.compare(currentPassword,user.password);
+    if(!isMatch){
+      return res.status(400).json({message:"Current password is incorrect"})
+      }
+      const hashedPassword = await bcrypt.hash(confirmPassword,10)
+      user.password = hashedPassword;
+      await user.save()
+      res.status(200).json({message:"Password updated successfully",user,passwordUpdated:true})
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({message:"Internal server error"})
+  }
+}
