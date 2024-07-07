@@ -10,31 +10,35 @@ import mongoose from "mongoose";
 import Product from "../../models/productModel";
 import ProductSearch from "../../models/productSearch";
 
-export const login = asyncHandler(async (req: Request, res: Response) => {
-  const { phone, password } = req.body;
+export const login = async (req: Request, res: Response) => {
+  try {
+    const { phone, password } = req.body;
 
-  const storeOwner = await Store.findOne({ phone });
-  if (storeOwner) {
-    console.log("password ", password);
-    console.log("storeowner.password ", storeOwner.password);
-    const match = await bcrypt.compare(password, storeOwner.password);
-    console.log("match ", match);
-    if (match) {
-      const token = storeOwner.generateAuthToken(storeOwner._id);
-      res.status(200).json({
-        _id: storeOwner._id,
-        name: storeOwner.storeOwnerName,
-        email: storeOwner.email,
-        token: token,
-        status: "ok",
-      });
-    } else {
-      res.status(500).json({ message: ":Phone or password wrong!" });
+    const storeOwner: any = await Store.findOne({ phone });
+    if (!storeOwner) {
+      return res.status(404).json({ message: "User not found" });
     }
-  } else {
-    res.status(500).json({ message: "Phone not exist" });
+    console.log("password ",password)
+    console.log("storeowner.password ",storeOwner.password)
+
+    const match = await bcrypt.compare(password, storeOwner.password);
+
+    if (!match) {
+      return res.status(400).json({ message: "Invalid password" });
+    }
+
+    const token = storeOwner.generateAuthToken(storeOwner._id);
+    res.status(200).json({
+      _id: storeOwner._id,
+      name: storeOwner.storeOwnerName,
+      email: storeOwner.email,
+      token: token,
+      status: "ok",
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
   }
-});
+};
 
 export const fetchStore = asyncHandler(
   async (req: any, res: Response, next: NextFunction): Promise<void> => {

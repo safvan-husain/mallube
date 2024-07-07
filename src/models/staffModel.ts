@@ -13,7 +13,7 @@ export interface IStaff {
   addedProducts:Array<string>;
   target:number;
   addedStoresCount:number;
-  
+  phone:string;
 }
 
 const staffSchema = new Schema<IStaff>(
@@ -48,6 +48,9 @@ const staffSchema = new Schema<IStaff>(
     addedStoresCount:{
       type:Number,
       default:0
+    },
+    phone:{
+      type:String
     }
   },
   {

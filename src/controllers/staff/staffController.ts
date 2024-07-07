@@ -5,18 +5,32 @@ import bcrypt, { hash } from "bcryptjs";
 import Store from "../../models/storeModel";
 import { RequestWithStaff } from "../../utils/interfaces/interfaces";
 import mongoose from "mongoose";
+import jwt from "jsonwebtoken";
+import twilio from "twilio";
 
-export const login = asyncHandler(async (req: Request, res: Response) => {
-  const { email, password } = req.body;
+const { TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN } = process.env;
+const twilioclient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN, {
+  lazyLoading: true,
+});
+
+const twilioServiceId = process.env.TWILIO_SERVICE_ID;
+export const login = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
 
   if (!email || !email.includes("@") || !password || password.trim === "") {
     res.status(422).json({ message: "Invalid input." });
     return;
   }
   const user = await Staff.findOne({ email });
-  if (user) {
+
+  if(!user){
+    return res.status(404).json({message:"Please check your email",login:false})
+  }
     const match = await bcrypt.compare(password, user.password);
-    if (match) {
+    if(!match){
+      return res.status(400).json({message:"Invalid password",login:false})
+    }
       const token = user.generateAuthToken(user._id);
       res.status(200).json({
         _id: user._id,
@@ -25,13 +39,13 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
         token: token,
         status: "ok",
       });
-    } else {
-      res.status(500).json({ message: "Email or password wrong!" });
-    }
-  } else {
-    res.status(500).json({ message: "Email not exist" });
+ 
+  } catch (error) {
+    res.status(500).json({message:"Internal server error"})
   }
-});
+  
+ 
+}
 
 export const addStore = async (req: any, res: Response) => {
   const staff = req.user._id;
@@ -348,3 +362,125 @@ export const deleteStore = asyncHandler(async (req: any, res: Response) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
+
+export const forgotPasswordOtpSendToPhone = async (req:Request,res:Response)=>{
+  try {
+    const {phone} = req.body
+    const staff = await Staff.findOne({phone})
+    
+    if(!staff){
+      return res.status(404).json({message:"Invalid number"})
+    }
+
+    if(!twilioServiceId){
+      return res.status(500).json({message:"Twilio service id is not configured"})
+    };
+
+    const otpResponse = await twilioclient.verify.v2
+    .services(twilioServiceId)
+    .verifications.create({
+      to: `+91${phone}`,
+      channel: "sms",
+    });
+    console.log('otp response ',otpResponse)
+
+    const token = jwt.sign(
+      {phone},
+      process.env.JWT_SECRET_FOR_PASSWORD_RESET!,
+      {expiresIn:"10m"}
+    );
+    res.status(201).json({
+      message:`otp send successfully : ${JSON.stringify(otpResponse)}`,
+      otpSend:true,
+      token,
+    })
+
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({message:"Internal server error"})
+  }
+}
+
+export const OtpVerify = async (req:Request,res:Response) => {
+  try {
+    const { token, otp } = req.body;
+console.log("token , otp ",token ,otp)
+    const decodedPhone: any = jwt.verify(
+      token,
+      process.env.JWT_SECRET_FOR_PASSWORD_RESET!
+    );
+    console.log('decoded phone ',decodedPhone)
+
+    const staff = await Staff.findOne({ phone: decodedPhone.phone });
+
+    if (!staff) {
+      return res.status(404).json({ message: "Invalid token" });
+    }
+    if (!twilioServiceId) {
+      return res
+        .status(500)
+        .json({ message: "Twilio service ID is not configured." });
+    }
+
+    const verifiedResponse = await twilioclient.verify.v2
+      .services(twilioServiceId)
+      .verificationChecks.create({
+        to: `+91${decodedPhone.phone}`,
+        code: otp,
+      });
+
+    //mark user as verified if otp is verified true
+    if (verifiedResponse.status === "approved") {
+      res.status(200).json({
+        message: `OTP verified successfully : ${JSON.stringify(
+          verifiedResponse
+        )}`,
+        verified: true,
+      });
+    } else {
+      res.status(400).json({ message: "Otp is wrong" });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" ,error});
+  }
+}
+
+
+export const updatePassword = async (req: Request, res: Response) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    const decodedPhone: any = jwt.verify(
+      token,
+      process.env.JWT_SECRET_FOR_PASSWORD_RESET!
+    );
+
+    const user = await Staff.findOne({ phone: decodedPhone.phone });
+
+    if (!user) {
+      res.status(404).json({ message: "User not found for this number" });
+    }
+
+    const hashPassword = await bcrypt.hash(newPassword, 10);
+
+    const response = await Staff.findByIdAndUpdate(
+      user,
+      {
+        password: hashPassword,
+      },
+      { new: true }
+    );
+    res
+      .status(201)
+      .json({
+        message: "Password changed successfully",
+        response,
+        updated: true,
+      });
+  } catch (error) {
+    console.log(error);
+    
+    res.status(500).json({ message: "Internal server error" ,error});
+  }
+};

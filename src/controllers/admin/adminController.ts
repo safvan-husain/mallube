@@ -8,14 +8,17 @@ import mongoose from "mongoose";
 import Advertisement from "../../models/advertisementModel";
 import ProductSearch from "../../models/productSearch";
 
-export const login = asyncHandler(async (req: Request, res: Response) => {
-  console.log("admin")
+export const login = async (req: Request, res: Response) => {
   try {
-    const { name, email, password } = req.body;
-    const user = await Admin.findOne({ email });
-    if (user) {
+    const { email, password } = req.body;
+    const user:any = await Admin.findOne({ email });
+    if(!user){
+       return  res.status(404).json({message:"Please check your email"})
+    }
       const match = await bcrypt.compare(password, user.password);
-      if (match) {
+      if(!match){
+        return res.status(400).json({message:"Invalid password",login:false})
+      }
         const token = user.generateAuthToken(user._id);
         res.status(200).json({
           _id: user._id,
@@ -23,20 +26,16 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
           email: user.email,
           token: token,
         });
-      } else {
-        res.status(500).json({ message: "Email or password wrong!" });
-      }
-    } else {
-      res.status(500).json({ message: "Email not exist" });
-    }
+    
   } catch (error) {
     console.log("Error in admin login", error);
+    res.status(500).json({message:"Internal server error"})
   }
-});
+}
 
 export const addStaff = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
-    const { name, email, password } = req.body;
+    const { name, email, password,phone } = req.body;
     try {
       // Check if staff member already exists
       const existingStaff = await Staff.findOne({ email });
@@ -48,7 +47,9 @@ export const addStaff = asyncHandler(
       const newStaff = new Staff({
         name,
         email,
-        password, // Remember to hash the password before saving it in the database
+        password,
+        phone
+        // Remember to hash the password before saving it in the database
         // status: 'active', // Set the default status if needed
         // addedStore: [] // Initialize the addedStore array if needed
       });
