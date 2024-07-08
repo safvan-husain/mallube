@@ -9,7 +9,14 @@ import Category from "../../models/categoryModel";
 import mongoose from "mongoose";
 import Product from "../../models/productModel";
 import ProductSearch from "../../models/productSearch";
+import jwt from "jsonwebtoken";
+import twilio from "twilio";
+const { TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN } = process.env;
+const twilioclient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN, {
+  lazyLoading: true,
+});
 
+const twilioServiceId = process.env.TWILIO_SERVICE_ID;
 export const login = async (req: Request, res: Response) => {
   try {
     const { phone, password } = req.body;
@@ -380,5 +387,122 @@ export const changePassword = async (
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const forgotPasswordOtpSendToPhone = async (req:Request,res:Response)=>{
+  try {
+    const {phone} = req.body
+    const store = await Store.findOne({phone})
+    
+    if(!store){
+      return res.status(404).json({message:"Invalid number"})
+    }
+
+    if(!twilioServiceId){
+      return res.status(500).json({message:"Twilio service id is not configured"})
+    };
+
+    const otpResponse = await twilioclient.verify.v2
+    .services(twilioServiceId)
+    .verifications.create({
+      to: `+91${phone}`,
+      channel: "sms",
+    });
+
+    const token = jwt.sign(
+      {phone},
+      process.env.JWT_SECRET_FOR_PASSWORD_RESET!,
+      {expiresIn:"10m"}
+    );
+    res.status(201).json({
+      message:`otp send successfully : ${JSON.stringify(otpResponse)}`,
+      otpSend:true,
+      token,
+    })
+
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({message:"Internal server error"})
+  }
+}
+
+export const OtpVerify = async (req:Request,res:Response) => {
+  try {
+    const { token, otp } = req.body;
+    const decodedPhone: any = jwt.verify(
+      token,
+      process.env.JWT_SECRET_FOR_PASSWORD_RESET!
+    );
+
+    const store = await Store.findOne({ phone: decodedPhone.phone });
+
+    if (!store) {
+      return res.status(404).json({ message: "Invalid token" });
+    }
+    if (!twilioServiceId) {
+      return res
+        .status(500)
+        .json({ message: "Twilio service ID is not configured." });
+    }
+
+    const verifiedResponse = await twilioclient.verify.v2
+      .services(twilioServiceId)
+      .verificationChecks.create({
+        to: `+91${decodedPhone.phone}`,
+        code: otp,
+      });
+
+    //mark user as verified if otp is verified true
+    if (verifiedResponse.status === "approved") {
+      res.status(200).json({
+        message: `OTP verified successfully : ${JSON.stringify(
+          verifiedResponse
+        )}`,
+        verified: true,
+      });
+    } else {
+      res.status(400).json({ message: "Otp is wrong" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" ,error});
+  }
+}
+
+
+export const updatePassword = async (req: Request, res: Response) => {
+  try {
+    const { token, newPassword } = req.body;
+    
+
+    const decodedPhone: any = jwt.verify(
+      token,
+      process.env.JWT_SECRET_FOR_PASSWORD_RESET!
+    );
+
+    const user = await Store.findOne({ phone: decodedPhone.phone });
+
+    if (!user) {
+      res.status(404).json({ message: "User not found for this number" });
+    }
+
+    const hashPassword = await bcrypt.hash(newPassword, 10);
+
+    const response = await Store.findByIdAndUpdate(
+      user,
+      {
+        password: hashPassword,
+      },
+      { new: true }
+    );
+    res
+      .status(201)
+      .json({
+        message: "Password changed successfully",
+        response,
+        updated: true,
+      });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" ,error});
   }
 };

@@ -382,7 +382,6 @@ export const forgotPasswordOtpSendToPhone = async (req:Request,res:Response)=>{
       to: `+91${phone}`,
       channel: "sms",
     });
-    console.log('otp response ',otpResponse)
 
     const token = jwt.sign(
       {phone},
@@ -404,12 +403,10 @@ export const forgotPasswordOtpSendToPhone = async (req:Request,res:Response)=>{
 export const OtpVerify = async (req:Request,res:Response) => {
   try {
     const { token, otp } = req.body;
-console.log("token , otp ",token ,otp)
     const decodedPhone: any = jwt.verify(
       token,
       process.env.JWT_SECRET_FOR_PASSWORD_RESET!
     );
-    console.log('decoded phone ',decodedPhone)
 
     const staff = await Staff.findOne({ phone: decodedPhone.phone });
 
