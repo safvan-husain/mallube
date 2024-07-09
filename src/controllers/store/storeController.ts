@@ -158,6 +158,7 @@ export const fetchStoresNearBy = async (req: Request, res: Response) => {
           $maxDistance: 10000, // in meters
         },
       },
+      status:"active"
     }).populate("category", "name icon");
 
     // distance geting wrong. need to work on this
@@ -259,6 +260,7 @@ export const fetchStoreByCategory = async (req: Request, res: Response) => {
             $maxDistance: 10000, // in meters
           },
         },
+        status:"active"
       });
     } else {
       response = await Store.find({
@@ -271,6 +273,7 @@ export const fetchStoreByCategory = async (req: Request, res: Response) => {
             $maxDistance: 10000,
           },
         },
+        status:"active",
       });
     }
     if (!response || response.length === 0) {
