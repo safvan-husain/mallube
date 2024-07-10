@@ -18,6 +18,9 @@ import {
   addTarget,
   mostSearchedProducts,
   deleteStoreById,
+  fetchAllUsers,
+  updateUserStatus,
+  deleteUser,
 } from "../controllers/admin/adminController";
 import { admin } from "../middleware/auth";
 const router = express.Router();
@@ -45,5 +48,7 @@ router
 router.route("/total-store").get(admin, fetchTotalStoreByCategory);
 router.route("/staff/target").post(admin, addTarget);
 router.route("/most-searched-products").get(admin,mostSearchedProducts)
-
+router.route("/fetch-all-users").get(admin,fetchAllUsers)
+router.route('/change-user-status').put(admin,updateUserStatus)
+router.route("/delete-user/:userId").delete(admin,deleteUser)
 export default router;

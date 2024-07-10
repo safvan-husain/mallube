@@ -115,6 +115,10 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
         .json({ message: "Please check your email", login: false });
     }
 
+    if(user?.isBlocked){
+      res.status(400).json({message:"You are blocked. Contact the owner"})
+    }
+
     //verify password
     const match = await bcrypt.compare(password, user.password);
     if (!match) {

@@ -13,6 +13,7 @@ export interface IUser {
   phone: string;
   otp: string;
   isVerified: boolean;
+  isBlocked:boolean;
 }
 
 const userSchema = new Schema<IUser>(
@@ -45,6 +46,10 @@ const userSchema = new Schema<IUser>(
       default: false,
       required: true,
     },
+    isBlocked:{
+      type:Boolean,
+      default:false
+    }
   },
   {
     timestamps: true,

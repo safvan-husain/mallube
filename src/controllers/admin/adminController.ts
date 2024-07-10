@@ -7,35 +7,37 @@ import Store from "../../models/storeModel";
 import mongoose from "mongoose";
 import Advertisement from "../../models/advertisementModel";
 import ProductSearch from "../../models/productSearch";
+import User from "../../models/userModel";
 
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-    const user:any = await Admin.findOne({ email });
-    if(!user){
-       return  res.status(404).json({message:"Please check your email"})
+    const user: any = await Admin.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "Please check your email" });
     }
-      const match = await bcrypt.compare(password, user.password);
-      if(!match){
-        return res.status(400).json({message:"Invalid password",login:false})
-      }
-        const token = user.generateAuthToken(user._id);
-        res.status(200).json({
-          _id: user._id,
-          name: user.name,
-          email: user.email,
-          token: token,
-        });
-    
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      return res
+        .status(400)
+        .json({ message: "Invalid password", login: false });
+    }
+    const token = user.generateAuthToken(user._id);
+    res.status(200).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      token: token,
+    });
   } catch (error) {
     console.log("Error in admin login", error);
-    res.status(500).json({message:"Internal server error"})
+    res.status(500).json({ message: "Internal server error" });
   }
-}
+};
 
 export const addStaff = asyncHandler(
   async (req: Request, res: Response): Promise<void> => {
-    const { name, email, password,phone } = req.body;
+    const { name, email, password, phone } = req.body;
     try {
       // Check if staff member already exists
       const existingStaff = await Staff.findOne({ email });
@@ -48,7 +50,7 @@ export const addStaff = asyncHandler(
         name,
         email,
         password,
-        phone
+        phone,
         // Remember to hash the password before saving it in the database
         // status: 'active', // Set the default status if needed
         // addedStore: [] // Initialize the addedStore array if needed
@@ -152,13 +154,13 @@ export const updateSubscription = async (
   next: NextFunction
 ) => {
   try {
-    const {subscription, storeId} = req.body;
+    const { subscription, storeId } = req.body;
     const store = await Store.findOne({ _id: storeId });
     if (!store) {
       return res.status(404).json({ message: "Store not found" });
     }
 
-    store.subscriptionPlan = subscription
+    store.subscriptionPlan = subscription;
 
     if (store.subscriptionPlan !== "noPlanTaken") {
       store.subscriptionActivatedAt = new Date();
@@ -176,7 +178,7 @@ export const updateSubscription = async (
       .json({ message: "Subscription status updated successfully" });
   } catch (error) {
     console.log(error);
-    res.status(500).json({message:"Internal server error"})
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -387,44 +389,42 @@ export const fetchTotalStoreByCategory = asyncHandler(
 export const addTarget = async (req: any, res: Response) => {
   try {
     const { target, staffId } = req.body;
-    console.log("STaffidf ",staffId)
+    console.log("STaffidf ", staffId);
     const staffMember = await Staff.findById(staffId);
 
     if (!staffMember) {
       return res.status(404).json({ message: "Staf not found" });
     }
     staffMember.target = target;
-    staffMember.save()
+    staffMember.save();
     res.status(200).json({ message: "Target added successfullly" });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
-export const mostSearchedProducts = async(req:Request,res:Response)=>{
+export const mostSearchedProducts = async (req: Request, res: Response) => {
   try {
     const response = await ProductSearch.aggregate([
-      {"$sort":{"searchCount":-1}},
-    {"$limit":10}
-    ])
-    if(!response || response.length ===0){
-      res.status(404).json({message:"No Search history."})
+      { $sort: { searchCount: -1 } },
+      { $limit: 10 },
+    ]);
+    if (!response || response.length === 0) {
+      res.status(404).json({ message: "No Search history." });
     }
-    res.status(200).json(response)
+    res.status(200).json(response);
   } catch (error) {
-    console.log(error)
-    res.status(500).json({message:"Internal server error"})
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
   }
-}
+};
 
 export const deleteStoreById = asyncHandler(
   async (req: Request, res: Response) => {
     try {
       const storeId = req.params.storeId;
 
-      const store = await Store.findByIdAndDelete(
-        storeId
-      );
+      const store = await Store.findByIdAndDelete(storeId);
 
       if (!store) {
         res.status(404).json({ message: "store not found" });
@@ -437,3 +437,81 @@ export const deleteStoreById = asyncHandler(
     }
   }
 );
+
+export const fetchAllUsers = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { page = 1, limit = 12, search = "" } = req.query;
+
+    const startIndex = (Number(page) - 1) * Number(limit);
+
+    const searchQuery: any = {
+      $or: [
+        { fullName: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+        { phone: { $regex: search, $options: "i" } },
+      ],
+    };
+
+    const total = await User.countDocuments({});
+
+    const users = await User.find(searchQuery)
+      .limit(Number(limit))
+      .skip(startIndex);
+
+    res.status(200).json({
+      users,
+      total,
+    });
+  }
+);
+
+export const updateUserStatus = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { userId } = req.body;
+  try {
+    if (userId == null) {
+      res.status(400).json({ message: "User id is required" });
+      return;
+    }
+
+    const user: any = await User.findById(userId);
+
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+
+    const updateUser: any = await User.findByIdAndUpdate(
+      userId,
+      { $set: { isBlocked: !user.isBlocked } },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: `User ${
+        updateUser?.isBlocked ? "Blocked" : "Unblocked"
+      } successfully`,
+      updateUser,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Something went wrong , please try again later" });
+  }
+};
+
+export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.params.userId;
+
+  const store = await User.findByIdAndDelete(userId);
+
+  if (!store) {
+    res.status(404).json({ message: "store not found" });
+    return;
+  }
+
+  res.status(200).json({ message: "store deleted successfully" });
+});
