@@ -21,20 +21,23 @@ const EXPIRATION_TIME = 5 * 60 * 1000;
 export const register = async (req: Request, res: Response) => {
   const { fullName, email, password, phone } = req.body;
   try {
-    const exist:any = await User.findOne({
+    const exist: any = await User.findOne({
       $or: [{ email }, { phone }],
-     });
+    });
 
     if (exist) {
       const currentTime = new Date().getTime();
-      const userCreationTime = new Date(exist.createdAt).getTime()
+      const userCreationTime = new Date(exist.createdAt).getTime();
       //Handling user otp verification in second attempt
-      if(!exist.isVerified && (currentTime - userCreationTime) > EXPIRATION_TIME){
-        await User.deleteOne({_id:exist._id})
-      }else{
-      res.status(422).json({ message: "email or phone already been used!" });
+      if (
+        !exist.isVerified &&
+        currentTime - userCreationTime > EXPIRATION_TIME
+      ) {
+        await User.deleteOne({ _id: exist._id });
+      } else {
+        res.status(422).json({ message: "email or phone already been used!" });
+      }
     }
-  }
     //hash the password
     const hashedPassword = await bcrypt.hash(password, 12);
 
@@ -118,15 +121,15 @@ export const verifyOtp = async (req: Request, res: Response) => {
 export const login = asyncHandler(async (req: Request, res: Response) => {
   try {
     const { username, password } = req.body;
-    const user: any = await User.findOne({ $or:[{email:username},{phone:username}] });
+    const user: any = await User.findOne({
+      $or: [{ email: username }, { phone: username }],
+    });
     if (!user) {
-      res
-        .status(404)
-        .json({ message: "Invalid email or phone", login: false });
+      res.status(404).json({ message: "Invalid email or phone", login: false });
     }
 
-    if(user?.isBlocked){
-      res.status(400).json({message:"You are blocked. Contact the owner"})
+    if (user?.isBlocked) {
+      res.status(400).json({ message: "You are blocked. Contact the owner" });
     }
 
     //verify password
@@ -160,6 +163,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     }
   } catch (error) {
     console.log(error);
+    res.status(500).json({ message: "Internal server error", error });
   }
 });
 
@@ -388,39 +392,56 @@ export const updatePassword = async (req: Request, res: Response) => {
       },
       { new: true }
     );
-    res
-      .status(200)
-      .json({
-        message: "Password changed successfully",
-        response,
-        updated: true,
-      });
+    res.status(200).json({
+      message: "Password changed successfully",
+      response,
+      updated: true,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
-export const updateProfilePassword = async (req:Request,res:Response)=>{
+export const updateProfilePassword = async (req: Request, res: Response) => {
   try {
-    const { currentPassword , confirmPassword} = req.body;
+    const { currentPassword, confirmPassword } = req.body;
 
     const userId = req.user?._id;
 
-    const user:any = await User.findOne({_id:userId})
-    if(!user){
-      return res.status(404).json({message:"User not found"})
+    const user: any = await User.findOne({ _id: userId });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
-    const isMatch = await bcrypt.compare(currentPassword,user.password);
-    if(!isMatch){
-      return res.status(400).json({message:"Current password is incorrect"})
-      }
-      const hashedPassword = await bcrypt.hash(confirmPassword,10)
-      user.password = hashedPassword;
-      await user.save()
-      res.status(200).json({message:"Password updated successfully",user,passwordUpdated:true})
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Current password is incorrect" });
+    }
+    const hashedPassword = await bcrypt.hash(confirmPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+    res.status(200).json({
+      message: "Password updated successfully",
+      user,
+      passwordUpdated: true,
+    });
   } catch (error) {
-    console.log(error)
-    res.status(500).json({message:"Internal server error"})
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
   }
-}
+};
+
+export const fetchUser = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?._id;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error", error });
+  }
+};
