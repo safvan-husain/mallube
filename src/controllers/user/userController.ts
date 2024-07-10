@@ -16,17 +16,25 @@ const twilioclient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN, {
 
 const twilioServiceId = process.env.TWILIO_SERVICE_ID;
 
+const EXPIRATION_TIME = 5 * 60 * 1000;
+
 export const register = async (req: Request, res: Response) => {
   const { fullName, email, password, phone } = req.body;
   try {
-    const exist = await User.findOne({
+    const exist:any = await User.findOne({
       $or: [{ email }, { phone }],
      });
 
     if (exist) {
+      const currentTime = new Date().getTime();
+      const userCreationTime = new Date(exist.createdAt).getTime()
+      //Handling user otp verification in second attempt
+      if(!exist.isVerified && (currentTime - userCreationTime) > EXPIRATION_TIME){
+        await User.deleteOne({_id:exist._id})
+      }else{
       res.status(422).json({ message: "email or phone already been used!" });
     }
-
+  }
     //hash the password
     const hashedPassword = await bcrypt.hash(password, 12);
 
