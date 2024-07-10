@@ -27,7 +27,6 @@ const userSchema = new Schema<IUser>(
     },
     email: {
       type: String,
-      required: true,
       unique: true,
     },
     password: {
@@ -37,6 +36,7 @@ const userSchema = new Schema<IUser>(
     phone: {
       type: String,
       required: true,
+      unique: true,
     },
     otp: {
       type: String,

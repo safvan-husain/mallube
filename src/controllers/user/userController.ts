@@ -19,10 +19,12 @@ const twilioServiceId = process.env.TWILIO_SERVICE_ID;
 export const register = async (req: Request, res: Response) => {
   const { fullName, email, password, phone } = req.body;
   try {
-    const exist = await User.findOne({ email });
+    const exist = await User.findOne({
+      $or: [{ email }, { phone }],
+     });
 
     if (exist) {
-      res.status(422).json({ message: "email already been used!" });
+      res.status(422).json({ message: "email or phone already been used!" });
     }
 
     //hash the password
@@ -107,12 +109,12 @@ export const verifyOtp = async (req: Request, res: Response) => {
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
-    const user: any = await User.findOne({ email });
+    const { username, password } = req.body;
+    const user: any = await User.findOne({ $or:[{email:username},{phone:username}] });
     if (!user) {
       res
         .status(404)
-        .json({ message: "Please check your email", login: false });
+        .json({ message: "Invalid email or phone", login: false });
     }
 
     if(user?.isBlocked){
