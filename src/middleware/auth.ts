@@ -74,7 +74,7 @@ export const store = asyncHandler(
     }
 
     try {
-      const decoded = jwt.verify(token, "storeSecrete") as {
+      const decoded = jwt.verify(token, config.jwtSecret) as {
         _id: string;
       };
       req.store = decoded;
