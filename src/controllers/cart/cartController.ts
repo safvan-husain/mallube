@@ -4,7 +4,6 @@ import bcrypt from "bcryptjs";
 import Store from "../../models/storeModel";
 import Advertisement from "../../models/advertisementModel";
 import { calculateDistance } from "../../utils/interfaces/common";
-import { populate } from "dotenv";
 import Category from "../../models/categoryModel";
 import mongoose from "mongoose";
 import Product from "../../models/productModel";
@@ -42,7 +41,7 @@ export const updateLiveStatus = async (
     if (!store) {
       return res.status(404).json({ message: "Store not found" });
     }
-    store.live = req.body.storeLiveStatus;
+    // store.live = req.body.storeLiveStatus;
     await store.save();
 
     return res

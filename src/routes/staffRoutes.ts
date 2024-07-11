@@ -1,17 +1,18 @@
 import express from "express";
 import {
   login,
-  addStore,
   searchUniqueNameExitst,
   fetchAllStore,
   updateStoreStatus,
-  updateStore,
   changePassword,
   getStaffById,
   deleteStore,
   forgotPasswordOtpSendToPhone,
   OtpVerify,
   updatePassword,
+  getStaffStore,
+  addOrUpdateStore,
+  checkStoreDetailsAndSendOtpHandler,
 } from "../controllers/staff/staffController";
 import { staff } from "../middleware/auth";
 import { validateData } from "../middleware/zod.validation";
@@ -25,16 +26,24 @@ import {
   getCategories,
   updateCategory,
 } from "../controllers/category/categoryController";
+import {
+  addStoreSchema,
+  checkDetailsAndSendOtp,
+  updateStoreSchema,
+} from "../schemas/store.schema";
 const router = express.Router();
 
 router.route("/login").post(login);
-router.route("/add-store").post(staff, addStore);
-router.route("/store/:uniqueName").get(searchUniqueNameExitst);
+router
+  .route("/add-store")
+  .post(staff, validateData(addStoreSchema), addOrUpdateStore);
+router.route("/store/uniquename/:uniqueName").get(searchUniqueNameExitst);
 router.route("/store").get(staff, fetchAllStore);
 router.route("/store/status-update/:storeId").put(staff, updateStoreStatus);
 router
   .route("/store/:storeId")
-  .put(staff, updateStore)
+  .get(staff, getStaffStore)
+  .put(staff, validateData(updateStoreSchema), addOrUpdateStore)
   .delete(staff, deleteStore);
 router
   .route("/category")
@@ -49,5 +58,12 @@ router.route("/").get(staff, getStaffById);
 router.route("/otp-send-forgot-password").post(forgotPasswordOtpSendToPhone);
 router.route("/otp-verify-forgot-password").post(OtpVerify);
 router.route("/update-password-request").put(updatePassword);
+router
+  .route("/check-details-and-send-otp")
+  .post(
+    staff,
+    validateData(checkDetailsAndSendOtp),
+    checkStoreDetailsAndSendOtpHandler
+  );
 
 export default router;

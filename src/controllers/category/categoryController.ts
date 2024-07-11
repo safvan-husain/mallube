@@ -20,7 +20,9 @@ import Product from "../../models/productModel";
 // get all categories for admin category management
 export const getCategories = asyncHandler(
   async (req: Request, res: Response) => {
-    const categories = await getCategoriesInFormat();
+    const categories = await getCategoriesInFormat({
+      isActive: Boolean(req.query.isActive),
+    });
     res.status(200).json(categories);
   }
 );
@@ -54,7 +56,7 @@ export const getActiveSubCategories = asyncHandler(
 // adding category for admin and staff
 export const addCategory = asyncHandler(
   async (req: ICustomRequest<IAddCategorySchema>, res: Response) => {
-    const { name, parentId, isActive,icon } = req.body;
+    const { name, parentId, isActive, icon } = req.body;
     const isDuplicate = await isDuplicateCategory(name, parentId);
 
     if (isDuplicate) res.status(409).json("Duplicate Category");
@@ -88,7 +90,6 @@ export const updateCategory = asyncHandler(
       if (category) {
         res.status(200).json("Product has been updated");
       } else {
-        res.status(400);
         res.status(404).json({ message: "Invalid category id" });
       }
     }

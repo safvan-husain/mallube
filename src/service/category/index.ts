@@ -28,13 +28,20 @@ export async function isDuplicateCategory(
   return Boolean(category);
 }
 
-export async function getCategoriesInFormat() {
-  return await Category.aggregate([
-    {
-      $match: {
-        parentId: { $exists: false },
-      },
+export async function getCategoriesInFormat({ isActive = false }) {
+  const matchStage: {
+    $match: any;
+  } = {
+    $match: {
+      parentId: { $exists: false },
     },
+  };
+
+  if (isActive) {
+    matchStage.$match.isActive = true;
+  }
+  return await Category.aggregate([
+    matchStage,
     {
       $lookup: {
         from: "categories", // Assuming the collection name is "categories"
@@ -48,7 +55,7 @@ export async function getCategoriesInFormat() {
         _id: 1,
         name: 1,
         isActive: 1,
-        icon:1,
+        icon: 1,
         isShowOnHomePage: 1,
         subcategories: {
           $map: {
@@ -58,7 +65,7 @@ export async function getCategoriesInFormat() {
               _id: "$$subcategory._id",
               name: "$$subcategory.name",
               isActive: "$$subcategory.isActive",
-              icon:"$$subcategory.icon"
+              icon: "$$subcategory.icon",
             },
           },
         },

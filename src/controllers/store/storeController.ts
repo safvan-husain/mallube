@@ -79,7 +79,7 @@ export const updateLiveStatus = async (
     if (!store) {
       return res.status(404).json({ message: "Store not found" });
     }
-    store.live = req.body.storeLiveStatus;
+    // store.live = req.body.storeLiveStatus;
     await store.save();
 
     return res
