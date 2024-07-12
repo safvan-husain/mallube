@@ -509,3 +509,16 @@ export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
 
   res.status(200).json({ message: "store deleted successfully" });
 });
+
+export const fetchUsersCount = async (req: Request, res: Response) => {
+  try {
+    const usersCount = await User.countDocuments();
+    if (!usersCount) {
+      return res.status(404).json({ message: "No users" });
+    }
+
+    res.status(200).json(usersCount);
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

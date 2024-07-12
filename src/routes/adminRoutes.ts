@@ -21,6 +21,7 @@ import {
   fetchAllUsers,
   updateUserStatus,
   deleteUser,
+  fetchUsersCount,
 } from "../controllers/admin/adminController";
 import { admin } from "../middleware/auth";
 const router = express.Router();
@@ -51,4 +52,5 @@ router.route("/most-searched-products").get(admin,mostSearchedProducts)
 router.route("/fetch-all-users").get(admin,fetchAllUsers)
 router.route('/change-user-status').put(admin,updateUserStatus)
 router.route("/delete-user/:userId").delete(admin,deleteUser)
+router.route("/users-count").get(admin,fetchUsersCount)
 export default router;
