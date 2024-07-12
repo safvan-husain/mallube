@@ -8,6 +8,7 @@ import mongoose from "mongoose";
 import Advertisement from "../../models/advertisementModel";
 import ProductSearch from "../../models/productSearch";
 import User from "../../models/userModel";
+import { getNextYearSameDateMinusOneDay } from "../../utils/misc";
 
 export const login = async (req: Request, res: Response) => {
   try {
@@ -160,17 +161,10 @@ export const updateSubscription = async (
       return res.status(404).json({ message: "Store not found" });
     }
 
-    // store.subscriptionPlan = subscription;
+    store.subscription.plan = subscription;
 
-    // if (store.subscriptionPlan !== "noPlanTaken") {
-    //   store.subscriptionActivatedAt = new Date();
-    //   const expirationDate = new Date();
-    //   expirationDate.setFullYear(expirationDate.getFullYear() + 1);
-    //   store.subscriptionExpiresAt = expirationDate;
-    // } else {
-    //   store.subscriptionActivatedAt = undefined;
-    //   store.subscriptionExpiresAt = undefined;
-    // }
+    store.subscription.activatedAt = new Date();
+    store.subscription.expiresAt = getNextYearSameDateMinusOneDay();
 
     await store.save();
     res
@@ -218,7 +212,7 @@ export const updateStoreStatus = async (
       return res.status(404).json({ message: "Store not found" });
     }
 
-    // store.status = store.status === "active" ? "inactive" : "active";
+    store.isActive = !store.isActive;
     await store.save();
 
     return res

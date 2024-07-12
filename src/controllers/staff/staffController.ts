@@ -194,7 +194,7 @@ export const getStaffStore = asyncHandler(
   }
 );
 
-export const searchUniqueNameExitst = asyncHandler(
+export const searchUniqueNameExist = asyncHandler(
   async (req: Request, res: Response) => {
     let { uniqueName } = req.params;
     try {
@@ -230,9 +230,6 @@ export const fetchAllStore = asyncHandler(async (req: any, res: Response) => {
     const addedStores = storesAddedByStaff.map((item) => {
       return item.id;
     });
-
-    // const addedStores = staff.addedStores;
-    // console.log("addedsstores ",addedStores)
 
     const stores = await Store.aggregate([
       {
@@ -285,7 +282,7 @@ export const updateStoreStatus = async (
       return res.status(404).json({ message: "Store not found" });
     }
 
-    // store.status = store.status === "active" ? "inactive" : "active";
+    store.isActive = !store.isActive;
     await store.save();
 
     return res

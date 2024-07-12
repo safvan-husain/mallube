@@ -1,7 +1,7 @@
 import express from "express";
 import {
   login,
-  searchUniqueNameExitst,
+  searchUniqueNameExist,
   fetchAllStore,
   updateStoreStatus,
   changePassword,
@@ -37,7 +37,7 @@ router.route("/login").post(login);
 router
   .route("/add-store")
   .post(staff, validateData(addStoreSchema), addOrUpdateStore);
-router.route("/store/uniquename/:uniqueName").get(searchUniqueNameExitst);
+router.route("/store/uniquename/:uniqueName").get(searchUniqueNameExist);
 router.route("/store").get(staff, fetchAllStore);
 router.route("/store/status-update/:storeId").put(staff, updateStoreStatus);
 router

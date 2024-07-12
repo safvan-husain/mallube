@@ -25,8 +25,6 @@ export const login = async (req: Request, res: Response) => {
     if (!storeOwner) {
       return res.status(404).json({ message: "User not found" });
     }
-    console.log("password ",password)
-    console.log("storeowner.password ",storeOwner.password)
 
     const match = await bcrypt.compare(password, storeOwner.password);
 
@@ -158,7 +156,8 @@ export const fetchStoresNearBy = async (req: Request, res: Response) => {
           $maxDistance: 10000, // in meters
         },
       },
-      status:"active"
+      isActive: true,
+      isAvailable: true
     }).populate("category", "name icon");
 
     // distance geting wrong. need to work on this
@@ -260,7 +259,8 @@ export const fetchStoreByCategory = async (req: Request, res: Response) => {
             $maxDistance: 10000, // in meters
           },
         },
-        status:"active"
+        isActive: true,
+        isAvailable: true
       });
     } else {
       response = await Store.find({
@@ -273,7 +273,8 @@ export const fetchStoreByCategory = async (req: Request, res: Response) => {
             $maxDistance: 10000,
           },
         },
-        status:"active",
+        isActive: true,
+        isAvailable: true,
       });
     }
     if (!response || response.length === 0) {
@@ -291,8 +292,6 @@ export const searchStoresByProductName = asyncHandler(
   async (req: Request, res: Response) => {
     try {
       let productName: any = req.query.searchTerm;
-      console.log("req.query ", req.query);
-      console.log("reqched back ", productName);
 
       if (!productName) {
         res.status(400).json({ message: "Product name is required" });
@@ -393,44 +392,48 @@ export const changePassword = async (
   }
 };
 
-export const forgotPasswordOtpSendToPhone = async (req:Request,res:Response)=>{
+export const forgotPasswordOtpSendToPhone = async (
+  req: Request,
+  res: Response
+) => {
   try {
-    const {phone} = req.body
-    const store = await Store.findOne({phone})
-    
-    if(!store){
-      return res.status(404).json({message:"Invalid number"})
+    const { phone } = req.body;
+    const store = await Store.findOne({ phone });
+
+    if (!store) {
+      return res.status(404).json({ message: "Invalid number" });
     }
 
-    if(!twilioServiceId){
-      return res.status(500).json({message:"Twilio service id is not configured"})
-    };
+    if (!twilioServiceId) {
+      return res
+        .status(500)
+        .json({ message: "Twilio service id is not configured" });
+    }
 
     const otpResponse = await twilioclient.verify.v2
-    .services(twilioServiceId)
-    .verifications.create({
-      to: `+91${phone}`,
-      channel: "sms",
-    });
+      .services(twilioServiceId)
+      .verifications.create({
+        to: `+91${phone}`,
+        channel: "sms",
+      });
 
     const token = jwt.sign(
-      {phone},
+      { phone },
       process.env.JWT_SECRET_FOR_PASSWORD_RESET!,
-      {expiresIn:"10m"}
+      { expiresIn: "10m" }
     );
     res.status(201).json({
-      message:`otp send successfully : ${JSON.stringify(otpResponse)}`,
-      otpSend:true,
+      message: `otp send successfully : ${JSON.stringify(otpResponse)}`,
+      otpSend: true,
       token,
-    })
-
+    });
   } catch (error) {
-    console.log(error)
-    res.status(500).json({message:"Internal server error"})
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
   }
-}
+};
 
-export const OtpVerify = async (req:Request,res:Response) => {
+export const OtpVerify = async (req: Request, res: Response) => {
   try {
     const { token, otp } = req.body;
     const decodedPhone: any = jwt.verify(
@@ -468,15 +471,13 @@ export const OtpVerify = async (req:Request,res:Response) => {
       res.status(400).json({ message: "Otp is wrong" });
     }
   } catch (error) {
-    res.status(500).json({ message: "Internal server error" ,error});
+    res.status(500).json({ message: "Internal server error", error });
   }
-}
-
+};
 
 export const updatePassword = async (req: Request, res: Response) => {
   try {
     const { token, newPassword } = req.body;
-    
 
     const decodedPhone: any = jwt.verify(
       token,
@@ -498,14 +499,12 @@ export const updatePassword = async (req: Request, res: Response) => {
       },
       { new: true }
     );
-    res
-      .status(201)
-      .json({
-        message: "Password changed successfully",
-        response,
-        updated: true,
-      });
+    res.status(201).json({
+      message: "Password changed successfully",
+      response,
+      updated: true,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Internal server error" ,error});
+    res.status(500).json({ message: "Internal server error", error });
   }
 };
