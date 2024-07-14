@@ -32,7 +32,7 @@ export const addStoreSchema = z.object({
     .string()
     .min(10, "enter a valid whatsapp number")
     .regex(numericRegex, "enter a valid phone number"),
-  email: z.string().email().optional(),
+  email: z.string().max(0).or(z.string().email()),
   subscriptionPlan: z.string(), //enum set here
   bio: z.string().optional(),
   shopImgUrl: z.string(),

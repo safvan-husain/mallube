@@ -8,7 +8,8 @@ export interface IProduct extends Document {
   offerPrice?: number;
   category: Schema.Types.ObjectId;
   store: Schema.Types.ObjectId;
-  isActive: boolean;
+  isActive: boolean; // controlled by admin
+  isAvailable: boolean; // conrolled by admin/staff
   isPending: boolean;
 }
 
@@ -37,19 +38,24 @@ const productSchema = new Schema<IProduct>(
       ref: "categories",
       required: true,
     },
+    store: {
+      type: Schema.Types.ObjectId,
+      ref: "stores",
+      required: true,
+    },
     isActive: {
       type: Boolean,
       default: false,
       required: true,
     },
+    isAvailable: {
+      type: Boolean,
+      default: true,
+      required: true,
+    },
     isPending: {
       type: Boolean,
       default: false,
-      required: true,
-    },
-    store: {
-      type: Schema.Types.ObjectId,
-      ref: "stores",
       required: true,
     },
   },

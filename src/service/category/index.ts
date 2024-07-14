@@ -81,6 +81,18 @@ export async function listActiveMainCategories() {
   );
 }
 
+export async function listAllSubCategories(id: string) {
+  return await Category.find(
+    { parentId: id },
+    {
+      _id: 1,
+      name: 1,
+      isActive: 1,
+      isPending: 1,
+    }
+  );
+}
+
 export async function listActiveSubCategories(id: string) {
   return await Category.find(
     { parentId: id, isActive: true, isPending: false },

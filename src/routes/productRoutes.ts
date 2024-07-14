@@ -4,26 +4,29 @@ import {
   deleteProduct,
   deleteProductOfAStore,
   fetchProducts,
-  getActiveSubCategories,
+  getAllSubCategories,
   getAllProducts,
   getProductById,
   getProductsOfAStore,
   updateProduct,
+  uploadProductImages,
 } from "../controllers/product/productController";
 // import { staff } from "../middleware/auth";
 import { validateData } from "../middleware/zod.validation";
-import { addProductSchema } from "../schemas/product.schema";
+import {
+  addProductSchema,
+  uploadProdutImagesSchema,
+} from "../schemas/product.schema";
+import { store } from "../middleware/auth";
+import { storeSubscription } from "../middleware/store-subscription.middleware";
 const router = express.Router();
-
 
 // for main website
 router.route("/fetch-products").get(fetchProducts);
 
-
-// need to add middleware here
+//TODO: need to add middleware here
 router.route("/").get(getAllProducts);
-router.route("/category/:shopId").get(getActiveSubCategories);
-
+router.route("/category/:shopId").get(getAllSubCategories);
 
 router
   .route("/:storeId")
@@ -32,10 +35,18 @@ router
   .delete(deleteProductOfAStore);
 
 router
+  .route("/images/upload")
+  .post(
+    store,
+    validateData(uploadProdutImagesSchema),
+    storeSubscription,
+    uploadProductImages
+  );
+
+router
   .route("/store/:productId")
   .get(getProductById)
   .put(updateProduct)
   .delete(deleteProduct);
-
 
 export default router;

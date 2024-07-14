@@ -2,6 +2,7 @@ import express from "express";
 import fileUpload from "express-fileupload";
 
 import { s3 } from "../config/s3";
+import { config } from "../config/vars";
 
 const router = express.Router();
 
@@ -27,8 +28,9 @@ const uniqueFileName = `${Date.now()}_${Math.floor(
   s3.putObject(
     {
       Body: fileContent, // The actual file content
-      Bucket: "mallumart",
+      Bucket: config.s3BucketName,
       Key: uniqueFileName, // The name of the file
+      ContentType: mimetype,
     },
     function (err) {
       if (err) {

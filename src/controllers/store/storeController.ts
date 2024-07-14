@@ -53,7 +53,7 @@ export const fetchStore = asyncHandler(
         path: "category",
         model: "categories", // Model name
         select: "name", // Field to select
-      });
+      }).populate("subscription.plan");
       if (!store) {
         res.status(404).json({ message: "No store found" });
         return;

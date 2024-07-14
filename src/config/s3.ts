@@ -8,3 +8,6 @@ export const s3 = new AWS.S3({
   secretAccessKey: config.s3SecretsKey,
   s3BucketEndpoint: true,
 });
+
+export const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB
+export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif'];

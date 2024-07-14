@@ -1,15 +1,27 @@
 import { Request, Response } from "express";
-import Product from "../../models/productModel";
+import { UploadedFile } from "express-fileupload";
 import asyncHandler from "express-async-handler";
-import { IAddProductSchema } from "../../schemas/product.schema";
+
+import {
+  IAddProductSchema,
+  IUploadProdutImagesSchema,
+} from "../../schemas/product.schema";
+
 import { ICustomRequest } from "../../types/requestion";
+
 import {
   isDuplicateCategory,
   listActiveSubCategories,
+  listAllSubCategories,
 } from "../../service/category";
+
+import Product from "../../models/productModel";
 import Category from "../../models/categoryModel";
 import Store from "../../models/storeModel";
 import ProductSearch from "../../models/productSearch";
+
+import { s3 } from "../../config/s3";
+import { config } from "../../config/vars";
 
 // get all products
 export const getAllProducts = asyncHandler(
@@ -26,7 +38,7 @@ export const getAllProducts = asyncHandler(
 );
 
 // get subcategories of a main category by id for showing on product adding page
-export const getActiveSubCategories = asyncHandler(
+export const getAllSubCategories = asyncHandler(
   async (req: any, res: Response) => {
     const store = await Store.findOne(
       { _id: req.params.shopId },
@@ -37,7 +49,7 @@ export const getActiveSubCategories = asyncHandler(
 
     const mainCategory: string = store?.category.toString();
 
-    const activeSubCategories = await listActiveSubCategories(mainCategory);
+    const activeSubCategories = await listAllSubCategories(mainCategory);
     res.status(200).json(activeSubCategories);
   }
 );
@@ -152,7 +164,14 @@ export const deleteProductOfAStore = asyncHandler(
 
 export const fetchProducts = asyncHandler(async (req: any, res: Response) => {
   try {
-    const { category, sort, searchTerm, storeId, page = 1, limit = 12 } = req.query;
+    const {
+      category,
+      sort,
+      searchTerm,
+      storeId,
+      page = 1,
+      limit = 12,
+    } = req.query;
 
     let filter: any = {};
 
@@ -179,7 +198,10 @@ export const fetchProducts = asyncHandler(async (req: any, res: Response) => {
           { $inc: { searchCount: 1 } }
         );
       } else {
-        await ProductSearch.create({ productName: trimmedSearchTerm, searchCount: 1 });
+        await ProductSearch.create({
+          productName: trimmedSearchTerm,
+          searchCount: 1,
+        });
       }
     }
 
@@ -218,3 +240,58 @@ export const fetchProducts = asyncHandler(async (req: any, res: Response) => {
   }
 });
 
+export const uploadProductImages = asyncHandler(
+  async (req: ICustomRequest<IUploadProdutImagesSchema>, res: Response) => {
+    const maxProductImagesAllowedBasedOnSubscription = (req as any).store
+      ?.subscription?.maxProductImages;
+    let files: UploadedFile | UploadedFile[] = req.files ? req.files.files : [];
+
+    if (!Array.isArray(files)) {
+      files = [files]; // Normalize to an array
+    }
+
+    const imageUrlsAndNames = req.body.imageUrlsAndNames;
+    if (imageUrlsAndNames > maxProductImagesAllowedBasedOnSubscription) {
+      throw new Error(
+        "added more images than allowed as per subscription plan"
+      );
+    }
+
+    const uploadPromises = imageUrlsAndNames.map(
+      async (image: { url: string; file: string }) => {
+        if (image.url) {
+          return image.url;
+        } else {
+          const imageFile = files.find((f) => f.name === image.file);
+          if (!imageFile) throw new Error("some files are missing");
+          const { name, mimetype, data } = imageFile;
+
+          const fileContent = Buffer.isBuffer(data)
+            ? data
+            : Buffer.from(data, "utf8");
+
+          const sanitizedFileName = name.replace(/\s+/g, "_");
+
+          const uniqueFileName = `${Date.now()}_${Math.floor(
+            Math.random() * 1000
+          )}_${sanitizedFileName}`;
+
+          await s3
+            .putObject({
+              Body: fileContent,
+              Bucket: config.s3BucketName,
+              Key: uniqueFileName,
+              ContentType: mimetype,
+            })
+            .promise();
+
+          return uniqueFileName;
+        }
+      }
+    );
+
+    const uploadedUrls = await Promise.all(uploadPromises);
+
+    res.status(200).json({ urls: uploadedUrls });
+  }
+);

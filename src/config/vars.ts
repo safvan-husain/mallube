@@ -6,6 +6,7 @@ export const config = {
     s3BaseUrl: process.env.S3_BASE_URL,
     s3AccessKey: process.env.S3_ACCESS_KEY,
     s3SecretsKey : process.env.S3_SECRET_KEY,
+    s3BucketName : 'mallumart',
 
     //twilio
     twilioAccountSid:process.env.TWILIO_ACCOUNT_SID, 
