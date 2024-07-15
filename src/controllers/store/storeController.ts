@@ -49,11 +49,13 @@ export const fetchStore = asyncHandler(
   async (req: any, res: Response, next: NextFunction): Promise<void> => {
     const storeId: any = req?.store._id;
     try {
-      const store = await Store.findOne({ _id: storeId }).populate({
-        path: "category",
-        model: "categories", // Model name
-        select: "name", // Field to select
-      }).populate("subscription.plan");
+      const store = await Store.findOne({ _id: storeId })
+        .populate({
+          path: "category",
+          model: "categories", // Model name
+          select: "name", // Field to select
+        })
+        .populate("subscription.plan");
       if (!store) {
         res.status(404).json({ message: "No store found" });
         return;
@@ -157,7 +159,7 @@ export const fetchStoresNearBy = async (req: Request, res: Response) => {
         },
       },
       isActive: true,
-      isAvailable: true
+      isAvailable: true,
     }).populate("category", "name icon");
 
     // distance geting wrong. need to work on this
@@ -260,7 +262,7 @@ export const fetchStoreByCategory = async (req: Request, res: Response) => {
           },
         },
         isActive: true,
-        isAvailable: true
+        isAvailable: true,
       });
     } else {
       response = await Store.find({
@@ -506,5 +508,31 @@ export const updatePassword = async (req: Request, res: Response) => {
     });
   } catch (error) {
     res.status(500).json({ message: "Internal server error", error });
+  }
+};
+
+export const updateStoreProfile = async (req: any, res: Response) => {
+  try {
+    const storeId = req.store._id;
+    
+    const { ...updatedFields } = req.body;
+    
+    const store = await Store.findById(storeId);
+
+    if (!store) {
+      return res.status(404).json({ message: "No store found" });
+    }
+
+    const response = await Store.findByIdAndUpdate(storeId, updatedFields, {
+      new: true,
+    });
+    if (!response) {
+      return res.status(500).json({ message: "Failed to update the store" });
+    }
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
