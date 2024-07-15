@@ -62,7 +62,16 @@ export const addProduct = asyncHandler(
   ): Promise<any> => {
     const { isPending, ...rest } = req.body;
     if (isPending) {
-      const storeCategory = req.params.storeId; /* req.storeId */
+      const storeId = req.params.storeId;
+      const storeDetails  =  await Store.findById(storeId)
+      console.log("storedetails ",storeDetails)
+      if(!storeDetails){
+        return res.status(404).json({message: "Store not found"})
+      }
+
+      
+
+      const storeCategory:any = storeDetails.category; /* req.storeId */
       const isDuplicate = await isDuplicateCategory(
         rest.category,
         storeCategory
