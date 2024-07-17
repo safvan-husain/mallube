@@ -242,8 +242,9 @@ export const fetchStoreByCategory = async (req: Request, res: Response) => {
   try {
     const { categoryId, longitude, latitude }: any = req.query;
 
+
     let response;
-    if (!longitude || !latitude) {
+    if (longitude === "null" || latitude === "null") {
       return res
         .status(400)
         .json({ message: "longitude and latitude are required" });
@@ -285,8 +286,8 @@ export const fetchStoreByCategory = async (req: Request, res: Response) => {
 
     res.status(200).json(response);
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Internal server error" });
+    console.log(" fetching category  error =>>>>>>>>>>>>>>>>>>",error);
+    res.status(500).json({ message: "Internal server error" ,error});
   }
 };
 
@@ -295,6 +296,8 @@ export const searchStoresByProductName = asyncHandler(
     try {
       let productName: any = req.query.searchTerm;
 
+      console.log("req.qrury================> ",req.query)
+ 
       if (!productName) {
         res.status(400).json({ message: "Product name is required" });
       }
