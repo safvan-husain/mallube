@@ -18,7 +18,7 @@ export function calculateDistance(
       (1 - Math.cos(dLon)) / 2;
   
     const distance = 2 * r * Math.asin(Math.sqrt(a));
-    const distanceInMeters = distance * 1000; // Convert to meters
-  
-    return distanceInMeters;
+    const distanceInMeters = distance ; // Convert to meters
+    const distanceInKM = distanceInMeters * 1.60934
+    return distanceInKM;
   }

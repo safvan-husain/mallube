@@ -155,12 +155,14 @@ export const fetchStoresNearBy = async (req: Request, res: Response) => {
             type: "Point",
             coordinates: [parseFloat(longitude), parseFloat(latitude)],
           },
-          $maxDistance: 10000, // in meters
+          // $maxDistance: 10000, // in meters
         },
       },
       isActive: true,
       isAvailable: true,
-    }).populate("category", "name icon");
+    })
+      .populate("category", "name icon")
+      .limit(20);
 
     // distance geting wrong. need to work on this
     const storeWithDistance = nearStores.map((store) => {
@@ -242,16 +244,35 @@ export const fetchStoreByCategory = async (req: Request, res: Response) => {
   try {
     const { categoryId, longitude, latitude }: any = req.query;
 
-
-    let response;
+    let response: any;
     if (longitude === "null" || latitude === "null") {
       return res
         .status(400)
         .json({ message: "longitude and latitude are required" });
     }
+    const findStores = async (query: any) => {
+      const stores = await Store.find(query);
+      if (!stores || stores.length === 0) {
+        return res.status(404).json({ message: "No stores found" });
+      }
+      const storesWithDistance = stores.map((store: any) => {
+        const distance = calculateDistance(
+          parseFloat(latitude),
+          parseFloat(longitude),
+          store.location.coordinates[1],
+          store.location.coordinates[0]
+        );
+        return {
+          ...store.toObject(),
+          distance: distance.toFixed(2),
+        };
+      });
+
+      return res.status(200).json(storesWithDistance);
+    };
 
     if (categoryId && mongoose.Types.ObjectId.isValid(categoryId)) {
-      response = await Store.find({
+      response = await findStores({
         category: categoryId,
         location: {
           $near: {
@@ -259,21 +280,21 @@ export const fetchStoreByCategory = async (req: Request, res: Response) => {
               type: "Point",
               coordinates: [parseFloat(longitude), parseFloat(latitude)],
             },
-            $maxDistance: 10000, // in meters
+            // $maxDistance: 10000, // in meters
           },
         },
         isActive: true,
         isAvailable: true,
       });
     } else {
-      response = await Store.find({
+      response = await findStores({
         location: {
           $near: {
             $geometry: {
               type: "Point",
               coordinates: [parseFloat(longitude), parseFloat(latitude)],
             },
-            $maxDistance: 10000,
+            // $maxDistance: 10000,
           },
         },
         isActive: true,
@@ -283,11 +304,9 @@ export const fetchStoreByCategory = async (req: Request, res: Response) => {
     if (!response || response.length === 0) {
       return res.status(404).json({ message: "No stores found" });
     }
-
-    res.status(200).json(response);
   } catch (error) {
-    console.log(" fetching category  error =>>>>>>>>>>>>>>>>>>",error);
-    res.status(500).json({ message: "Internal server error" ,error});
+    console.log(" fetching category  error =>>>>>>>>>>>>>>>>>>", error);
+    res.status(500).json({ message: "Internal server error", error });
   }
 };
 
@@ -296,8 +315,6 @@ export const searchStoresByProductName = asyncHandler(
     try {
       let productName: any = req.query.searchTerm;
 
-      console.log("req.qrury================> ",req.query)
- 
       if (!productName) {
         res.status(400).json({ message: "Product name is required" });
       }
@@ -517,9 +534,9 @@ export const updatePassword = async (req: Request, res: Response) => {
 export const updateStoreProfile = async (req: any, res: Response) => {
   try {
     const storeId = req.store._id;
-    
+
     const { ...updatedFields } = req.body;
-    
+
     const store = await Store.findById(storeId);
 
     if (!store) {
