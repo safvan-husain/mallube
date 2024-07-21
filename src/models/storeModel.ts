@@ -33,6 +33,7 @@ export interface IStore extends Document {
   };
   createdAt?: Date;
   updatedAt?: Date;
+  storeProviding?:"productBased" |  "serviceBased"
 }
 
 const storeSchema = new Schema<IStore>(
@@ -118,6 +119,10 @@ const storeSchema = new Schema<IStore>(
       type: Schema.Types.ObjectId,
       ref: "staffs",
     },
+    storeProviding:{
+      type:String,
+      default:"productBased"
+    }
   },
   {
     timestamps: true,

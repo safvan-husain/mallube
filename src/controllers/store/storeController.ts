@@ -11,6 +11,7 @@ import Product from "../../models/productModel";
 import ProductSearch from "../../models/productSearch";
 import jwt from "jsonwebtoken";
 import twilio from "twilio";
+import TimeSlot from "../../models/timeSlotModel";
 const { TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN } = process.env;
 const twilioclient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN, {
   lazyLoading: true,
@@ -556,3 +557,48 @@ export const updateStoreProfile = async (req: any, res: Response) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export const addTimeSlot = async (req: any, res: Response) => {
+  try {
+    const storeId = req.store?._id;
+    const { slots } = req.body;
+    console.log("date ",slots)
+
+    if (!storeId)
+      return res.status(400).json({ message: "Store id is required" });
+
+    if (!slots)
+      return res.status(400).json({ message: "Slots are required" });
+
+    //DELETE ANY EXISTING TIME SLOT FOR THE STORE
+    await TimeSlot.deleteMany({ storeId });
+
+    // CREATE A NEW TIMESLOT
+    const newTimeSlot = new TimeSlot({
+      storeId,
+      ...slots
+    });
+
+    await newTimeSlot.save();
+    res
+      .status(201)
+      .json({ message: "Time slot added successfully", timeSlot: newTimeSlot });
+  } catch (error) {
+    console.log("erorr while timeslot adding ", error);
+    res.status(500).json({ message: "Internal server error", error });
+  }
+};
+
+// export const fetchTimeSlot = async (req:any,res:Response) => {
+//   try {
+//     const storeId = req.store._id;
+
+//     if(!storeId) return res.status(400).json({message:"Store id required"})
+     
+//       cos
+
+//   } catch (error) {
+//     console.log(error)
+//     res.status(500).json({message:"Internal server error",error})
+//   }
+// }

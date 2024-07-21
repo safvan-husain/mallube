@@ -37,6 +37,7 @@ export const addStoreSchema = z.object({
   bio: z.string().optional(),
   shopImgUrl: z.string(),
   otp: z.string().min(6, "invalid otp").max(6, "invalid otp"),
+  storeProviding:z.string().optional()
 });
 
 export type IAddStoreSchema = z.infer<typeof addStoreSchema>;

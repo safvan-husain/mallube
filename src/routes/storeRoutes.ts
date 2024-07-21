@@ -16,6 +16,7 @@ import {
   OtpVerify,
   updatePassword,
   updateStoreProfile,
+  addTimeSlot,
 } from "../controllers/store/storeController";
 import { store } from "../middleware/auth";
 const router = express.Router();
@@ -41,5 +42,6 @@ router.route("/change-password").put(store, changePassword);
 router.route("/otp-send-forgot-password").post(forgotPasswordOtpSendToPhone);
 router.route("/otp-verify-forgot-password").post(OtpVerify);
 router.route("/update-password-request").put(updatePassword);
+router.route("/add-time-slot").post(store,addTimeSlot)
 
 export default router;
