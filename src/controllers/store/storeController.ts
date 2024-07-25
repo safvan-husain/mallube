@@ -12,6 +12,7 @@ import ProductSearch from "../../models/productSearch";
 import jwt from "jsonwebtoken";
 import twilio from "twilio";
 import TimeSlot from "../../models/timeSlotModel";
+import Booking from "../../models/bookingModel";
 const { TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN } = process.env;
 const twilioclient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN, {
   lazyLoading: true,
@@ -190,12 +191,11 @@ export const fetchStoresNearBy = async (req: Request, res: Response) => {
 export const fetchStoreByUniqueName = async (req: Request, res: Response) => {
   try {
     const { uniqueName } = req.params; // Destructure the id from req.params
-    console.log("unique name ", uniqueName);
+
     const store: any = await Store.findOne({ uniqueName: uniqueName }).populate(
       "category",
       "name"
     ); // Correctly pass the id to findById method
-    console.log("Reached be ", store);
 
     if (!store) {
       return res.status(404).json({ message: "Store not found" });
@@ -562,43 +562,69 @@ export const addTimeSlot = async (req: any, res: Response) => {
   try {
     const storeId = req.store?._id;
     const { slots } = req.body;
-    console.log("date ",slots)
 
     if (!storeId)
       return res.status(400).json({ message: "Store id is required" });
 
-    if (!slots)
-      return res.status(400).json({ message: "Slots are required" });
+    if (!slots) return res.status(400).json({ message: "Slots are required" });
 
-    //DELETE ANY EXISTING TIME SLOT FOR THE STORE
-    await TimeSlot.deleteMany({ storeId });
+    const existingTimeSlot = await TimeSlot.findOne({ storeId });
 
-    // CREATE A NEW TIMESLOT
-    const newTimeSlot = new TimeSlot({
-      storeId,
-      ...slots
-    });
-
-    await newTimeSlot.save();
-    res
-      .status(201)
-      .json({ message: "Time slot added successfully", timeSlot: newTimeSlot });
+    if (existingTimeSlot) {
+      existingTimeSlot.slots = existingTimeSlot.slots.concat(slots);
+      await existingTimeSlot.save();
+      res.status(201).json({
+        message: "Time slot updated successfully",
+        timeSlot: existingTimeSlot,
+      });
+    } else {
+      const newTimeSlot = new TimeSlot({
+        storeId,
+        slots,
+      });
+      await newTimeSlot.save();
+      res.status(201).json({
+        message: "Time slot added successfully",
+        timeSlot: newTimeSlot,
+      });
+    }
   } catch (error) {
     console.log("erorr while timeslot adding ", error);
     res.status(500).json({ message: "Internal server error", error });
   }
 };
 
-// export const fetchTimeSlot = async (req:any,res:Response) => {
-//   try {
-//     const storeId = req.store._id;
+export const fetchTimeSlot = async (req: any, res: Response) => {
+  try {
+    const storeId = req.store._id;
 
-//     if(!storeId) return res.status(400).json({message:"Store id required"})
-     
-//       cos
+    if (!storeId) return res.status(400).json({ message: "Store id required" });
 
-//   } catch (error) {
-//     console.log(error)
-//     res.status(500).json({message:"Internal server error",error})
-//   }
-// }
+    const timeSlot = await TimeSlot.find({ storeId });
+
+    if (!timeSlot)
+      return res
+        .status(404)
+        .json({ message: "No timeslot found for this store." });
+
+    res.status(200).json(timeSlot);
+  } catch (error) {
+    console.log("error while fetching timeslot ", error);
+    res.status(500).json({ message: "Internal server error", error });
+  }
+};
+
+export const deleteTimeSlots = async (req: any, res: Response) => {
+  try {
+    const storeId = req.store._id;
+
+    if (!storeId) return res.status(400).json({ message: "Store id required" });
+
+    await TimeSlot.findOneAndDelete({ storeId });
+
+    res.status(200).json({ message: "Timeslots deleted successfully" });
+  } catch (error) {
+    console.log("error while fetching timeslot ", error);
+    res.status(500).json({ message: "Internal server error", error });
+  }
+};

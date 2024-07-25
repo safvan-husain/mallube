@@ -65,7 +65,7 @@ export const staff = asyncHandler(
 );
 
 export const store = asyncHandler(
-  async (req: RequestWithStaff | any, res: Response, next: NextFunction) => {
+  async (req: any | any, res: Response, next: NextFunction) => {
     let token = req.headers.authorization;
 
     if (!token) {

@@ -17,6 +17,8 @@ import {
   updatePassword,
   updateStoreProfile,
   addTimeSlot,
+  fetchTimeSlot,
+  deleteTimeSlots,
 } from "../controllers/store/storeController";
 import { store } from "../middleware/auth";
 const router = express.Router();
@@ -37,11 +39,11 @@ router
   .route("/advertisement/:advertisementId")
   .delete(store, deleteAdvertisement);
 router.route("/near-by-shop/:longitude/:latitude").get(fetchStoresNearBy);
-router.route("/:uniqueName").get(fetchStoreByUniqueName);
 router.route("/change-password").put(store, changePassword);
 router.route("/otp-send-forgot-password").post(forgotPasswordOtpSendToPhone);
 router.route("/otp-verify-forgot-password").post(OtpVerify);
 router.route("/update-password-request").put(updatePassword);
-router.route("/add-time-slot").post(store,addTimeSlot)
+router.route("/time-slots").post(store,addTimeSlot).get(store,fetchTimeSlot).delete(store,deleteTimeSlots)
+router.route("/:uniqueName").get(fetchStoreByUniqueName);
 
 export default router;

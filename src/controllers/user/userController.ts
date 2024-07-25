@@ -8,6 +8,9 @@ import { ICustomRequest } from "../../types/requestion";
 import { IAddCartSchema } from "../../schemas/cart.schema";
 import Product from "../../models/productModel";
 import jwt, { decode } from "jsonwebtoken";
+import TimeSlot, { ITimeSlot } from "../../models/timeSlotModel";
+import Booking from "../../models/bookingModel";
+import TokenNumber from "../../models/tokenModel";
 
 const { TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN } = process.env;
 const twilioclient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN, {
@@ -442,6 +445,75 @@ export const fetchUser = async (req: Request, res: Response) => {
 
     res.status(200).json(user);
   } catch (error) {
+    res.status(500).json({ message: "Internal server error", error });
+  }
+};
+
+export const fetchTimeSlot = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) return res.status(400).json({ message: "Store id is required" });
+
+    const slot = await TimeSlot.find({ storeId: id });
+
+    if (!slot)
+      return res.status(404).json({ message: "No time slot for this store" });
+
+    res.status(200).json(slot);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error", error });
+  }
+};
+
+export const slotBooking = async (req: any, res: Response) => {
+  try {
+    const { slotId, date, startTime, endTime, storeId } = req.body;
+
+    const userId = req.user._id;
+    // Validate the slotData and storeId
+    if (!slotId || !storeId) {
+      return res.status(400).json({ message: "Invalid booking data" });
+    }
+    // check if the slot is available
+    const timeslots: any = await TimeSlot.findOne({
+      "slots._id": slotId,
+      storeId,
+    });
+    if (timeslots?.slots?.slotCount <= 0) {
+      return res.status(400).json({ message: "No available slot" });
+    }
+
+    const token = await TokenNumber.findOneAndUpdate(
+      { storeId },
+      { $inc: { tokenNumber: 1 }, userId: userId },
+      { new: true, upsert: true }
+    );
+
+    const newBooking = new Booking({
+      timeSlotId: slotId,
+      date,
+      startTime,
+      endTime,
+      storeId,
+      userId,
+      token: token.tokenNumber,
+    });
+
+    await newBooking.save();
+
+    // Decrease the slot count
+    timeslots.slots.slotCount -= 1;
+    await timeslots.save();
+    res
+      .status(201)
+      .json({
+        message: `Booking confirmed.Your token is ${token.tokenNumber}. You will get a call from shop owner.`,
+        newBooking,
+      });
+  } catch (error) {
+    console.log("booking error ", error);
     res.status(500).json({ message: "Internal server error", error });
   }
 };

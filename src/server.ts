@@ -14,6 +14,7 @@ import StoreRoutes from "./routes/storeRoutes";
 import advertisementRoutes from "./routes/advertisementRoutes";
 import utilsRoutes from "./routes/utilsRoutes";
 import subscriptionRoutes from "./routes/subscriptionRoutes"
+import bookingRoutes from './routes/bookingRoutes'
 
 require("dotenv").config();
 import { errorHandler, notFound } from "./middleware/error.middleware";
@@ -50,6 +51,7 @@ app.use("/api/store", StoreRoutes);
 app.use("/api/advertisement", advertisementRoutes);
 app.use("/api/utils", utilsRoutes);
 app.use("/api/subscription", subscriptionRoutes);
+app.use("/api/booking", bookingRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

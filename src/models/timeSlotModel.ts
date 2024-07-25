@@ -1,13 +1,15 @@
-import { Schema, model, Document } from "mongoose";
+import { Schema, model, Document, models } from "mongoose";
 
 export interface ITimeSlot extends Document {
   storeId: Schema.Types.ObjectId;
   slots: {
+    filter(arg0: (item: any) => boolean): unknown;
     date: Date;
     startTime: string;
     endTime: string;
     token: number;
-  };
+    slotCount:number;
+  }[];
 }
 
 const timeSlotSchema = new Schema<ITimeSlot>(
@@ -16,7 +18,6 @@ const timeSlotSchema = new Schema<ITimeSlot>(
       type: Schema.Types.ObjectId,
       ref: "stores",
       requried: true,
-      unique: true,
     },
     slots: [
       {
@@ -32,6 +33,15 @@ const timeSlotSchema = new Schema<ITimeSlot>(
           type: String,
           required: true,
         },
+        token:{
+          type:Number,
+          required:false
+        },
+        slotCount:{
+          type:Number,
+          default:1
+        }
+        
       },
     ],
   },
@@ -40,6 +50,6 @@ const timeSlotSchema = new Schema<ITimeSlot>(
   }
 );
 
-const TimeSlot = model<ITimeSlot>("timeSlots", timeSlotSchema);
+const TimeSlot = models.TimeSlot ||  model<ITimeSlot>("timeSlots", timeSlotSchema);
 
 export default TimeSlot;
