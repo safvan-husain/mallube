@@ -23,7 +23,7 @@ const timeSlotSchema = new Schema<ITimeSlot>(
       {
         date: {
           type: Date,
-          required: true,
+          required: false,
         },
         startTime: {
           type: String,
