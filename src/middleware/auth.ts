@@ -1,4 +1,4 @@
-import jwt from "jsonwebtoken";
+import jwt, { TokenExpiredError } from "jsonwebtoken";
 import asyncHandler from "express-async-handler";
 import { NextFunction, Response } from "express";
 import {
@@ -101,9 +101,16 @@ export const user = asyncHandler(
 
         next();
       } catch (error) {
-        res.status(401);
-        throw new Error("Not authorized, token verification failed");
+        if(error instanceof TokenExpiredError){
+          res.status(401).json({message:"Token expired, please log in again.",tokenExpired:true})
+        }else{
+
+          res.status(401);
+          throw new Error("Not authorized, token verification failed");
+        }
       }
+    }else{
+      res.status(401).json({message:"Not authorized, no token provided."})
     }
   }
 );
