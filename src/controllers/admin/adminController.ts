@@ -522,3 +522,23 @@ export const fetchUsersCount = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
+export const fetchAdminDetails = async (req:Request,res:Response)=>{
+  try {
+    const adminId = req.user?._id
+    
+    if(!adminId){
+      return res.status(401).json({message:"Not authorized"})
+    }
+
+    const admin = await Admin.findById(adminId)
+    if(!admin){
+      return res.status(404).json({message:"Not found"})
+    }
+    res.status(200).json(admin)
+  } catch (error) {
+    console.log("error ",error)
+    res.status(500).json({ message: "Internal server error" });
+  }
+}

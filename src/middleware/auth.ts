@@ -34,6 +34,9 @@ export const admin = asyncHandler(
       req.user = decoded;
       next();
     } catch (error) {
+      if(error instanceof TokenExpiredError){
+        res.status(401).json({message:"Token expired, please log in again.",tokenExpired:true})
+      }
       res.status(401);
       console.log("Error decoding", error);
       throw new Error("Not authorized as admin, You cant access this resource");
