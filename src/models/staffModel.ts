@@ -68,7 +68,7 @@ staffSchema.pre("save", async function (next) {
 
 // generate auth token
 staffSchema.methods.generateAuthToken = function (userId: string): string {
-  return jwt.sign({ _id: userId }, "staffSecrete", { expiresIn: "7d" });
+  return jwt.sign({ _id: userId }, "staffSecrete", { expiresIn: "360d" });
 };
 
 const Staff = model<IStaff>("staffs", staffSchema);

@@ -47,7 +47,7 @@ adminSchema.pre("save", async function (next) {
 
 // generate auth token
 adminSchema.methods.generateAuthToken = function (userId: string): string {
-  return jwt.sign({ _id: userId }, "adminSecrete", { expiresIn: "200d" });
+  return jwt.sign({ _id: userId }, "adminSecrete", { expiresIn: "360d" });
 };
 
 const Admin = model<IAdmin>("admins", adminSchema);
