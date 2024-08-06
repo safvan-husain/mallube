@@ -628,3 +628,23 @@ export const deleteTimeSlots = async (req: any, res: Response) => {
     res.status(500).json({ message: "Internal server error", error });
   }
 };
+
+export const stockUpdate = async (req: Request, res: Response) => {
+  try {
+    const { proId } = req.body;
+    if (!proId)
+      return res.status(400).json({ message: "Product id is required." });
+
+    const product = await Product.findById(proId);
+    if (!product)
+      return res.status(404).json({ message: "Product not found." });
+
+    product.stock = !product.stock;
+
+    await product.save();
+    res.status(200).json({ message: "Stock updated successfully." });
+  } catch (error) {
+    console.log("error while updating stock ", error);
+    res.status(500).json({ message: "Internal server error", error });
+  }
+};

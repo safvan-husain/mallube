@@ -11,6 +11,7 @@ export interface IProduct extends Document {
   isActive: boolean; // controlled by admin
   isAvailable: boolean; // conrolled by admin/staff
   isPending: boolean;
+  stock:boolean;
 }
 
 const productSchema = new Schema<IProduct>(
@@ -58,6 +59,11 @@ const productSchema = new Schema<IProduct>(
       default: false,
       required: true,
     },
+    stock:{
+      type:Boolean,
+      default:true,
+      required:true
+    }
   },
   {
     timestamps: true,
