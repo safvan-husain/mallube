@@ -37,11 +37,14 @@ const bookingSchema = new Schema<IBooking>(
         },
         date:{
             type:Date,
+            expires:"1d"
         }
+        
     },
     {
         timestamps:true
     }
+    
 )
 
 const Booking = model<IBooking>("bookings",bookingSchema)
