@@ -15,6 +15,7 @@ import advertisementRoutes from "./routes/advertisementRoutes";
 import utilsRoutes from "./routes/utilsRoutes";
 import subscriptionRoutes from "./routes/subscriptionRoutes"
 import bookingRoutes from './routes/bookingRoutes'
+import './utils/common'
 
 require("dotenv").config();
 import { errorHandler, notFound } from "./middleware/error.middleware";

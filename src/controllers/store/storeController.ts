@@ -566,21 +566,30 @@ export const addTimeSlot = async (req: any, res: Response) => {
     if (!storeId)
       return res.status(400).json({ message: "Store id is required" });
 
-    if (!slots) return res.status(400).json({ message: "Slots are required" });
+    if (!slots || !Array.isArray(slots)) 
+      return res.status(400).json({ message: "Slots are required and should be an array" });
+
+    // Ensure each slot has an originalSlotCount set
+    const slotsWithOriginalCount = slots.map((slot: any) => ({
+      ...slot,
+      originalSlotCount: slot.slotCount !== undefined ? slot.slotCount : 1, // Set originalSlotCount to slotCount or 1
+    }));
 
     const existingTimeSlot = await TimeSlot.findOne({ storeId });
 
     if (existingTimeSlot) {
-      existingTimeSlot.slots = existingTimeSlot.slots.concat(slots);
+      // Append new slots to existing time slots
+      existingTimeSlot.slots = existingTimeSlot.slots.concat(slotsWithOriginalCount);
       await existingTimeSlot.save();
       res.status(201).json({
         message: "Time slot updated successfully",
         timeSlot: existingTimeSlot,
       });
     } else {
+      // Create a new time slot entry with the provided slots
       const newTimeSlot = new TimeSlot({
         storeId,
-        slots,
+        slots: slotsWithOriginalCount, // Use the processed slots with originalSlotCount
       });
       await newTimeSlot.save();
       res.status(201).json({
@@ -589,7 +598,7 @@ export const addTimeSlot = async (req: any, res: Response) => {
       });
     }
   } catch (error) {
-    console.log("erorr while timeslot adding ", error);
+    console.log("error while adding time slot", error);
     res.status(500).json({ message: "Internal server error", error });
   }
 };

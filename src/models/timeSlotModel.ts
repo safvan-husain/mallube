@@ -9,6 +9,7 @@ export interface ITimeSlot extends Document {
     endTime: string;
     token: number;
     slotCount:number;
+    originalSlotCount:number;
   }[];
 }
 
@@ -40,6 +41,10 @@ const timeSlotSchema = new Schema<ITimeSlot>(
         slotCount:{
           type:Number,
           default:1
+        },
+        originalSlotCount:{
+          type:Number,
+          default:1
         }
         
       },
@@ -49,6 +54,18 @@ const timeSlotSchema = new Schema<ITimeSlot>(
     timestamps: true,
   }
 );
+
+// timeSlotSchema.pre('save',function(next:any){
+//   if(this.isNew){
+//     this.slots.forEach((slot:any)=> {
+//       console.log("from pree ---- ",slot)
+//       if(slot.originalSlotCount === undefined){
+//         slot.originalSlotCount = slot.slotCount
+//       }
+//     })
+//   }
+//   next()
+// })
 
 const TimeSlot = models.TimeSlot ||  model<ITimeSlot>("timeSlots", timeSlotSchema);
 
