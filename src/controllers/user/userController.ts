@@ -455,24 +455,18 @@ export const fetchTimeSlot = async (req: Request, res: Response) => {
 
     if (!id) return res.status(400).json({ message: "Store id is required" });
 
-    const bookings: any = await Booking.find({ storeId: id }).select(
-      "timeSlotId"
-    );
-    // const bookedSlotIds = [
-    //   ...new Set(bookings.map((booking: any) => booking.timeSlotId.toString())),
-    // ];
-
     const slot: any = await TimeSlot.find({ storeId: id }); // here except slots which booking id having the slot id.
 
 
-    if (!slot || slot[0].slots.length === 0)
+    if (!slot || slot.length === 0){
       return res.status(404).json({ message: "No time slot for this store" });
+    }
 
     const availableSlots = slot[0].slots.filter(
       (slot: any) =>  slot.slotCount > 0 );
     res.status(200).json(availableSlots);
   } catch (error) {
-    console.log(error);
+    console.log("error while fetching slots " ,error);
     res.status(500).json({ message: "Internal server error", error });
   }
 };
