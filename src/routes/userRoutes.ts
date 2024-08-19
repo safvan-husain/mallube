@@ -1,8 +1,9 @@
 import express from "express";
-import { register,login, verifyOtp, addToCart, getCart, removeCart,updateProfile, forgetPasswordOtpSend, verifyOtpForPasswrodReset, updatePassword, updateProfilePassword,fetchUser,fetchTimeSlot, slotBooking } from "../controllers/user/userController";
+import { register,login, verifyOtp, addToCart, getCart, removeCart,updateProfile, forgetPasswordOtpSend, verifyOtpForPasswrodReset, updatePassword, updateProfilePassword,fetchUser,fetchTimeSlot, slotBooking , fetchAllDoctors, fetchAllSpecialisations } from "../controllers/user/userController";
 import { user } from "../middleware/auth";
 import { validateData } from "../middleware/zod.validation";
 import { addCartSchema } from "../schemas/cart.schema";
+import { drBooking } from "../controllers/booking/bookingController";
 const router = express.Router();
 
 router.route("/register").post(register)
@@ -19,4 +20,7 @@ router.route("/change-profile-password").put(user,updateProfilePassword)
 router.route("/fetch-user-details").get(user,fetchUser)
 router.route("/time-slots/:id").get(user,fetchTimeSlot)
 router.route("/booking").post(user,slotBooking)
+router.route("/dr-booking").post(user,drBooking)
+router.route("/specialisations/:uniqueName").get(fetchAllSpecialisations)
+router.route("/doctors/:uniqueName").get(fetchAllDoctors)
 export default router;

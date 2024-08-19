@@ -22,6 +22,8 @@ import {
   stockUpdate
 } from "../controllers/store/storeController";
 import { store } from "../middleware/auth";
+import { addSpecialisation, fetchAllSpecialisation } from "../controllers/specialisation/specialisationController";
+import { addDoctor, changeDrAvailability, deleteDoctor, fetchAllDoctors } from "../controllers/doctor/doctorController";
 const router = express.Router();
 
 router.route("/login").post(login);
@@ -46,6 +48,11 @@ router.route("/otp-verify-forgot-password").post(OtpVerify);
 router.route("/update-password-request").put(updatePassword);
 router.route("/time-slots").post(store,addTimeSlot).get(store,fetchTimeSlot).delete(store,deleteTimeSlots)
 router.route("/update-product-stock").put(store,stockUpdate)
+router.route("/specialisation").get(store,fetchAllSpecialisation).post(addSpecialisation)
+router.route("/doctor").post(store,addDoctor).delete(store,deleteDoctor)
+router.route("/fetch-all-doctors").get(store,fetchAllDoctors)
+router.route("/change-dr-availability").put(store,changeDrAvailability)
 router.route("/:uniqueName").get(fetchStoreByUniqueName);
+
 
 export default router;

@@ -13,6 +13,7 @@ import jwt from "jsonwebtoken";
 import twilio from "twilio";
 import TimeSlot from "../../models/timeSlotModel";
 import Booking from "../../models/bookingModel";
+import Specialisation from "../../models/specialisationModel";
 const { TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN } = process.env;
 const twilioclient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN, {
   lazyLoading: true,
@@ -657,3 +658,4 @@ export const stockUpdate = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Internal server error", error });
   }
 };
+

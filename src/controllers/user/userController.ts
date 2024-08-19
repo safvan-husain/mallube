@@ -11,6 +11,10 @@ import jwt, { decode } from "jsonwebtoken";
 import TimeSlot, { ITimeSlot } from "../../models/timeSlotModel";
 import Booking from "../../models/bookingModel";
 import TokenNumber from "../../models/tokenModel";
+import Doctor from "../../models/doctorModel";
+import Store from "../../models/storeModel";
+import mongoose from "mongoose";
+import Specialisation from "../../models/specialisationModel";
 
 const { TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN } = process.env;
 const twilioclient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN, {
@@ -457,16 +461,16 @@ export const fetchTimeSlot = async (req: Request, res: Response) => {
 
     const slot: any = await TimeSlot.find({ storeId: id }); // here except slots which booking id having the slot id.
 
-
-    if (!slot || slot.length === 0){
+    if (!slot || slot.length === 0) {
       return res.status(404).json({ message: "No time slot for this store" });
     }
 
     const availableSlots = slot[0].slots.filter(
-      (slot: any) =>  slot.slotCount > 0 );
+      (slot: any) => slot.slotCount > 0
+    );
     res.status(200).json(availableSlots);
   } catch (error) {
-    console.log("error while fetching slots " ,error);
+    console.log("error while fetching slots ", error);
     res.status(500).json({ message: "Internal server error", error });
   }
 };
@@ -478,7 +482,10 @@ export const slotBooking = async (req: any, res: Response) => {
     const bookings: any = await Booking.find({ storeId: storeId });
 
     if (bookings.length === 0) {
-      await TokenNumber.findOneAndUpdate({ storeId: storeId },{$set:{tokenNumber:0}});
+      await TokenNumber.findOneAndUpdate(
+        { storeId: storeId },
+        { $set: { tokenNumber: 0 } }
+      );
     }
 
     const userId = req.user._id;
@@ -497,7 +504,7 @@ export const slotBooking = async (req: any, res: Response) => {
       },
       { new: true }
     );
-    
+
     const token = await TokenNumber.findOneAndUpdate(
       { storeId },
       { $inc: { tokenNumber: 1 }, userId: userId },
@@ -516,7 +523,7 @@ export const slotBooking = async (req: any, res: Response) => {
 
     await newBooking.save();
     await timeslots.save();
-    
+
     res.status(201).json({
       message: `Booking confirmed.Your token is ${token.tokenNumber}. You will get a call from shop owner.`,
       newBooking,
@@ -526,3 +533,83 @@ export const slotBooking = async (req: any, res: Response) => {
     res.status(500).json({ message: "Internal server error", error });
   }
 };
+
+export const fetchAllDoctors = async (req: Request, res: Response) => {
+  try {
+    const { uniqueName } = req.params;
+
+
+    if (!uniqueName || typeof uniqueName !== "string") {
+      return res
+        .status(404)
+        .json({
+          message: "Store unique name is required and must be a string",
+        });
+    }
+
+    const store = await Store.findOne({ uniqueName: uniqueName });
+
+
+    if (!store) {
+      return res.status(404).json({ message: "No store found" });
+    }
+
+    const doctors = await Doctor.aggregate([
+      { $match: { storeId: new mongoose.Types.ObjectId(store._id) } },
+      {
+        $lookup: {
+          from: "specialisations",
+          localField: "specialisation",
+          foreignField: "_id",
+          as: "specialisationDetails",
+        },
+      },
+      { $unwind: "$specialisationDetails" },
+    ]);
+
+    if (!doctors) {
+      return res.status(404).json({ message: "No doctors found" });
+    }
+
+    res.status(200).json(doctors);
+  } catch (error) {
+    console.log("error while fetching doctors", error);
+    res.status(500).json({ message: "Internal server error", error });
+  }
+};
+
+export const fetchAllSpecialisations = async (req:Request , res:Response) => {
+  try {
+    const { uniqueName } = req.params;
+
+    
+    if (!uniqueName || typeof uniqueName !== "string") {
+      return res
+        .status(404)
+        .json({
+          message: "Store unique name is required and must be a string",
+        });
+    }
+
+    const store = await Store.findOne({ uniqueName: uniqueName });
+
+
+    if (!store) {
+      return res.status(404).json({ message: "No store found" });
+    }
+
+    const specialisations = await Specialisation.find({storeId:store?._id})
+
+    if (!specialisations) {
+      return res.status(404).json({ message: "No specialisations found" });
+    }
+
+    res.status(200).json(specialisations)
+
+
+  } catch (error) {
+    console.log("error while fetching specialisation", error);
+    res.status(500).json({ message: "Internal server error", error });
+    
+  }
+}

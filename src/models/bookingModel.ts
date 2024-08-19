@@ -8,12 +8,14 @@ export interface IBooking extends Document {
     startTime:string,
     endTime:string,
     date:Date;
+    name:string;
+    phone:string;
+    doctor:Schema.Types.ObjectId
 }
 const bookingSchema = new Schema<IBooking>(
     {
         timeSlotId:{
             type:Schema.Types.ObjectId,
-            required:true,
         },
         storeId:{
             type:Schema.Types.ObjectId,
@@ -23,21 +25,29 @@ const bookingSchema = new Schema<IBooking>(
             type:Schema.Types.ObjectId,
             required:true
         },
+        name:{
+            type:String
+        },
+        phone:{
+            type:String
+        },
         token:{
             type:Number,
-            required:true
+            default:1
+
         },
         startTime:{
             type:String,
-            required:true
         },
         endTime:{
             type:String,
-            required:true
         },
         date:{
             type:Date,
             expires:"1d"
+        },
+        doctor:{
+            type:Schema.Types.ObjectId
         }
         
     },
