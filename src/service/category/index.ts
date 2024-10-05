@@ -19,7 +19,7 @@ export async function isDuplicateCategory(
 ): Promise<Boolean> {
   const category = await Category.findOne({
     name: {
-      $regex: `^${name}`,
+      $regex: name, 
       $options: "i",
     },
     parentId,
