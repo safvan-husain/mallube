@@ -352,10 +352,42 @@ export const searchStoresByProductName = asyncHandler(
       //extracts store ids from the product
       const storeIds = products.map((product) => product.store);
 
-      const stores = await Store.find({ _id: { $in: storeIds } }).populate(
-        "category",
-        "name"
-      );
+  
+      
+      const trimmedSearchTerm = productName.trim();
+
+      const categories = await Category.find({
+        name:{$regex:trimmedSearchTerm,$options:"i"}
+      })
+
+      const categoryIds = categories.map((category)=>category._id);
+      
+      // const storesByCategory = await Store
+
+      const stores = await Store.find({
+        $or: [
+          { storeName: { $regex: trimmedSearchTerm, $options: "i" } }, // Search store name
+          { bio: { $regex: trimmedSearchTerm, $options: "i" } },        // Search bio
+          { category: { $in: categoryIds } } // Search category name
+        ]
+      }).populate("category", "name");
+
+
+ // Find products that match the search term and get the store ids
+ const productss = await Product.find({
+  name: { $regex: trimmedSearchTerm, $options: "i" }, // Search product name
+});
+
+// If products are found, get the stores that match the product
+if (productss.length > 0) {
+  const productStoreIds = productss.map((product) => product.store);
+  const productStores = await Store.find({
+    _id: { $in: productStoreIds },
+  }).populate("category", "name");
+
+  // Combine both store results (store search + product store search)
+  stores.push(...productStores);
+}
 
       if (stores.length === 0) {
         res
