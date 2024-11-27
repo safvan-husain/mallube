@@ -10,6 +10,7 @@ import {
   getProductsOfAStore,
   updateProduct,
   uploadProductImages,
+  addVisitors,
 } from "../controllers/product/productController";
 // import { staff } from "../middleware/auth";
 import { validateData } from "../middleware/zod.validation";
@@ -48,5 +49,6 @@ router
   .get(getProductById)
   .put(updateProduct)
   .delete(deleteProduct);
+router.route("/addVisitors/:userId/:shopId").get(addVisitors);
 
 export default router;

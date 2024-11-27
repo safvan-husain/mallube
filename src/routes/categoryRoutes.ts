@@ -7,6 +7,7 @@ import {
   getCategories,
   getPendingSubCategories,
   updateCategory,
+  deleteCategory
   //   getCategoryById,
   //   updateCategory,
 } from "../controllers/category/categoryController";
@@ -30,7 +31,8 @@ router.route("/main").get(getActiveMainCategories);
 router
   .route("/:id")
   .get(getActiveSubCategories)
-  .put(validateData(updateCategorySchema), updateCategory);
+  .put(validateData(updateCategorySchema), updateCategory)
+  .delete(deleteCategory);
 // router
 //   .route("/:id")
 //   .get(getProductById)

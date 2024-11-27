@@ -48,7 +48,6 @@ export const getActiveMainCategories = asyncHandler(
 export const getActiveSubCategories = asyncHandler(
   async (req: Request, res: Response) => {
     const activeSubCategories = await listActiveSubCategories(req.params.id);
-
     res.status(200).json(activeSubCategories);
   }
 );
@@ -73,7 +72,8 @@ export const updateCategory = asyncHandler(
   async (req: ICustomRequest<IUpdateCategorySchema>, res: Response) => {
     const { id } = req.params;
 
-    const { isPending, ...rest } = req.body;
+    const { isPending, parentId, ...rest } = req.body;
+    const updatedParentId = new Types.ObjectId(parentId);
 
     if (!Types.ObjectId.isValid(id)) {
       res.status(404).json({ message: "Invalid category id" });
@@ -84,14 +84,33 @@ export const updateCategory = asyncHandler(
       });
 
       if (!isPending) {
-        await Product.updateMany({ category: id }, { isPending: false });
+        if (Types.ObjectId.isValid(updatedParentId)) {
+          const parent=await Category.findById(updatedParentId)
+          if(parent){
+            let icon=parent.icon
+            await Category.findByIdAndUpdate(id,{isPending,...rest,parentId:updatedParentId,icon:icon})
+          }
+          await Product.updateMany({ category: id }, { isPending: false });
+        }
       }
-
       if (category) {
         res.status(200).json("Product has been updated");
       } else {
         res.status(404).json({ message: "Invalid category id" });
       }
+    }
+  }
+);
+export const deleteCategory = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const declinedCategory = await Category.findById(id);
+    if (declinedCategory) {
+      declinedCategory.isDeclined = true;
+      declinedCategory.save();
+      res.status(200).json("Category has been declined");
+    } else {
+      res.status(404).json({ message: "Invalid category id" });
     }
   }
 );

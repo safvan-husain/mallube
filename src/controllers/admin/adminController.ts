@@ -183,9 +183,7 @@ export const updateStore = async (
 ) => {
   try {
     const { storeId }: any = req.params;
-
     const updatedFields = req.body;
-
     const updatedStore = await Store.findByIdAndUpdate(storeId, updatedFields, {
       new: true,
       runValidators: true,
@@ -198,7 +196,22 @@ export const updateStore = async (
     res.status(500).json({ message: "internal server error", error });
   }
 };
+export const getAdminStore = asyncHandler(
+  async (req: Request, res: Response) => {
+    const id = req.params.storeId;
 
+    const store = await Store.findOne({ _id: id})
+      .select(["-password"])
+      .populate("category", { _id: 1, name: 1 })
+      .populate("subscription.plan", { _id: 1, name: 1 });
+
+    if (!store) {
+      res.status(404).json({ message: "store not found" });
+    } else {
+      res.status(200).json(store);
+    }
+  }
+);
 export const updateStoreStatus = async (
   req: Request,
   res: Response,

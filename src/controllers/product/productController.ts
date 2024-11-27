@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { UploadedFile } from "express-fileupload";
 import asyncHandler from "express-async-handler";
+import mongoose, { Types, Schema } from "mongoose";
 
 import {
   IAddProductSchema,
@@ -22,6 +23,7 @@ import ProductSearch from "../../models/productSearch";
 
 import { s3 } from "../../config/s3";
 import { config } from "../../config/vars";
+import User from "../../models/userModel";
 
 // get all products
 export const getAllProducts = asyncHandler(
@@ -63,15 +65,12 @@ export const addProduct = asyncHandler(
     const { isPending, ...rest } = req.body;
     if (isPending) {
       const storeId = req.params.storeId;
-      const storeDetails  =  await Store.findById(storeId)
-      console.log("storedetails ",storeDetails)
-      if(!storeDetails){
-        return res.status(404).json({message: "Store not found"})
+      const storeDetails = await Store.findById(storeId);
+      if (!storeDetails) {
+        return res.status(404).json({ message: "Store not found" });
       }
 
-      
-
-      const storeCategory:any = storeDetails.category; /* req.storeId */
+      const storeCategory: any = storeDetails.category; /* req.storeId */
       const isDuplicate = await isDuplicateCategory(
         rest.category,
         storeCategory
@@ -170,6 +169,27 @@ export const deleteProductOfAStore = asyncHandler(
     res.status(200).json(result);
   }
 );
+
+export const addVisitors = asyncHandler(async (req: Request, res: Response) => {
+  const { userId, shopId } = req.params;
+
+  const shop = await Store.findById(shopId).exec();
+  const user = await User.findById(userId).exec();
+
+  if (user && shop) {
+    const userIdAsObjectId = new mongoose.Types.ObjectId(user._id);
+
+    if (!shop.visitors.some((visitor) => visitor.equals(userIdAsObjectId))) {
+      shop.visitors.push(userIdAsObjectId); // Add user as visitor
+      await shop.save(); // Save the shop
+      res.status(200).json({ message: "Visitor added successfully." });
+    }
+
+    res.status(200).json({ message: "Visitor already exists." });
+  }
+
+  res.status(404).json({ message: "Shop or user not found." });
+});
 
 export const fetchProducts = asyncHandler(async (req: any, res: Response) => {
   try {

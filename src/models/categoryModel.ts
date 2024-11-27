@@ -7,6 +7,7 @@ export interface ICategory extends Document {
   isPending: boolean;
   isShowOnHomePage: boolean;
   icon: string;
+  isDeclined:boolean;
 }
 
 const categorySchema = new Schema(
@@ -26,7 +27,7 @@ const categorySchema = new Schema(
     },
     isPending: {
       type: Boolean,
-      default: false,
+      default: true,
       required: true,
     },
     isShowOnHomePage: {
@@ -37,6 +38,10 @@ const categorySchema = new Schema(
     icon: {
       type: String,
     },
+    isDeclined:{
+      type:Boolean,
+      default:false
+    }
   },
   {
     timestamps: true,

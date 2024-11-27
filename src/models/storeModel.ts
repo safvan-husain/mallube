@@ -1,4 +1,4 @@
-import { Schema, model, Document } from "mongoose";
+import { Schema, model, Document ,Types} from "mongoose";
 import jwt from "jsonwebtoken";
 import { config } from "../config/vars";
 
@@ -19,6 +19,7 @@ export interface IStore extends Document {
   password: string;
   category: Schema.Types.ObjectId;
   addedBy: Schema.Types.ObjectId;
+  visitors: Types.ObjectId[];
   shopImgUrl: string;
   retail?: boolean;
   wholesale?: boolean;
@@ -122,7 +123,9 @@ const storeSchema = new Schema<IStore>(
     storeProviding:{
       type:String,
       default:"productBased"
-    }
+    },
+    visitors: [{ type: Schema.Types.ObjectId, ref: 'users' }],
+
   },
   {
     timestamps: true,

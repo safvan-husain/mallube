@@ -1,4 +1,6 @@
+import { bool } from "aws-sdk/clients/signer";
 import { Schema, model, Document } from "mongoose";
+import { boolean } from "zod";
 
 export interface IProduct extends Document {
   name: string;
@@ -12,6 +14,7 @@ export interface IProduct extends Document {
   isAvailable: boolean; // conrolled by admin/staff
   isPending: boolean;
   stock:boolean;
+  addToCartActive:boolean;
 }
 
 const productSchema = new Schema<IProduct>(
@@ -62,6 +65,11 @@ const productSchema = new Schema<IProduct>(
     stock:{
       type:Boolean,
       default:true,
+      required:true
+    },
+    addToCartActive:{
+      type:Boolean,
+      default:false,
       required:true
     }
   },

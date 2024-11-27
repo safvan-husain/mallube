@@ -40,7 +40,6 @@ export const updateCategorySchema = addCategory
     isShowOnHomePage: z.boolean().default(false),
     isPending: z.boolean().default(false),
   })
-  .omit({ parentId: true })
   .partial();
 
 export type IUpdateCategorySchema = z.infer<typeof updateCategorySchema>;

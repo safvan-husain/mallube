@@ -58,4 +58,5 @@ app.use(notFound);
 app.use(errorHandler);
 
 const PORT = config.port || 4000;
+
 app.listen(PORT, () => console.log(`API server listening at ${PORT}`));
