@@ -23,7 +23,6 @@ export const getCategories = asyncHandler(
     const categories = await getCategoriesInFormat({
       isActive: Boolean(req.query.isActive),
     });
-    console.log(categories);
     res.status(200).json(categories);
   }
 );
