@@ -26,7 +26,6 @@ export const login = async (req: Request, res: Response) => {
         .json({ message: "Invalid password", login: false });
     }
     const token = user.generateAuthToken(user._id);
-    const products=await Product.updateMany({},{$set:{addToCartActive:true}})
     
     res.status(200).json({
       _id: user._id,
