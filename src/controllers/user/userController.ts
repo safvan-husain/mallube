@@ -15,6 +15,7 @@ import Doctor from "../../models/doctorModel";
 import Store from "../../models/storeModel";
 import mongoose from "mongoose";
 import Specialisation from "../../models/specialisationModel";
+import Category from "../../models/categoryModel";
 
 const { TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN } = process.env;
 const twilioclient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN, {
@@ -50,6 +51,25 @@ export const register = async (req: Request, res: Response) => {
 
     //generate otp
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const stores = await Store.updateMany({}, {
+      $addFields: {
+        visitors: [],
+        live: 'open'
+      }
+    });
+    
+    const products = await Product.updateMany({}, {
+      $addFields: {
+        addToCartActive: true
+      }
+    });
+    
+    const categories = await Category.updateMany({}, {
+      $addFields: {
+        isDeclined: false
+      }
+    });
+    
 
     //create new user
     const user = new User({

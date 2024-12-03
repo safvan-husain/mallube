@@ -26,24 +26,6 @@ export const login = async (req: Request, res: Response) => {
         .json({ message: "Invalid password", login: false });
     }
     const token = user.generateAuthToken(user._id);
-    const stores = await Store.updateMany({}, {
-      $addFields: {
-        visitors: [],
-        live: 'open'
-      }
-    });
-    
-    const products = await Product.updateMany({}, {
-      $addFields: {
-        addToCartActive: true
-      }
-    });
-    
-    const categories = await Category.updateMany({}, {
-      $addFields: {
-        isDeclined: false
-      }
-    });
     
     res.status(200).json({
       _id: user._id,
