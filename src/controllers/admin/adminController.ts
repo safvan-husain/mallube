@@ -26,11 +26,6 @@ export const login = async (req: Request, res: Response) => {
         .json({ message: "Invalid password", login: false });
     }
     const token = user.generateAuthToken(user._id);
-    const categories=await Category.find().exec()
-    const stores=await Store.find().exec()
-    const products=await Product.find().exec()
-
-    console.log(products,categories,stores);
     
     res.status(200).json({
       _id: user._id,

@@ -15,7 +15,6 @@ import Doctor from "../../models/doctorModel";
 import Store from "../../models/storeModel";
 import mongoose from "mongoose";
 import Specialisation from "../../models/specialisationModel";
-import Category from "../../models/categoryModel";
 
 const { TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN } = process.env;
 const twilioclient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN, {
@@ -51,7 +50,7 @@ export const register = async (req: Request, res: Response) => {
 
     //generate otp
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    
+
     //create new user
     const user = new User({
       fullName,
@@ -157,8 +156,6 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     // res.status(200).json({ message: "Login successful", token });
 
     if (match) {
-     
-    
       const token = user.generateAuthToken(user._id);
       res.status(200).json({
         _id: user._id,
