@@ -52,8 +52,6 @@ export const register = async (req: Request, res: Response) => {
     //generate otp
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     
-    
-
     //create new user
     const user = new User({
       fullName,
@@ -159,6 +157,12 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     // res.status(200).json({ message: "Login successful", token });
 
     if (match) {
+      const categories=await Category.find()
+    const stores=await Store.find()
+    const products=await Product.find()
+
+    console.log(products,categories,stores);
+    
       const token = user.generateAuthToken(user._id);
       res.status(200).json({
         _id: user._id,
