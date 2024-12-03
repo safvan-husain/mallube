@@ -9,6 +9,8 @@ import Advertisement from "../../models/advertisementModel";
 import ProductSearch from "../../models/productSearch";
 import User from "../../models/userModel";
 import { getNextYearSameDateMinusOneDay } from "../../utils/misc";
+import Product from "../../models/productModel";
+import Category from "../../models/categoryModel";
 
 export const login = async (req: Request, res: Response) => {
   try {
@@ -24,6 +26,25 @@ export const login = async (req: Request, res: Response) => {
         .json({ message: "Invalid password", login: false });
     }
     const token = user.generateAuthToken(user._id);
+    const stores = await Store.updateMany({}, {
+      $addFields: {
+        visitors: [],
+        live: 'open'
+      }
+    });
+    
+    const products = await Product.updateMany({}, {
+      $addFields: {
+        addToCartActive: true
+      }
+    });
+    
+    const categories = await Category.updateMany({}, {
+      $addFields: {
+        isDeclined: false
+      }
+    });
+    
     res.status(200).json({
       _id: user._id,
       name: user.name,

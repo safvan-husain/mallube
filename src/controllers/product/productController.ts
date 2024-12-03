@@ -177,15 +177,9 @@ export const addVisitors = asyncHandler(async (req: Request, res: Response) => {
   const user = await User.findById(userId).exec();
 
   if (user && shop) {
-    const userIdAsObjectId = new mongoose.Types.ObjectId(user._id);
-
-    if (!shop.visitors.some((visitor) => visitor.equals(userIdAsObjectId))) {
-      shop.visitors.push(userIdAsObjectId); // Add user as visitor
-      await shop.save(); // Save the shop
-      res.status(200).json({ message: "Visitor added successfully." });
-    }
-
-    res.status(200).json({ message: "Visitor already exists." });
+    shop.visitors+=1
+    shop.save()
+     res.status(200).json({ message: "Visitor added successfully." });
   }
 
   res.status(404).json({ message: "Shop or user not found." });

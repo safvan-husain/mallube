@@ -19,7 +19,7 @@ export interface IStore extends Document {
   password: string;
   category: Schema.Types.ObjectId;
   addedBy: Schema.Types.ObjectId;
-  visitors: Types.ObjectId[];
+  visitors: number;
   shopImgUrl: string;
   retail?: boolean;
   wholesale?: boolean;
@@ -27,6 +27,7 @@ export interface IStore extends Document {
   isAvailable: boolean; // this field will be used by store owner to change their shop status
   district: string;
   bio: string;
+  live:string;
   generateAuthToken: (userId: string) => string;
   location: {
     type: string;
@@ -59,7 +60,6 @@ const storeSchema = new Schema<IStore>(
       type: {
         type: String,
         enum: ["Point"],
-        // required: true,
         default: "Point",
       },
       coordinates: {
@@ -124,8 +124,8 @@ const storeSchema = new Schema<IStore>(
       type:String,
       default:"productBased"
     },
-    visitors: [{ type: Schema.Types.ObjectId, ref: 'users' }],
-
+    visitors: {type:Number, default:0},
+    live:{type:String, default:'open'}
   },
   {
     timestamps: true,
