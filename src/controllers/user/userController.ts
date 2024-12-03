@@ -157,11 +157,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     // res.status(200).json({ message: "Login successful", token });
 
     if (match) {
-      const categories=await Category.find().exec()
-    const stores=await Store.find().exec()
-    const products=await Product.find().exec()
-
-    console.log(products,categories,stores);
+     
     
       const token = user.generateAuthToken(user._id);
       res.status(200).json({
