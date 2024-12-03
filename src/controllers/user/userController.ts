@@ -51,24 +51,7 @@ export const register = async (req: Request, res: Response) => {
 
     //generate otp
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const stores = await Store.updateMany({}, {
-      $addFields: {
-        visitors: [],
-        live: 'open'
-      }
-    });
     
-    const products = await Product.updateMany({}, {
-      $addFields: {
-        addToCartActive: true
-      }
-    });
-    
-    const categories = await Category.updateMany({}, {
-      $addFields: {
-        isDeclined: false
-      }
-    });
     
 
     //create new user
