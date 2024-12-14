@@ -127,10 +127,10 @@ export const addOrUpdateStore = async (
       });
     }
 
-    const verified = await verifyTwilioOtp(phone, otp);
-    if (!verified) {
-      return res.status(403).json({ message: "Invalid OTP" });
-    }
+    // const verified = await verifyTwilioOtp(phone, otp);
+    // if (!verified) {
+    //   return res.status(403).json({ message: "Invalid OTP" });
+    // }
     const salt = await bcrypt.genSalt(10);
     password = await bcrypt.hash(phone, salt);
   }

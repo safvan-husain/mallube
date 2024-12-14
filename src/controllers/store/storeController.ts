@@ -36,6 +36,7 @@ export const login = async (req: Request, res: Response) => {
     }
 
     const token = storeOwner.generateAuthToken(storeOwner._id);
+    
     res.status(200).json({
       _id: storeOwner._id,
       name: storeOwner.storeOwnerName,
@@ -98,7 +99,6 @@ export const AddAdvertisement = async (req: any, res: Response) => {
   try {
     const storeId = req.store;
     const { image } = req.body;
-
     const newAdvertisement = new Advertisement({
       image,
       store: storeId,
@@ -570,7 +570,8 @@ export const updateStoreProfile = async (req: any, res: Response) => {
     const storeId = req.store._id;
 
     const { ...updatedFields } = req.body;
-
+    console.log(updatedFields);
+    
     const store = await Store.findById(storeId);
 
     if (!store) {
@@ -595,6 +596,8 @@ export const addTimeSlot = async (req: any, res: Response) => {
   try {
     const storeId = req.store?._id;
     const { slots } = req.body;
+    console.log(slots);
+    
 
     if (!storeId)
       return res.status(400).json({ message: "Store id is required" });

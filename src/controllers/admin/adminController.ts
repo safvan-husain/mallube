@@ -516,7 +516,6 @@ export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
   const userId = req.params.userId;
 
   const store = await User.findByIdAndDelete(userId);
-
   if (!store) {
     res.status(404).json({ message: "store not found" });
     return;

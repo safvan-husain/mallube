@@ -58,7 +58,7 @@ export const register = async (req: Request, res: Response) => {
       password: hashedPassword,
       phone,
       otp,
-      isVerified: false,
+      isVerified: true,
     });
 
     await user.save();
@@ -68,14 +68,14 @@ export const register = async (req: Request, res: Response) => {
         .status(500)
         .json({ message: "Twilio service ID is not configured." });
     }
-    const otpResponse = await twilioclient.verify.v2
-      .services(twilioServiceId)
-      .verifications.create({
-        to: `+91${phone}`,
-        channel: "sms",
-      });
+    // const otpResponse = await twilioclient.verify.v2
+    //   .services(twilioServiceId)
+    //   .verifications.create({
+    //     to: `+91${phone}`,
+    //     channel: "sms",
+    //   });
     res.status(201).json({
-      message: `otp send successfully : ${JSON.stringify(otpResponse)}`,
+      message: `otp send successfully`,
       otpSend: true,
     });
   } catch (error) {
@@ -537,8 +537,8 @@ export const slotBooking = async (req: any, res: Response) => {
 export const fetchAllDoctors = async (req: Request, res: Response) => {
   try {
     const { uniqueName } = req.params;
-
-
+    console.log(uniqueName);
+    
     if (!uniqueName || typeof uniqueName !== "string") {
       return res
         .status(404)

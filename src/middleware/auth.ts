@@ -73,6 +73,7 @@ export const store = asyncHandler(
   async (req: any | any, res: Response, next: NextFunction) => {
     let token = req.headers.authorization;
 
+    
     if (!token) {
       res.status(401);
       throw new Error("Not authorized, no token available");
@@ -82,6 +83,7 @@ export const store = asyncHandler(
       const decoded = jwt.verify(token, config.jwtSecret) as {
         _id: string;
       };
+      
       req.store = decoded;
       next();
     } catch (error) {
