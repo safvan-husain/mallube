@@ -28,6 +28,8 @@ export interface IStore extends Document {
   district: string;
   bio: string;
   live:string;
+  instagram:string;
+  facebook:string;
   generateAuthToken: (userId: string) => string;
   location: {
     type: string;
@@ -90,6 +92,14 @@ const storeSchema = new Schema<IStore>(
     },
     email: {
       type: String,
+    },
+    instagram: {
+      type: String,
+      default:''
+    },
+    facebook: {
+      type: String,
+      default:''
     },
     bio: {
       type: String,

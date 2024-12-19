@@ -95,6 +95,7 @@ export const addOrUpdateStore = async (
 
   const { shopImgUrl, subscriptionPlan, latitude, longitude, ...rest } =
     req.body;
+    
 
   let uniqueName, otp, phone, password, currentSubscriptionPlan;
 
