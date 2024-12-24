@@ -43,6 +43,7 @@ export const login = async (req: Request, res: Response) => {
       email: storeOwner.email,
       token: token,
       status: "ok",
+      storeProviding:storeOwner.storeProviding
     });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
