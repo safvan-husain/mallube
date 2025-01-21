@@ -6,7 +6,7 @@ import Store from "../../models/storeModel";
 import { RequestWithStaff } from "../../utils/interfaces/interfaces";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
-import twilio from "twilio";
+// import twilio from "twilio";
 import { ICustomRequest } from "../../types/requestion";
 import {
   IAddStoreSchema,
@@ -18,9 +18,9 @@ import { sendTwilioOtp, verifyTwilioOtp } from "../../utils/twilio";
 import { getNextYearSameDateMinusOneDay } from "../../utils/misc";
 
 const { TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN } = process.env;
-const twilioclient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN, {
-  lazyLoading: true,
-});
+// const twilioclient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN, {
+//   lazyLoading: true,
+// });
 
 const twilioServiceId = process.env.TWILIO_SERVICE_ID;
 export const login = async (req: Request, res: Response) => {
@@ -133,6 +133,7 @@ export const addOrUpdateStore = async (
     //   return res.status(403).json({ message: "Invalid OTP" });
     // }
     const salt = await bcrypt.genSalt(10);
+    //TODO: correct the below code password
     password = await bcrypt.hash(phone, salt);
   }
 
@@ -399,13 +400,14 @@ export const forgotPasswordOtpSendToPhone = async (
         .status(500)
         .json({ message: "Twilio service id is not configured" });
     }
-
-    const otpResponse = await twilioclient.verify.v2
-      .services(twilioServiceId)
-      .verifications.create({
-        to: `+91${phone}`,
-        channel: "sms",
-      });
+//TODO: uncomment below code after twilio integration
+    // const otpResponse = await twilioclient.verify.v2
+    //   .services(twilioServiceId)
+    //   .verifications.create({
+    //     to: `+91${phone}`,
+    //     channel: "sms",
+    //   });
+    const otpResponse = {"content" : "Test data"}
 
     const token = jwt.sign(
       { phone },
@@ -442,12 +444,13 @@ export const OtpVerify = async (req: Request, res: Response) => {
         .json({ message: "Twilio service ID is not configured." });
     }
 
-    const verifiedResponse = await twilioclient.verify.v2
-      .services(twilioServiceId)
-      .verificationChecks.create({
-        to: `+91${decodedPhone.phone}`,
-        code: otp,
-      });
+    // const verifiedResponse = await twilioclient.verify.v2
+    //   .services(twilioServiceId)
+    //   .verificationChecks.create({
+    //     to: `+91${decodedPhone.phone}`,
+    //     code: otp,
+    //   });
+    const verifiedResponse = {"status" : "approved"}
 
     //mark user as verified if otp is verified true
     if (verifiedResponse.status === "approved") {

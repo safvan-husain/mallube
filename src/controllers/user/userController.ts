@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import asyncHandler from "express-async-handler";
 import User from "../../models/userModel";
 import bcrypt, { hash } from "bcryptjs";
-import twilio from "twilio";
+// import twilio from "twilio";
 import Cart from "../../models/cartModel";
 import { ICustomRequest } from "../../types/requestion";
 import { IAddCartSchema } from "../../schemas/cart.schema";
@@ -17,9 +17,9 @@ import mongoose from "mongoose";
 import Specialisation from "../../models/specialisationModel";
 
 const { TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN } = process.env;
-const twilioclient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN, {
-  lazyLoading: true,
-});
+// const twilioclient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN, {
+//   lazyLoading: true,
+// });
 
 const twilioServiceId = process.env.TWILIO_SERVICE_ID;
 
@@ -98,12 +98,14 @@ export const verifyOtp = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const verifiedResponse = await twilioclient.verify.v2
-      .services(twilioServiceId)
-      .verificationChecks.create({
-        to: `+91${phone}`,
-        code: otp,
-      });
+    // const verifiedResponse = await twilioclient.verify.v2
+    //   .services(twilioServiceId)
+    //   .verificationChecks.create({
+    //     to: `+91${phone}`,
+    //     code: otp,
+    //   });
+
+    const verifiedResponse = { status: "approved" };
 
     //mark user as verified if otp is verified true
     if (verifiedResponse.status === "approved") {
@@ -305,12 +307,13 @@ export const forgetPasswordOtpSend = async (req: Request, res: Response) => {
         .json({ message: "Twilio service ID is not configured." });
     }
 
-    const otpResponse = await twilioclient.verify.v2
-      .services(twilioServiceId)
-      .verifications.create({
-        to: `+91${phone}`,
-        channel: "sms",
-      });
+    // const otpResponse = await twilioclient.verify.v2
+    //   .services(twilioServiceId)
+    //   .verifications.create({
+    //     to: `+91${phone}`,
+    //     channel: "sms",
+    //   });
+    const otpResponse = { status: "test variable data" };
 
     const token = jwt.sign(
       { phone },
@@ -351,12 +354,14 @@ export const verifyOtpForPasswrodReset = async (
         .json({ message: "Twilio service ID is not configured." });
     }
 
-    const verifiedResponse = await twilioclient.verify.v2
-      .services(twilioServiceId)
-      .verificationChecks.create({
-        to: `+91${decodedPhone.phone}`,
-        code: otp,
-      });
+    // const verifiedResponse = await twilioclient.verify.v2
+    //   .services(twilioServiceId)
+    //   .verificationChecks.create({
+    //     to: `+91${decodedPhone.phone}`,
+    //     code: otp,
+    //   });
+
+    const verifiedResponse = { status: "approved" };
 
     //mark user as verified if otp is verified true
     if (verifiedResponse.status === "approved") {

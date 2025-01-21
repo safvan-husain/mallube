@@ -10,14 +10,22 @@ import mongoose from "mongoose";
 import Product from "../../models/productModel";
 import ProductSearch from "../../models/productSearch";
 import jwt from "jsonwebtoken";
-import twilio from "twilio";
+// import twilio from "twilio";
 import TimeSlot from "../../models/timeSlotModel";
 import Booking from "../../models/bookingModel";
 import Specialisation from "../../models/specialisationModel";
+import { ICustomRequest } from "../../types/requestion";
+import { getStoreByPhoneOrUniqueName } from "../../service/store/index";
+import {
+  IAddStoreSchema,
+  ISignUpStoreSchema
+} from "../../schemas/store.schema";
+import { getNextYearSameDateMinusOneDay } from "../../utils/misc";
+
 const { TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN } = process.env;
-const twilioclient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN, {
-  lazyLoading: true,
-});
+// const twilioclient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN, {
+//   lazyLoading: true,
+// });
 
 const twilioServiceId = process.env.TWILIO_SERVICE_ID;
 export const login = async (req: Request, res: Response) => {
@@ -36,10 +44,10 @@ export const login = async (req: Request, res: Response) => {
     }
 
     const token = storeOwner.generateAuthToken(storeOwner._id);
-    
+
     res.status(200).json({
       _id: storeOwner._id,
-      name: storeOwner.storeOwnerName,
+      name: storeOwner.storeOwnerName, 
       email: storeOwner.email,
       token: token,
       status: "ok",
@@ -48,6 +56,55 @@ export const login = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
   }
+};
+
+
+export const signup = async (req: ICustomRequest<ISignUpStoreSchema>, res: Response) => {
+    const { shopImgUrl, latitude, longitude, ...rest } =
+    req.body;
+
+    let uniqueName = (req.body as ISignUpStoreSchema).uniqueName;
+    let phone = (req.body as ISignUpStoreSchema).phone;
+    let password = (req.body as ISignUpStoreSchema).password;
+
+    const phoneOrUniqueNameAlreadyExist = await getStoreByPhoneOrUniqueName(
+      phone,
+      uniqueName
+    );
+
+    if (phoneOrUniqueNameAlreadyExist) {
+      return res.status(409).json({
+        message:
+          phoneOrUniqueNameAlreadyExist.phone === phone
+            ? "Phone number already exists"
+            : "Unique name already exists",
+      });
+    }
+
+    if (password == undefined) {
+      return res.status(400).json({ message: "Password is required" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    password = await bcrypt.hash(password, salt);
+
+    const location = {
+    type: "Point",
+    coordinates: [longitude, latitude],
+  };
+
+  const storeDetails: any = {
+    ...(uniqueName && password && phone && { uniqueName, password, phone }),
+    location,
+    shopImgUrl,
+    // addedBy: staffId,
+    ...rest,
+  };
+
+
+  const newStore = new Store(storeDetails);
+    await newStore.save();
+    res.status(201).json({ message: "Store created" });
 };
 
 export const fetchStore = asyncHandler(
@@ -84,7 +141,7 @@ export const updateLiveStatus = async (
     if (!store) {
       return res.status(404).json({ message: "Store not found" });
     }
-     store.live = req.body.storeLiveStatus.toString();
+    store.live = req.body.storeLiveStatus.toString();
     await store.save();
 
     return res
@@ -353,16 +410,16 @@ export const searchStoresByProductName = asyncHandler(
       //extracts store ids from the product
       const storeIds = products.map((product) => product.store);
 
-  
-      
+
+
       const trimmedSearchTerm = productName.trim();
 
       const categories = await Category.find({
-        name:{$regex:trimmedSearchTerm,$options:"i"}
+        name: { $regex: trimmedSearchTerm, $options: "i" }
       })
 
-      const categoryIds = categories.map((category)=>category._id);
-      
+      const categoryIds = categories.map((category) => category._id);
+
       // const storesByCategory = await Store
 
       const stores = await Store.find({
@@ -374,21 +431,21 @@ export const searchStoresByProductName = asyncHandler(
       }).populate("category", "name");
 
 
- // Find products that match the search term and get the store ids
- const productss = await Product.find({
-  name: { $regex: trimmedSearchTerm, $options: "i" }, // Search product name
-});
+      // Find products that match the search term and get the store ids
+      const productss = await Product.find({
+        name: { $regex: trimmedSearchTerm, $options: "i" }, // Search product name
+      });
 
-// If products are found, get the stores that match the product
-if (productss.length > 0) {
-  const productStoreIds = productss.map((product) => product.store);
-  const productStores = await Store.find({
-    _id: { $in: productStoreIds },
-  }).populate("category", "name");
+      // If products are found, get the stores that match the product
+      if (productss.length > 0) {
+        const productStoreIds = productss.map((product) => product.store);
+        const productStores = await Store.find({
+          _id: { $in: productStoreIds },
+        }).populate("category", "name");
 
-  // Combine both store results (store search + product store search)
-  stores.push(...productStores);
-}
+        // Combine both store results (store search + product store search)
+        stores.push(...productStores);
+      }
 
       if (stores.length === 0) {
         res
@@ -467,12 +524,13 @@ export const forgotPasswordOtpSendToPhone = async (
         .json({ message: "Twilio service id is not configured" });
     }
 
-    const otpResponse = await twilioclient.verify.v2
-      .services(twilioServiceId)
-      .verifications.create({
-        to: `+91${phone}`,
-        channel: "sms",
-      });
+    // const otpResponse = await twilioclient.verify.v2
+    //   .services(twilioServiceId)
+    //   .verifications.create({
+    //     to: `+91${phone}`,
+    //     channel: "sms",
+    //   });
+    const otpResponse = { data: "test temp data" }
 
     const token = jwt.sign(
       { phone },
@@ -509,12 +567,13 @@ export const OtpVerify = async (req: Request, res: Response) => {
         .json({ message: "Twilio service ID is not configured." });
     }
 
-    const verifiedResponse = await twilioclient.verify.v2
-      .services(twilioServiceId)
-      .verificationChecks.create({
-        to: `+91${decodedPhone.phone}`,
-        code: otp,
-      });
+    // const verifiedResponse = await twilioclient.verify.v2
+    //   .services(twilioServiceId)
+    //   .verificationChecks.create({
+    //     to: `+91${decodedPhone.phone}`,
+    //     code: otp,
+    //   });
+    const verifiedResponse = { status: "approved" };
 
     //mark user as verified if otp is verified true
     if (verifiedResponse.status === "approved") {
@@ -572,7 +631,7 @@ export const updateStoreProfile = async (req: any, res: Response) => {
 
     const { ...updatedFields } = req.body;
     console.log(updatedFields);
-    
+
     const store = await Store.findById(storeId);
 
     if (!store) {
@@ -598,12 +657,12 @@ export const addTimeSlot = async (req: any, res: Response) => {
     const storeId = req.store?._id;
     const { slots } = req.body;
     console.log(slots);
-    
+
 
     if (!storeId)
       return res.status(400).json({ message: "Store id is required" });
 
-    if (!slots || !Array.isArray(slots)) 
+    if (!slots || !Array.isArray(slots))
       return res.status(400).json({ message: "Slots are required and should be an array" });
 
     // Ensure each slot has an originalSlotCount set
