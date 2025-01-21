@@ -86,14 +86,14 @@ export const signup = async (req: ICustomRequest<ISignUpStoreSchema>, res: Respo
     }
 
     const salt = await bcrypt.genSalt(10);
-    password = await bcrypt.hash(password, salt);
+    let hashedPassword = await bcrypt.hash(password, salt);
 
     const location = {
     type: "Point",
     coordinates: [longitude, latitude],
   };
 
-  const storeDetails: any = {
+  let storeDetails: any = {
     ...(uniqueName && password && phone && { uniqueName, password, phone }),
     location,
     shopImgUrl,
@@ -101,6 +101,7 @@ export const signup = async (req: ICustomRequest<ISignUpStoreSchema>, res: Respo
     ...rest,
   };
 
+  storeDetails.password = hashedPassword;
 
   const newStore = new Store(storeDetails);
     await newStore.save();
