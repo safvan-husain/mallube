@@ -23,7 +23,9 @@ export interface IStore extends Document {
   shopImgUrl: string;
   retail?: boolean;
   wholesale?: boolean;
+  service?: boolean;
   isActive: boolean; //this field will be used by admin to block and unblock a shop
+
   isAvailable: boolean; // this field will be used by store owner to change their shop status
   district: string;
   bio: string;
@@ -55,9 +57,10 @@ const storeSchema = new Schema<IStore>(
     category: {
       type: Schema.Types.ObjectId,
       ref: "categories",
-    },
+    }, 
     retail: { type: Boolean },
     wholesale: { type: Boolean },
+    service: { type: Boolean },
     location: {
       type: {
         type: String,

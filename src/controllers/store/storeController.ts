@@ -17,7 +17,8 @@ import Specialisation from "../../models/specialisationModel";
 import { ICustomRequest } from "../../types/requestion";
 import { getStoreByPhoneOrUniqueName } from "../../service/store/index";
 import {
-  IAddStoreSchema
+  IAddStoreSchema,
+  ISignUpStoreSchema
 } from "../../schemas/store.schema";
 import { getNextYearSameDateMinusOneDay } from "../../utils/misc";
 
@@ -58,13 +59,13 @@ export const login = async (req: Request, res: Response) => {
 };
 
 
-export const signup = async (req: ICustomRequest<IAddStoreSchema>, res: Response) => {
-    const { shopImgUrl, subscriptionPlan, latitude, longitude, ...rest } =
+export const signup = async (req: ICustomRequest<ISignUpStoreSchema>, res: Response) => {
+    const { shopImgUrl, latitude, longitude, ...rest } =
     req.body;
 
-    let uniqueName = (req.body as IAddStoreSchema).uniqueName;
-    let phone = (req.body as IAddStoreSchema).phone;
-    let password = (req.body as IAddStoreSchema).password;
+    let uniqueName = (req.body as ISignUpStoreSchema).uniqueName;
+    let phone = (req.body as ISignUpStoreSchema).phone;
+    let password = (req.body as ISignUpStoreSchema).password;
 
     const phoneOrUniqueNameAlreadyExist = await getStoreByPhoneOrUniqueName(
       phone,
@@ -100,11 +101,6 @@ export const signup = async (req: ICustomRequest<IAddStoreSchema>, res: Response
     ...rest,
   };
 
-  storeDetails.subscription = {
-      plan: subscriptionPlan,
-      activatedAt: Date.now(),
-      expiresAt: getNextYearSameDateMinusOneDay(),
-    };
 
   const newStore = new Store(storeDetails);
     await newStore.save();
