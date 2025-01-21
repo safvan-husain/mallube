@@ -37,7 +37,8 @@ export const addStoreSchema = z.object({
   bio: z.string().optional(),
   shopImgUrl: z.string(),
   otp: z.string().min(6, "invalid otp").max(6, "invalid otp"),
-  storeProviding:z.string().optional()
+  storeProviding:z.string().optional(),
+  password: z.string().min(6, "password must be atleast 6 characters long"),
 });
 
 export type IAddStoreSchema = z.infer<typeof addStoreSchema>;

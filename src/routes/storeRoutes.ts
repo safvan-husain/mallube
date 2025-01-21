@@ -1,6 +1,7 @@
 import express from "express";
 import {
   login,
+  signup,
   fetchStore,
   updateLiveStatus,
   AddAdvertisement,
@@ -27,6 +28,7 @@ import { addDoctor, changeDrAvailability, deleteDoctor, fetchAllDoctors } from "
 const router = express.Router();
 
 router.route("/login").post(login);
+router.route("/signup").post(signup);
 // need to add store authentication middleware
 router.route("/").get(store, fetchStore).put(store, updateStoreProfile);
 router.route("/search-stores").get(searchStoresByProductName);
@@ -36,7 +38,7 @@ router.route("/update-live-status").put(store, updateLiveStatus);
 router
   .route("/advertisement")
   .post(store, AddAdvertisement)
-  .delete(store, deleteAdvertisement)
+  // .delete(store, deleteAdvertisement)
   .get(store, fetchAllAdvertisement);
 router
   .route("/advertisement/:advertisementId")
