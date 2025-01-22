@@ -47,11 +47,11 @@ export const login = async (req: Request, res: Response) => {
 
     res.status(200).json({
       _id: storeOwner._id,
-      name: storeOwner.storeOwnerName, 
+      name: storeOwner.storeOwnerName,
       email: storeOwner.email,
       token: token,
       status: "ok",
-      storeProviding:storeOwner.storeProviding
+      storeProviding: storeOwner.storeProviding
     });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
@@ -60,35 +60,35 @@ export const login = async (req: Request, res: Response) => {
 
 
 export const signup = async (req: ICustomRequest<ISignUpStoreSchema>, res: Response) => {
-    const { shopImgUrl, latitude, longitude, ...rest } =
+  const { shopImgUrl, latitude, longitude, ...rest } =
     req.body;
 
-    let uniqueName = (req.body as ISignUpStoreSchema).uniqueName;
-    let phone = (req.body as ISignUpStoreSchema).phone;
-    let password = (req.body as ISignUpStoreSchema).password;
+  let uniqueName = (req.body as ISignUpStoreSchema).uniqueName;
+  let phone = (req.body as ISignUpStoreSchema).phone;
+  let password = (req.body as ISignUpStoreSchema).password;
 
-    const phoneOrUniqueNameAlreadyExist = await getStoreByPhoneOrUniqueName(
-      phone,
-      uniqueName
-    );
+  const phoneOrUniqueNameAlreadyExist = await getStoreByPhoneOrUniqueName(
+    phone,
+    uniqueName
+  );
 
-    if (phoneOrUniqueNameAlreadyExist) {
-      return res.status(409).json({
-        message:
-          phoneOrUniqueNameAlreadyExist.phone === phone
-            ? "Phone number already exists"
-            : "Unique name already exists",
-      });
-    }
+  if (phoneOrUniqueNameAlreadyExist) {
+    return res.status(409).json({
+      message:
+        phoneOrUniqueNameAlreadyExist.phone === phone
+          ? "Phone number already exists"
+          : "Unique name already exists",
+    });
+  }
 
-    if (password == undefined) {
-      return res.status(400).json({ message: "Password is required" });
-    }
+  if (password == undefined) {
+    return res.status(400).json({ message: "Password is required" });
+  }
 
-    const salt = await bcrypt.genSalt(10);
-    let hashedPassword = await bcrypt.hash(password, salt);
+  const salt = await bcrypt.genSalt(10);
+  let hashedPassword = await bcrypt.hash(password, salt);
 
-    const location = {
+  const location = {
     type: "Point",
     coordinates: [longitude, latitude],
   };
@@ -104,8 +104,8 @@ export const signup = async (req: ICustomRequest<ISignUpStoreSchema>, res: Respo
   storeDetails.password = hashedPassword;
 
   const newStore = new Store(storeDetails);
-    await newStore.save();
-    res.status(201).json({ message: "Store created" });
+  await newStore.save();
+  res.status(201).json({ message: "Store created" });
 };
 
 export const fetchStore = asyncHandler(
@@ -157,10 +157,21 @@ export const updateLiveStatus = async (
 export const AddAdvertisement = async (req: any, res: Response) => {
   try {
     const storeId = req.store;
-    const { image } = req.body;
+    const { image, radius, adPlan } = req.body;
+
+    if (adPlan == undefined) {
+      return res.status(400).json({ message: "AdPlan is required" });
+    }
+    const c = await Store.findById(storeId);
+    const earthRadiusInMeters = 6378137; // Earth's radius in meters
+    const radiusInRadians = radius / earthRadiusInMeters;
     const newAdvertisement = new Advertisement({
       image,
       store: storeId,
+      radius: radius || 10,
+      location: c?.location,
+      radiusInRadians,
+      adPlan
     });
     await newAdvertisement.save();
     res.status(201).json({ message: "Advertisement added successfully" });
