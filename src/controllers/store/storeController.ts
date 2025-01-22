@@ -60,7 +60,8 @@ export const login = async (req: Request, res: Response) => {
 
 
 export const signup = async (req: ICustomRequest<ISignUpStoreSchema>, res: Response) => {
-  const { shopImgUrl, latitude, longitude, ...rest } =
+  try {
+    const { shopImgUrl, latitude, longitude, ...rest } =
     req.body;
 
   let uniqueName = (req.body as ISignUpStoreSchema).uniqueName;
@@ -106,6 +107,12 @@ export const signup = async (req: ICustomRequest<ISignUpStoreSchema>, res: Respo
   const newStore = new Store(storeDetails);
   await newStore.save();
   res.status(201).json({ message: "Store created" });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
+    console.log(error);
+    
+  }
+  
 };
 
 export const fetchStore = asyncHandler(
