@@ -40,7 +40,7 @@ app.use(
 );
 
 app.use("/api/healthcheck", (req, res) => {
-  res.status(200).send("Server is healthy and CI CD is working 1");
+  res.status(200).send("Server is healthy");
 });
 
 app.use("/api/admin", adminRoutes);

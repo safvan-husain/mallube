@@ -11,7 +11,6 @@ import {
   updateStoreStatus,
   changePassword,
   addAdvertisement,
-  fetchAllAdvertisement,
   deleteAdvertisement,
   updateAdvertisementDisplay,
   fetchTotalStoreByCategory,
@@ -25,6 +24,7 @@ import {
   fetchAdminDetails,
   getAdminStore
 } from "../controllers/admin/adminController";
+import { fetchAllAdvertisement } from "../controllers/advertisement/advertisementController";
 import { admin } from "../middleware/auth";
 import { createNewAdvertisementPlan } from "../controllers/advertisement/advertisementPlanController";
 const router = express.Router();
