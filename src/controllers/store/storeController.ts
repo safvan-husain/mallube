@@ -15,12 +15,13 @@ import TimeSlot from "../../models/timeSlotModel";
 import Booking from "../../models/bookingModel";
 import Specialisation from "../../models/specialisationModel";
 import { ICustomRequest } from "../../types/requestion";
-import { getStoreByPhoneOrUniqueName } from "../../service/store/index";
+import { getStoreByPhoneOrUniqueNameOrEmail } from "../../service/store/index";
 import {
   IAddStoreSchema,
   ISignUpStoreSchema
 } from "../../schemas/store.schema";
 import { getNextYearSameDateMinusOneDay } from "../../utils/misc";
+import { store } from "../../middleware/auth";
 
 const { TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN } = process.env;
 // const twilioclient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN, {
@@ -30,9 +31,18 @@ const { TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN } = process.env;
 const twilioServiceId = process.env.TWILIO_SERVICE_ID;
 export const login = async (req: Request, res: Response) => {
   try {
-    const { phone, password } = req.body;
+    const { phone, password, email } = req.body;
 
-    const storeOwner: any = await Store.findOne({ phone });
+    let storeOwner: any;
+
+    if (phone) {
+      storeOwner = await Store.findOne({ phone });
+    } else if (email) {
+      storeOwner = await Store.findOne({ email });
+
+    } else {
+      return res.status(400).json({ message: "Phone or email is required" });
+    }
     if (!storeOwner) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -50,64 +60,90 @@ export const login = async (req: Request, res: Response) => {
       name: storeOwner.storeOwnerName,
       email: storeOwner.email,
       token: token,
-      status: "ok",
-      storeProviding: storeOwner.storeProviding
+      storeProviding: storeOwner.storeProviding,
+      storeName: storeOwner.storeName,
+      uniqueName: storeOwner.uniqueName,
+      category: storeOwner.category,
+      phone: storeOwner.phone,
+      location: storeOwner.location,
+      shopImgUrl: storeOwner.shopImgUrl,
+      bio: storeOwner.bio,
+      live: storeOwner.live,
+      isActive: storeOwner.isActive,
+      isAvailable: storeOwner.isAvailable,
+      subscription: storeOwner.subscription,
+      createdAt: storeOwner.createdAt,
+      updatedAt: storeOwner.updatedAt,
     });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
 
 export const signup = async (req: ICustomRequest<ISignUpStoreSchema>, res: Response) => {
-  const { shopImgUrl, latitude, longitude, ...rest } =
-    req.body;
+  try {
+    const { shopImgUrl, latitude, longitude, ...rest } =
 
-  let uniqueName = (req.body as ISignUpStoreSchema).uniqueName;
-  let phone = (req.body as ISignUpStoreSchema).phone;
-  let password = (req.body as ISignUpStoreSchema).password;
 
-  const phoneOrUniqueNameAlreadyExist = await getStoreByPhoneOrUniqueName(
-    phone,
-    uniqueName
-  );
+      req.body;
 
-  if (phoneOrUniqueNameAlreadyExist) {
-    return res.status(409).json({
-      message:
-        phoneOrUniqueNameAlreadyExist.phone === phone
-          ? "Phone number already exists"
-          : "Unique name already exists",
-    });
+    let uniqueName = (req.body as ISignUpStoreSchema).uniqueName;
+    let phone = (req.body as ISignUpStoreSchema).phone;
+    let password = (req.body as ISignUpStoreSchema).password;
+    let email = (req.body as ISignUpStoreSchema).email;
+
+    const phoneOrUniqueNameAlreadyExist = await getStoreByPhoneOrUniqueNameOrEmail(
+      phone,
+      uniqueName,
+      email
+    );
+
+    if (phoneOrUniqueNameAlreadyExist) {
+      return res.status(409).json({
+        message:
+          phoneOrUniqueNameAlreadyExist.phone === phone
+            ? "Phone number already exists"
+            : "Unique name already exists",
+      });
+    }
+
+    if (password == undefined) {
+      return res.status(400).json({ message: "Password is required" });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    let hashedPassword = await bcrypt.hash(password, salt);
+
+    const location = {
+      type: "Point",
+      coordinates: [longitude, latitude],
+    };
+
+    let storeDetails: any = {
+      ...(uniqueName && password && phone && { uniqueName, password, phone }),
+      location,
+      shopImgUrl,
+      // addedBy: staffId,
+      ...rest,
+    };
+
+    storeDetails.password = hashedPassword;
+
+    const newStore = new Store(storeDetails);
+    await newStore.save();
+    res.status(201).json({ message: "Store created" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
+
   }
-
-  if (password == undefined) {
-    return res.status(400).json({ message: "Password is required" });
-  }
-
-  const salt = await bcrypt.genSalt(10);
-  let hashedPassword = await bcrypt.hash(password, salt);
-
-  const location = {
-    type: "Point",
-    coordinates: [longitude, latitude],
-  };
-
-  let storeDetails: any = {
-    ...(uniqueName && password && phone && { uniqueName, password, phone }),
-    location,
-    shopImgUrl,
-    // addedBy: staffId,
-    ...rest,
-  };
-
-  storeDetails.password = hashedPassword;
-
-  const newStore = new Store(storeDetails);
-  await newStore.save();
-  res.status(201).json({ message: "Store created" });
 };
 
+export const editStore = async (req: any, res: Response) => {
+  const { } = req.body;
+};
 export const fetchStore = asyncHandler(
   async (req: any, res: Response, next: NextFunction): Promise<void> => {
     const storeId: any = req?.store._id;
