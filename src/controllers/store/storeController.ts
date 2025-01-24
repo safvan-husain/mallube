@@ -29,6 +29,7 @@ const { TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN } = process.env;
 // });
 
 const twilioServiceId = process.env.TWILIO_SERVICE_ID;
+
 export const login = async (req: Request, res: Response) => {
   try {
     const { phone, password, email } = req.body;
@@ -80,6 +81,47 @@ export const login = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export const getProfile = async (req: any, res: Response) => {
+  let storeId = req.store._id;
+  try {
+    const store: any[] = await Store.aggregate([
+      {
+        $match: {
+          _id: new mongoose.Types.ObjectId(storeId),
+        },
+      },
+      {
+        $lookup: {
+          from: "categories",
+          localField: "category",
+          foreignField: "_id",
+          as: "category_name",
+        },
+
+
+      },
+      {
+        $unwind: {
+          path: "$category_name",
+          preserveNullAndEmptyArrays: true
+        },
+      },
+      {
+        $addFields: {
+          category_name: { $ifNull: ["$category_name", null] }
+        }
+      }
+    ]);
+    if (store.length === 0) {
+      return res.status(404).json({ message: "Store not found" });
+    }
+    res.status(200).json(store[0]);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+}
 
 
 export const signup = async (req: ICustomRequest<ISignUpStoreSchema>, res: Response) => {
@@ -142,8 +184,39 @@ export const signup = async (req: ICustomRequest<ISignUpStoreSchema>, res: Respo
 };
 
 export const editStore = async (req: any, res: Response) => {
-  const { } = req.body;
+  const {
+    name, email, storeName, uniqueName, category, phone,
+    location, shopImageUrl, bio, live,
+    isActive, subscription,
+  } = req.body;
+
+  const storeId: any = req?.store._id;
+  try {
+    const store = await Store.findById(storeId);
+    if (!store) {
+      return res.status(404).json({ message: "Store not found" });
+    }
+    store.storeOwnerName = name || store.storeOwnerName;
+    store.email = email || store.email;
+    store.storeName = storeName || store.storeName;
+    store.uniqueName = uniqueName || store.uniqueName;
+    store.category = category || store.category;
+    store.phone = phone || store.phone;
+    store.location = location || store.location;
+    store.shopImgUrl = shopImageUrl || store.shopImgUrl;
+    store.bio = bio || store.bio;
+    store.live = live || store.live;
+    store.isActive = isActive || store.isActive;
+    store.subscription = subscription || store.subscription;
+    await store.save();
+    res.status(200).json({ message: "Store updated successfully" });
+  } catch (error) {
+    console.log("error while edit store", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+
 };
+
 export const fetchStore = asyncHandler(
   async (req: any, res: Response, next: NextFunction): Promise<void> => {
     const storeId: any = req?.store._id;
@@ -678,7 +751,7 @@ export const updateStoreProfile = async (req: any, res: Response) => {
     const storeId = req.store._id;
 
     const { ...updatedFields } = req.body;
-    console.log(updatedFields);
+    delete updatedFields._id;
 
     const store = await Store.findById(storeId);
 
@@ -686,17 +759,31 @@ export const updateStoreProfile = async (req: any, res: Response) => {
       return res.status(404).json({ message: "No store found" });
     }
 
+    // Check if the unique field value is the same as the current value
+    if (updatedFields.uniqueName && updatedFields.uniqueName === store.uniqueName) {
+      delete updatedFields.uniqueName;
+    }
+
     const response = await Store.findByIdAndUpdate(storeId, updatedFields, {
       new: true,
     });
+
     if (!response) {
-      return res.status(500).json({ message: "Failed to update the store" });
+      return res.status(404).json({ message: "Update failed" });
     }
 
-    res.status(200).json(response);
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(200).json({
+      message: "Store profile updated successfully",
+      response,
+    });
+  } catch (error: any) {
+    if (error.code === 11000) {
+      return res.status(400).json({
+        message: "Duplicate key error",
+        error: error.errmsg,
+      });
+    }
+    res.status(500).json({ message: "Internal server error", error });
   }
 };
 
