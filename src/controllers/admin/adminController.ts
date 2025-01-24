@@ -420,8 +420,9 @@ export const mostSearchedProducts = async (req: Request, res: Response) => {
     ]);
     if (!response || response.length === 0) {
       res.status(404).json({ message: "No Search history." });
+    } else {
+      res.status(200).json(response);
     }
-    res.status(200).json(response);
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Internal server error" });
