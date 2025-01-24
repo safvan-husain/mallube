@@ -1,9 +1,15 @@
 import Store from "../../models/storeModel";
 
-export async function getStoreByPhoneOrUniqueName(
+export async function getStoreByPhoneOrUniqueNameOrEmail(
   phone: string,
-  uniqueName: string
+  uniqueName: string,
+  email: string | undefined
 ) {
+  if (email) {
+    return await Store.findOne({
+      $or: [{ phone }, { uniqueName }, { email }],
+    });
+  }
   return await Store.findOne({
     $or: [{ phone }, { uniqueName }],
   });

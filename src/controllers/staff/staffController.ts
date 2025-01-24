@@ -13,7 +13,7 @@ import {
   ICheckDetailsAndSendOtp,
   IUpdateStoreSchema,
 } from "../../schemas/store.schema";
-import { getStoreByPhoneOrUniqueName } from "../../service/store";
+import { getStoreByPhoneOrUniqueNameOrEmail } from "../../service/store";
 import { sendTwilioOtp, verifyTwilioOtp } from "../../utils/twilio";
 import { getNextYearSameDateMinusOneDay } from "../../utils/misc";
 
@@ -62,11 +62,12 @@ export const checkStoreDetailsAndSendOtpHandler = asyncHandler(
     req: ICustomRequest<ICheckDetailsAndSendOtp>,
     res: Response
   ): Promise<void> => {
-    const { phone, uniqueName } = req.body;
+    const { phone, uniqueName, email } = req.body;
 
-    const phoneOrUniqueNameAlreadyExist = await getStoreByPhoneOrUniqueName(
+    const phoneOrUniqueNameAlreadyExist = await getStoreByPhoneOrUniqueNameOrEmail(
       phone,
-      uniqueName
+      uniqueName,
+      email
     );
 
     if (phoneOrUniqueNameAlreadyExist) {
@@ -114,9 +115,11 @@ export const addOrUpdateStore = async (
     otp = (req.body as IAddStoreSchema).otp;
     phone = (req.body as IAddStoreSchema).phone;
 
-    const phoneOrUniqueNameAlreadyExist = await getStoreByPhoneOrUniqueName(
+
+    const phoneOrUniqueNameAlreadyExist = await getStoreByPhoneOrUniqueNameOrEmail(
       phone,
-      uniqueName
+      uniqueName,
+      undefined
     );
 
     if (phoneOrUniqueNameAlreadyExist) {

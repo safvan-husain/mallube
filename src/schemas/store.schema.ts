@@ -32,7 +32,7 @@ export const addStoreSchema = z.object({
     .string()
     .min(10, "enter a valid whatsapp number")
     .regex(numericRegex, "enter a valid phone number"),
-  email: z.string().max(0).or(z.string().email()),
+  email: z.string().max(0).or(z.string().email()).optional(),
   subscriptionPlan: z.string(), //enum set here
   bio: z.string().optional(),
   shopImgUrl: z.string(),
@@ -86,6 +86,7 @@ export type ISignUpStoreSchema = z.infer<typeof signUpStoreSchema>;
 export const checkDetailsAndSendOtp = addStoreSchema.pick({
   phone: true,
   uniqueName: true,
+  email: true,
 });
 
 export type ICheckDetailsAndSendOtp = z.infer<typeof checkDetailsAndSendOtp>;
