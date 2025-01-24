@@ -299,15 +299,15 @@ export const addAdvertisement = async (req: Request, res: Response) => {
   }
 };
 
-export const fetchAllAdvertisement = async (req: Request, res: Response) => {
-  try {
-    const advertisements = await Advertisement.find();
-    res.status(200).json(advertisements);
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
+// export const fetchAllAdvertisement = async (req: Request, res: Response) => {
+//   try {
+//     const advertisements = await Advertisement.find();
+//     res.status(200).json(advertisements);
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// };
 
 export const deleteAdvertisement = asyncHandler(
   async (req: Request, res: Response) => {

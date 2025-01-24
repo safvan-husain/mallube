@@ -49,6 +49,7 @@ router
   .get(getProductById)
   .put(updateProduct)
   .delete(deleteProduct);
+
 router.route("/addVisitors/:userId/:shopId").get(addVisitors);
 
 export default router;
