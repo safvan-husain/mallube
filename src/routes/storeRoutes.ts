@@ -20,7 +20,8 @@ import {
   addTimeSlot,
   fetchTimeSlot,
   deleteTimeSlots,
-  stockUpdate
+  stockUpdate,
+  getProfile
 } from "../controllers/store/storeController";
 import { store } from "../middleware/auth";
 import { addSpecialisation, fetchAllSpecialisation } from "../controllers/specialisation/specialisationController";
@@ -29,6 +30,8 @@ const router = express.Router();
 
 router.route("/login").post(login);
 router.route("/signup").post(signup);
+router.route("/profile").get(store, getProfile);
+// router.route("/edit-profile").put(store, updateStoreProfile);
 // need to add store authentication middleware
 router.route("/").get(store, fetchStore).put(store, updateStoreProfile);
 router.route("/search-stores").get(searchStoresByProductName);
