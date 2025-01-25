@@ -52,10 +52,9 @@ export const staff = asyncHandler(
       throw new Error("Not authorized, no token available");
     }
 
-    console.log(token);
-
-
-    token = token.split(" ")[1];//remove Bearer from token
+    if (token.startsWith("Bearer")) {
+      token = token.split(" ")[1];
+    }
 
     try {
       const decoded = jwt.verify(token, "staffSecrete") as {
@@ -84,7 +83,10 @@ export const store = asyncHandler(
       res.status(401);
       throw new Error("Not authorized, no token available");
     }
-    token = token.split(" ")[1];//remove Bearer from token
+    if (token.startsWith("Bearer")) {
+      token = token.split(" ")[1];
+    }
+
     try {
       const decoded = jwt.verify(token, config.jwtSecret) as {
         _id: string;
