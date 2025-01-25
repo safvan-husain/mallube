@@ -61,6 +61,7 @@ export const login = async (req: Request, res: Response) => {
       name: storeOwner.storeOwnerName,
       email: storeOwner.email,
       token: token,
+      status: "ok",
       storeProviding: storeOwner.storeProviding,
       storeName: storeOwner.storeName,
       uniqueName: storeOwner.uniqueName,
