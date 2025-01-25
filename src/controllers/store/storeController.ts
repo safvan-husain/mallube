@@ -315,7 +315,13 @@ export const fetchAllAdvertisement = async (req: any, res: Response) => {
   try {
     const storeId = req.store;
     const advertisements = await Advertisement.find({ store: storeId });
-    res.status(200).json(advertisements);
+    //TODO: remove the maping for efficancy, added since some older data don't have isActive field
+    res.status(200).json(advertisements.map((i) => {
+      if (i.isActive == undefined) {
+        i.isActive = false;
+      }
+      return i;
+    }));
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Internal server error" });

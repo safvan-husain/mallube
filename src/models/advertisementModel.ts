@@ -3,8 +3,10 @@ import { Schema, model, Document } from "mongoose";
 export interface IAdvertisement extends Document {
   image: string;
   advertisementDisplayStatus: "showIinMainCarousal" | "showInSecondCarousal" | "hideFromBothCarousal";
+  isActive: boolean;
   store?: Schema.Types.ObjectId;
   timestamp: Date;
+  expireAt?: Date;
   location: {
     type: string;
     coordinates: [number, number];
@@ -24,6 +26,10 @@ const advertisementSchema = new Schema<IAdvertisement>({
     enum: ["showIinMainCarousal", "showInSecondCarousal", "hideFromBothCarousal"],
     default: "hideFromBothCarousal",
   },
+  isActive: {
+    type: Boolean,
+    default: false,
+  },
   store: {
     type: Schema.Types.ObjectId,
     ref: "stores",
@@ -32,6 +38,9 @@ const advertisementSchema = new Schema<IAdvertisement>({
   timestamp: {
     type: Date,
     default: Date.now,
+  },
+  expireAt: {
+    type: Date,
   },
   location: {
     type: {
