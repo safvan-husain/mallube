@@ -59,7 +59,7 @@ router.route("/doctor").post(store,addDoctor).delete(store,deleteDoctor)
 router.route("/fetch-all-doctors").get(store,fetchAllDoctors)
 router.route("/change-dr-availability").put(store,changeDrAvailability)
 router.route("/:uniqueName").get(fetchStoreByUniqueName);
-router.route("/product").post(store, addProduct).get(store, getProductsOfAStore);
+router.route("/products").post(store, addProduct).get(store, getProductsOfAStore);
 
 
 export default router;
