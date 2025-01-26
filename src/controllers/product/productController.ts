@@ -24,6 +24,7 @@ import ProductSearch from "../../models/productSearch";
 import { s3 } from "../../config/s3";
 import { config } from "../../config/vars";
 import User from "../../models/userModel";
+import { store } from "../../middleware/auth";
 
 // get all products
 export const getAllProducts = asyncHandler(
@@ -63,6 +64,9 @@ export const addProduct = asyncHandler(
     res: Response
   ): Promise<any> => {
     const { isPending, ...rest } = req.body;
+    if (rest.store == undefined ) {
+      rest.store = req.store?._id;
+    }
     if (isPending) {
       let storeId;
       if (req.store?._id) {
@@ -174,8 +178,21 @@ export const getProductsOfAStore = asyncHandler(
 
 //delete product of a store
 export const deleteProductOfAStore = asyncHandler(
-  async (req: Request, res: Response) => {
-    const result = await Product.findByIdAndDelete(req.params.storeId);
+  async (req: any, res: Response) => {
+    let productId;
+    if (req.query.productId) {
+      productId = req.query.productId;
+    } else {
+      productId = req.params.storeId; //from mobile side it will pass as productId, from web it will be storeId (by previous developer - anurak MK)
+      //TODO: change in the front end storeId -> productId, then change here.
+    }
+    try {
+      const result = await Product.findByIdAndDelete(productId);
+      res.status(200).json(result);
+    } catch (error) {
+      console.log("error at deleteProductOfAStore", error);
+      res.status(200).json({ message: "Internal server error" });
+    }
 
     res.status(200).json(result);
   }
