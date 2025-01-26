@@ -15,6 +15,7 @@ export interface IProduct extends Document {
   isPending: boolean;
   stock:boolean;
   addToCartActive:boolean;
+  isEnquiryAvailable?: boolean;
 }
 
 const productSchema = new Schema<IProduct>(
@@ -71,6 +72,11 @@ const productSchema = new Schema<IProduct>(
       type:Boolean,
       default:false,
       required:true
+    },
+    isEnquiryAvailable: {
+      type: Boolean,
+      default: false,
+      required: true
     }
   },
   {

@@ -12,6 +12,8 @@ export const addProductSchema = z
     category: z.string(),
     isActive: z.boolean().default(true),
     isPending: z.boolean().default(false).optional(),
+    addToCartActive: z.boolean().default(false).optional(),
+    isEnquiryAvailable: z.boolean().default(false).optional(),
   })
   .superRefine((data, ctx) => {
     if (data.offerPrice && data.offerPrice >= data?.price) {
