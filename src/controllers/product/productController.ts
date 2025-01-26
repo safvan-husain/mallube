@@ -194,7 +194,6 @@ export const deleteProductOfAStore = asyncHandler(
       res.status(200).json({ message: "Internal server error" });
     }
 
-    res.status(200).json(result);
   }
 );
 
