@@ -64,7 +64,12 @@ export const addProduct = asyncHandler(
   ): Promise<any> => {
     const { isPending, ...rest } = req.body;
     if (isPending) {
-      const storeId = req.params.storeId;
+      let storeId;
+      if (req.store?._id) {
+        storeId = req.store._id;
+      } else {
+        storeId = req.params.storeId;
+      }
       const storeDetails = await Store.findById(storeId);
       if (!storeDetails) {
         return res.status(404).json({ message: "Store not found" });
