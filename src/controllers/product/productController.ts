@@ -157,8 +157,14 @@ export const getProductById = asyncHandler(
 
 //get product of a store
 export const getProductsOfAStore = asyncHandler(
-  async (req: Request, res: Response) => {
-    const products = await Product.find({ store: req.params.storeId }).populate(
+  async (req: ICustomRequest<undefined>, res: Response) => {
+    let storeId;
+    if (req.store?._id ) {
+      storeId = req.store._id;
+    } else {
+      storeId = req.params.storeId;
+    }
+    const products = await Product.find({ store: storeId }).populate(
       "category"
     );
 
