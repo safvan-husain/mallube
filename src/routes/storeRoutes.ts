@@ -26,6 +26,7 @@ import {
 import { store } from "../middleware/auth";
 import { addSpecialisation, fetchAllSpecialisation } from "../controllers/specialisation/specialisationController";
 import { addDoctor, changeDrAvailability, deleteDoctor, fetchAllDoctors } from "../controllers/doctor/doctorController";
+import { addProduct, getProductsOfAStore } from "../controllers/product/productController";
 const router = express.Router();
 
 router.route("/login").post(login);
@@ -58,6 +59,7 @@ router.route("/doctor").post(store,addDoctor).delete(store,deleteDoctor)
 router.route("/fetch-all-doctors").get(store,fetchAllDoctors)
 router.route("/change-dr-availability").put(store,changeDrAvailability)
 router.route("/:uniqueName").get(fetchStoreByUniqueName);
+router.route("/product").post(store, addProduct).get(store, getProductsOfAStore);
 
 
 export default router;
