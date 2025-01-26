@@ -26,7 +26,7 @@ import {
 import { store } from "../middleware/auth";
 import { addSpecialisation, fetchAllSpecialisation } from "../controllers/specialisation/specialisationController";
 import { addDoctor, changeDrAvailability, deleteDoctor, fetchAllDoctors } from "../controllers/doctor/doctorController";
-import { addProduct, deleteProductOfAStore, getProductsOfAStore, updateProduct } from "../controllers/product/productController";
+import { addProduct, deleteProductOfAStore, getProductsOfAStore, switchStockStatusOfAProduct, updateProduct } from "../controllers/product/productController";
 const router = express.Router();
 
 router.route("/login").post(login);
@@ -63,6 +63,7 @@ router.route("/product")
   .get(store, getProductsOfAStore)
   .delete(store, deleteProductOfAStore)
   .put(store, updateProduct);
+router.route("/product/stock-status").put(store, switchStockStatusOfAProduct);
 router.route("/:uniqueName").get(fetchStoreByUniqueName);
 
 

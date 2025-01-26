@@ -125,7 +125,6 @@ export const updateProduct = asyncHandler(
     );
 
     if (product) {
-      res.status(200).json("Product has been updated");
       res.status(200).json({ message: "Product has been updated", product: product});
     } else {
       res.status(400).json({ message: "Product not found"});
@@ -135,7 +134,7 @@ export const updateProduct = asyncHandler(
 );
 
 // delete product
-
+//TODO: check duplication, make sure front end not depend on this.
 export const deleteProduct = asyncHandler(
   async (req: Request, res: Response) => {
     const product = await Product.findById(req.params.id);
@@ -149,6 +148,19 @@ export const deleteProduct = asyncHandler(
     }
   }
 );
+
+export const switchStockStatusOfAProduct = asyncHandler(
+  async (req: Request, res: Response) => {
+    try {
+      await Product.findById(req.query.productId, {
+        stock: req.query.stockStatus
+      });
+      res.status(200).json({ message: "Stock status changed successfully" });
+    } catch (error) {
+      console.log("error at switchStock", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  })
 
 // get single product
 export const getProductById = asyncHandler(
