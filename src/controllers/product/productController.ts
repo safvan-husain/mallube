@@ -113,15 +113,22 @@ export const addProduct = asyncHandler(
 // update product
 export const updateProduct = asyncHandler(
   async (req: Request, res: Response) => {
+    let productId;
+    if (req.query.productId) {
+      productId = req.query.productId;
+    } else {
+      productId = req.params.productId;
+    }
     const product = await Product.findByIdAndUpdate(
-      req.params.productId,
+      productId,
       req.body
     );
 
     if (product) {
       res.status(200).json("Product has been updated");
+      res.status(200).json({ message: "Product has been updated", product: product});
     } else {
-      res.status(400);
+      res.status(400).json({ message: "Product not found"});
       throw new Error("Products not found!");
     }
   }
