@@ -24,7 +24,7 @@ import {
   fetchAdminDetails,
   getAdminStore
 } from "../controllers/admin/adminController";
-import { fetchAllAdvertisement } from "../controllers/advertisement/advertisementController";
+import { approveAdvertisement, fetchAllAdvertisement } from "../controllers/advertisement/advertisementController";
 import { admin } from "../middleware/auth";
 import { createNewAdvertisementPlan } from "../controllers/advertisement/advertisementPlanController";
 const router = express.Router();
@@ -56,9 +56,12 @@ router
   .post(admin, addAdvertisement)
   .get(admin, fetchAllAdvertisement)
   .put(admin, updateAdvertisementDisplay);
+//TODO: add admin middleware.
+router.route("/advertisement/approve").put(approveAdvertisement);
 router
   .route("/advertisement/:advertisementId")
   .delete(admin, deleteAdvertisement);
+
 //TODO: add middleware admin.
 router.route("/advertisement/plan")
   .post(createNewAdvertisementPlan);

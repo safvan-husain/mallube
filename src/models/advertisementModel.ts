@@ -21,6 +21,7 @@ const advertisementSchema = new Schema<IAdvertisement>({
     type: String,
     required: true,
   },
+  //TODO: remove this after cross check no where else it used, since its no longer the bussiness
   advertisementDisplayStatus: {
     type: String,
     enum: ["showIinMainCarousal", "showInSecondCarousal", "hideFromBothCarousal"],
