@@ -70,8 +70,11 @@ export const fetchRelaventAdvertisement = asyncHandler(
               $function: {
                 //calculating distance between two points (userLocation, advertisementLocation)
                 //then checking that distance is less than or equal to radius ( checking whether user is in the area of advertisement)
-                body: function (location: { coordinates: Array<number> }, lat1: number, long1: number, radius: number): boolean {
-                  const [lon2, lat2] = location.coordinates;
+                body: function (location: { coordinates: Array<number> } | undefined | null, lat1: number, long1: number, radius: number): boolean {
+                  if (location === null || location === undefined) {
+                    return false;
+                  }
+                  const [lon2, lat2] = location!.coordinates;
                   const toRadians = (degrees: number) => degrees * (Math.PI / 180);
                   const R = 6371;
                   const dLat = toRadians(lat2 - lat1);
