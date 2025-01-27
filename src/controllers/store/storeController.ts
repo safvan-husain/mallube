@@ -313,12 +313,12 @@ export const deleteAdvertisement = asyncHandler(
 
 export const fetchAllAdvertisement = async (req: any, res: Response) => {
   try {
-    const storeId = req.store;
+    const storeId = req.store._id;
     // const advertisements = await Advertisement.find({ store: storeId });
     const advertisements = await Advertisement.aggregate([
       {
         $match: {
-          store: storeId
+          store: new mongoose.Types.ObjectId(storeId)
         }
       },
       {
