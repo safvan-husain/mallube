@@ -314,7 +314,53 @@ export const deleteAdvertisement = asyncHandler(
 export const fetchAllAdvertisement = async (req: any, res: Response) => {
   try {
     const storeId = req.store;
-    const advertisements = await Advertisement.find({ store: storeId });
+    // const advertisements = await Advertisement.find({ store: storeId });
+    const advertisements = await Advertisement.aggregate([
+      {
+        $match: {
+          store: storeId
+        }
+      },
+      {
+        $lookup: {
+          from: 'stores', // Name of the store collection
+          localField: 'store', // Field in the Product collection
+          foreignField: '_id', // Field in the Store collection
+          as: 'storeDetails', // Output array field
+        },
+      },
+      {
+        $unwind: '$storeDetails', // Convert the array to an object
+      },
+      {
+        $addFields: {
+          store: '$storeDetails.uniqueName', // Map storeDetails.name to store
+        },
+      },
+      {
+        $unset: 'storeDetails', // Optionally remove the storeDetails field
+      },
+      {
+        $lookup: {
+          from: 'advertisementplans', // Name of the store collection
+          localField: 'adPlan', // Field in the Product collection
+          foreignField: '_id', // Field in the Store collection
+          as: 'ad_plan_details', // Output array field
+        },
+      },
+      {
+        $unwind: '$ad_plan_details', // Convert the array to an object
+      },
+      {
+        $addFields: {
+          plan_name: '$ad_plan_details.name', // Map storeDetails.name to store
+        },
+      },
+      {
+        $unset: 'ad_plan_details', // Optionally remove the storeDetails field
+      },
+
+    ]);
     //TODO: remove the maping for efficancy, added since some older data don't have isActive field
     res.status(200).json(advertisements.map((i) => {
       if (i.isActive == undefined) {
