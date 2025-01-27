@@ -65,15 +65,10 @@ export const addProduct = asyncHandler(
   ): Promise<any> => {
     const { isPending, ...rest } = req.body;
     if (rest.store == undefined ) {
-      rest.store = req.store?._id;
+      rest.store = req.store?._id ?? req.params.storeId;
     }
-    if (isPending) {
-      let storeId;
-      if (req.store?._id) {
-        storeId = req.store._id;
-      } else {
-        storeId = req.params.storeId;
-      }
+    if (req.store == undefined && isPending) { // through bussiness app, we would only choose available category, so no need for isPending, authToken passing from mobile side
+      let storeId = req.params.storeId;
       const storeDetails = await Store.findById(storeId);
       if (!storeDetails) {
         return res.status(404).json({ message: "Store not found" });
@@ -105,7 +100,7 @@ export const addProduct = asyncHandler(
       ...rest,
     });
 
-    const newProduct = await product.save();
+    var newProduct = await (await product.save()).populate("category");    
     res.status(201).json(newProduct);
   }
 );
