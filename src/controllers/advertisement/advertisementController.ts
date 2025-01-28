@@ -60,7 +60,7 @@ export const fetchAllAdvertisement = asyncHandler(
 
 export const fetchRelaventAdvertisement = asyncHandler(
   async (req: Request, res: Response) => {
-    const { latitude, longitude } = req.params;
+    const { latitude, longitude } = req.query;
 
     try {
       const advertisements = await Advertisement.aggregate([
