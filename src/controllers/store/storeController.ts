@@ -161,7 +161,7 @@ export const signup = async (req: ICustomRequest<ISignUpStoreSchema>, res: Respo
 
     const location = {
       type: "Point",
-      coordinates: [longitude, latitude],
+      coordinates: [latitude, longitude],
     };
 
     let storeDetails: any = {

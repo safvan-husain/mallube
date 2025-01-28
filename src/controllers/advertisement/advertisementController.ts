@@ -65,6 +65,11 @@ export const fetchRelaventAdvertisement = asyncHandler(
     try {
       const advertisements = await Advertisement.aggregate([
         {
+          $match: { 
+            isActive: true
+          }
+        },
+        {
           $addFields: {
             show: {
               $function: {
