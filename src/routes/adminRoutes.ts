@@ -12,7 +12,6 @@ import {
   changePassword,
   addAdvertisement,
   deleteAdvertisement,
-  updateAdvertisementDisplay,
   fetchTotalStoreByCategory,
   addTarget,
   mostSearchedProducts,
@@ -54,8 +53,7 @@ router.route("/change-password")
 router
   .route("/advertisement")
   .post(admin, addAdvertisement)
-  .get(admin, fetchAllAdvertisement)
-  .put(admin, updateAdvertisementDisplay);
+  .get(admin, fetchAllAdvertisement);
 //TODO: add admin middleware.
 router.route("/advertisement/status").put(updateAdvertisementStatus);
 router

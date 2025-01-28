@@ -2,7 +2,6 @@ import { Schema, model, Document } from "mongoose";
 
 export interface IAdvertisement extends Document {
   image: string;
-  advertisementDisplayStatus: "showIinMainCarousal" | "showInSecondCarousal" | "hideFromBothCarousal";
   isActive: boolean;
   store?: Schema.Types.ObjectId;
   timestamp: Date;
@@ -20,12 +19,6 @@ const advertisementSchema = new Schema<IAdvertisement>({
   image: {
     type: String,
     required: true,
-  },
-  //TODO: remove this after cross check no where else it used, since its no longer the bussiness
-  advertisementDisplayStatus: {
-    type: String,
-    enum: ["showIinMainCarousal", "showInSecondCarousal", "hideFromBothCarousal"],
-    default: "hideFromBothCarousal",
   },
   isActive: {
     type: Boolean,

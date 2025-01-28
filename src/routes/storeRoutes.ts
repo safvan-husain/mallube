@@ -27,6 +27,7 @@ import { store } from "../middleware/auth";
 import { addSpecialisation, fetchAllSpecialisation } from "../controllers/specialisation/specialisationController";
 import { addDoctor, changeDrAvailability, deleteDoctor, fetchAllDoctors } from "../controllers/doctor/doctorController";
 import { addProduct, deleteProductOfAStore, getProductsOfAStore, switchStockStatusOfAProduct, updateProduct } from "../controllers/product/productController";
+import { rePublishRequestAnAdvertisement } from "../controllers/advertisement/advertisementController";
 const router = express.Router();
 
 router.route("/login").post(login);
@@ -44,6 +45,7 @@ router
   .post(store, AddAdvertisement)
   // .delete(store, deleteAdvertisement)
   .get(store, fetchAllAdvertisement);
+router.route("/advertisement/republish").put(store, rePublishRequestAnAdvertisement);
 router
   .route("/advertisement/:advertisementId")
   .delete(store, deleteAdvertisement);

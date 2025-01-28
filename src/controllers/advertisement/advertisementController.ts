@@ -143,3 +143,30 @@ export const updateAdvertisementStatus = asyncHandler(async (req: Request, res: 
   }
 }
 )
+
+export const rePublishRequestAnAdvertisement = asyncHandler(async (req: Request, res: Response) => {
+  const advertisementId = req.query.advertisementId;
+  try {    
+    var existingAdvertisement = await Advertisement.findById(advertisementId);
+    if (existingAdvertisement == undefined) {
+      res.status(401).json({ message: "Advertisement doesn't exist"});
+      return;
+    }
+    const { location, image, isActive, store, radius, radiusInRadians, adPlan, timestamp } = existingAdvertisement;
+    var newAdvertisement = new Advertisement({
+      location,
+      image,
+      isActive,
+      store,
+      radius,
+      radiusInRadians,
+      adPlan,
+    });
+    newAdvertisement = await newAdvertisement.save();
+    res.status(201).json({ message: "New advertisement created"});
+  } catch (error) {
+     console.log("error ar republish", error);
+     res.status(500).json({ message: "Internal server error"});
+  }
+
+})
