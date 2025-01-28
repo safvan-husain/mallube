@@ -835,8 +835,9 @@ export const updateStoreProfile = async (req: any, res: Response) => {
         message: "Duplicate key error",
         error: error.errmsg,
       });
-    }
+    } else {
     res.status(500).json({ message: "Internal server error", error });
+    }
   }
 };
 
