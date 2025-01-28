@@ -112,26 +112,29 @@ export const fetchRelaventAdvertisement = asyncHandler(
 );
 
 //TODO: make sure its IST, and works fine.
-export const approveAdvertisement = asyncHandler(async (req: Request, res: Response) => {
+export const updateAdvertisementStatus = asyncHandler(async (req: Request, res: Response) => {
   try {
-    var advertisement = await Advertisement.findById(req.query.advertisementId).populate("adPlan");
-    console.log(advertisement);
-    
+    let advertisement = await Advertisement.findById(req.body.advertisementId).populate("adPlan");
     if (!advertisement) {
-      res.status(404).json({ message: "Advertisement not found" });
-      return;
+        res.status(404).json({ message: "Advertisement not found" });
+        return;
+      }
+    if (req.body.isActive) {      
+      const planDurationInHours = ((advertisement.adPlan as unknown) as IAddAdvertisementPlanSchema).duration;
+      const expireAt = new Date(Date.now() + planDurationInHours * 60 * 60 * 1000); // Add the hours based on the plan
+      
+      advertisement.expireAt = expireAt;
+      advertisement.isActive = true;
+      advertisement = await advertisement.save();
+    } else {
+      advertisement.isActive = false;
+      advertisement.expireAt = undefined;
+      advertisement = await advertisement.save();
     }
-    const planDurationInHours = ((advertisement.adPlan as unknown) as IAddAdvertisementPlanSchema).duration;
-    const expireAt = new Date(Date.now() + planDurationInHours * 60 * 60 * 1000); // Add the hours based on the plan
-
-    advertisement.expireAt = expireAt;
-    advertisement = await advertisement.save();
-    
-    res.status(200).json({ message: "Successfully approved", advertisement});
+    res.status(200).json({ message: `Successfully ${ req.body.isActive ? "approved" : "canceled"}`, advertisement });
   } catch (error) {
     console.log("error ar approve ads", error);
-    res.status(500).json({ message: "Internal server error"});
-    
+    res.status(500).json({ message: "Internal server error" });
   }
-  }
+}
 )
