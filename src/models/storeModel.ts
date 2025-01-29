@@ -32,7 +32,7 @@ export interface IStore extends Document {
   live:string;
   instagram:string;
   facebook:string;
-  generateAuthToken: (userId: string) => string;
+  generateAuthToken: () => string;
   location: {
     type: string;
     coordinates: [number, number];
@@ -154,8 +154,8 @@ const storeSchema = new Schema<IStore>(
 // });
 
 // GENERATE AUTH TOKEN
-storeSchema.methods.generateAuthToken = function (storeId: string): string {
-  return jwt.sign({ _id: storeId }, config.jwtSecret, { expiresIn: "7d" });
+storeSchema.methods.generateAuthToken = function (): string {
+  return jwt.sign({ _id: this._id }, config.jwtSecret, { expiresIn: "7d" });
 };
 
 storeSchema.index({ location: "2dsphere" });

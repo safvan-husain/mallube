@@ -54,7 +54,7 @@ export const login = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid password" });
     }
 
-    const token = storeOwner.generateAuthToken(storeOwner._id);
+    const token = storeOwner.generateAuthToken();
 
     res.status(200).json({
       _id: storeOwner._id,
@@ -175,8 +175,9 @@ export const signup = async (req: ICustomRequest<ISignUpStoreSchema>, res: Respo
     storeDetails.password = hashedPassword;
 
     const newStore = new Store(storeDetails);
-    await newStore.save();
-    res.status(201).json({ message: "Store created" });
+    var store = await newStore.save();
+    const token = store.generateAuthToken();
+    res.status(201).json({ message: "Store created", authToken: token });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Internal server error" });
