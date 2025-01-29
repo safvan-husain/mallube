@@ -7,53 +7,73 @@ export const fetchAllAdvertisement = asyncHandler(
   async (req: Request, res: Response) => {
     console.log("called fetch all ads");
 
-    const advertisements = await Advertisement.aggregate([
-      {
-        $lookup: {
-          from: 'stores', // Name of the store collection
-          localField: 'store', // Field in the Product collection
-          foreignField: '_id', // Field in the Store collection
-          as: 'storeDetails', // Output array field
+    try {
+      const advertisements = await Advertisement.aggregate([
+        //finding store name using ID.
+        {
+          $lookup: {
+            from: 'stores', // Name of the store collection
+            localField: 'store', // Field in the Product collection
+            foreignField: '_id', // Field in the Store collection
+            as: 'storeDetails', // Output array field
+          },
         },
-      },
-      {
-        $unwind: '$storeDetails', // Convert the array to an object
-      },
-      {
-        $addFields: {
-          store: '$storeDetails.uniqueName', // Map storeDetails.name to store
+        //advertiesement created by admin will not have store field, so specifing it include on the following stages (even if those field are null).
+        {
+          $unwind: {
+            path: '$storeDetails',
+            preserveNullAndEmptyArrays: true, // This will include documents without a store
+          },
         },
-      },
-      {
-        $unset: 'storeDetails', // Optionally remove the storeDetails field
-      },
-      {
-        $lookup: {
-          from: 'advertisementplans', // Name of the store collection
-          localField: 'adPlan', // Field in the Product collection
-          foreignField: '_id', // Field in the Store collection
-          as: 'ad_plan_details', // Output array field
+        {
+          $addFields: {
+            store: {
+              $ifNull: ['$storeDetails.uniqueName', null],
+            }
+          },
         },
-      },
-      {
-        $unwind: '$ad_plan_details', // Convert the array to an object
-      },
-      {
-        $addFields: {
-          plan_name: '$ad_plan_details.name', // Map storeDetails.name to store
+        {
+          $unset: 'storeDetails',
         },
-      },
-      {
-        $unset: 'ad_plan_details', // Optionally remove the storeDetails field
-      },
+        {
+          $lookup: {
+            from: 'advertisementplans', // Name of the store collection
+            localField: 'adPlan', // Field in the Product collection
+            foreignField: '_id', // Field in the Store collection
+            as: 'ad_plan_details', // Output array field
+          },
+        },
+        {
+          $unwind: {
+            path: '$ad_plan_details',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $addFields: {
+            plan_name: {
+              $ifNull: ['$ad_plan_details.name', null]
+            },
+          },
+        },
+        {
+          $unset: 'ad_plan_details',
+        },
+        //we want to only include document which either posted by admin or have store owner.
+        //TODO: comment the below stage and delete all the previous ads.
+        {
+          $match: {
+            $or: [
+              { store: { $ne: null } }, { isPostedByAdmin: true },
+            ],
+          },
+        },
+      ]);
 
-    ]);
-
-    if (advertisements) {
       res.status(200).json(advertisements);
-    } else {
-      res.status(500);
-      throw new Error("Product not found");
+    } catch (error) {
+      console.log("error at fetch all ads", error);
+      res.status(500).json({ message: "Internal server error" });
     }
   }
 );
@@ -65,7 +85,7 @@ export const fetchRelaventAdvertisement = asyncHandler(
     try {
       const advertisements = await Advertisement.aggregate([
         {
-          $match: { 
+          $match: {
             isActive: true
           }
         },
@@ -121,14 +141,16 @@ export const updateAdvertisementStatus = asyncHandler(async (req: Request, res: 
   try {
     let advertisement = await Advertisement.findById(req.body.advertisementId).populate("adPlan");
     if (!advertisement) {
-        res.status(404).json({ message: "Advertisement not found" });
-        return;
+      res.status(404).json({ message: "Advertisement not found" });
+      return;
+    }
+    if (req.body.isActive) {
+      //if ad is by admin, we want to have unlimitted time.
+      if (!advertisement.isPostedByAdmin) {
+        const planDurationInHours = ((advertisement.adPlan as unknown) as IAddAdvertisementPlanSchema).duration;
+        const expireAt = new Date(Date.now() + planDurationInHours * 60 * 60 * 1000); // Add the hours based on the plan        
+        advertisement.expireAt = expireAt;
       }
-    if (req.body.isActive) {      
-      const planDurationInHours = ((advertisement.adPlan as unknown) as IAddAdvertisementPlanSchema).duration;
-      const expireAt = new Date(Date.now() + planDurationInHours * 60 * 60 * 1000); // Add the hours based on the plan
-      
-      advertisement.expireAt = expireAt;
       advertisement.isActive = true;
       advertisement = await advertisement.save();
     } else {
@@ -136,7 +158,7 @@ export const updateAdvertisementStatus = asyncHandler(async (req: Request, res: 
       advertisement.expireAt = undefined;
       advertisement = await advertisement.save();
     }
-    res.status(200).json({ message: `Successfully ${ req.body.isActive ? "approved" : "canceled"}`, advertisement });
+    res.status(200).json({ message: `Successfully ${req.body.isActive ? "approved" : "canceled"}`, advertisement });
   } catch (error) {
     console.log("error ar approve ads", error);
     res.status(500).json({ message: "Internal server error" });
@@ -146,10 +168,10 @@ export const updateAdvertisementStatus = asyncHandler(async (req: Request, res: 
 
 export const rePublishRequestAnAdvertisement = asyncHandler(async (req: Request, res: Response) => {
   const advertisementId = req.query.advertisementId;
-  try {    
+  try {
     var existingAdvertisement = await Advertisement.findById(advertisementId);
     if (existingAdvertisement == undefined) {
-      res.status(401).json({ message: "Advertisement doesn't exist"});
+      res.status(401).json({ message: "Advertisement doesn't exist" });
       return;
     }
     const { location, image, isActive, store, radius, radiusInRadians, adPlan, timestamp } = existingAdvertisement;
@@ -163,10 +185,26 @@ export const rePublishRequestAnAdvertisement = asyncHandler(async (req: Request,
       adPlan,
     });
     newAdvertisement = await newAdvertisement.save();
-    res.status(201).json({ message: "New advertisement created"});
+    res.status(201).json({ message: "New advertisement created" });
   } catch (error) {
-     console.log("error ar republish", error);
-     res.status(500).json({ message: "Internal server error"});
+    console.log("error ar republish", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 
 })
+
+
+export const periodicallyChangeStatusOfExpiredAdvertisemets = () => {
+  setInterval(async () => {
+    const expiredAdvertisements = await Advertisement.find({
+      expireAt: { $lt: new Date() },
+      isActive: true,
+    });
+    if(expiredAdvertisements) {
+      for (var expiredAd of expiredAdvertisements) {
+        expiredAd.isActive = false;
+        expiredAd.save();
+      }
+    }
+  }, 60000 * 10);
+}

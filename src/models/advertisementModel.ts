@@ -3,15 +3,16 @@ import { Schema, model, Document } from "mongoose";
 export interface IAdvertisement extends Document {
   image: string;
   isActive: boolean;
+  isPostedByAdmin: boolean;
   store?: Schema.Types.ObjectId;
   timestamp: Date;
   expireAt?: Date;
-  location: {
+  location?: {
     type: string;
     coordinates: [number, number];
   };
-  radius: number;
-  radiusInRadians: number;
+  radius?: number;
+  radiusInRadians?: number;
   adPlan?: Schema.Types.ObjectId;
 }
 
@@ -23,6 +24,12 @@ const advertisementSchema = new Schema<IAdvertisement>({
   isActive: {
     type: Boolean,
     default: false,
+    index: true
+  },
+  isPostedByAdmin: {
+    type: Boolean,
+    default: false,
+    required: true,
   },
   store: {
     type: Schema.Types.ObjectId,
@@ -49,17 +56,22 @@ const advertisementSchema = new Schema<IAdvertisement>({
   },
   radius: {
     type: Number,
-    required: true,
   },
   radiusInRadians: {
     type: Number,
-    required: true,
   },
   adPlan: {
     type: Schema.Types.ObjectId,
     ref: "advertisementPlans",
-    required: true,
   }
+});
+
+advertisementSchema.index({ 
+  expireAt: 1, 
+  isActive: 1 
+}, { 
+  sparse: true, 
+  background: true 
 });
 
 const Advertisement = model<IAdvertisement>(

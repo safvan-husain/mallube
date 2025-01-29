@@ -284,12 +284,12 @@ export const changePassword = async (
 
 export const addAdvertisement = async (req: Request, res: Response) => {
   try {
-    const { image, isMainAdvertisement, isSecondAdvertisement } = req.body;
+    const { image } = req.body;
 
     const newAdvertisement = new Advertisement({
       image,
-      isMainAdvertisement,
-      isSecondAdvertisement,
+      isPostedByAdmin: true,
+      isActive: true
     });
     await newAdvertisement.save();
     res.status(201).json({ message: "Advertisement added successfully" });
@@ -326,34 +326,6 @@ export const deleteAdvertisement = asyncHandler(
       res.status(200).json({ message: "Advertisement deleted successfully" });
     } catch (error) {
       res.status(500).json({ message: "Internal Server Error" });
-    }
-  }
-);
-
-export const updateAdvertisementDisplay = asyncHandler(
-  async (req: Request, res: Response) => {
-    try {
-      const { advertisement, advertisementId } = req.body;
-
-      const updatedAdvertisement = await Advertisement.findByIdAndUpdate(
-        advertisementId,
-        {
-          advertisementDisplayStatus: advertisement,
-        },
-        {
-          new: true,
-        }
-      );
-
-      if (!updatedAdvertisement) {
-        res.status(404).json({ message: "Advertisement not found" });
-      }
-      res.status(200).json({
-        message: "Advertisement display status updated successfully",
-        updatedAdvertisement,
-      });
-    } catch (error) {
-      res.status(500).json({ message: "Internal server error" });
     }
   }
 );

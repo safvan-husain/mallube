@@ -20,6 +20,7 @@ import './utils/common'
 require("dotenv").config();
 import { errorHandler, notFound } from "./middleware/error.middleware";
 import { config } from "./config/vars";
+import { periodicallyChangeStatusOfExpiredAdvertisemets } from "./controllers/advertisement/advertisementController";
 
 const app = express();
 
@@ -56,6 +57,8 @@ app.use("/api/booking", bookingRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
+
+periodicallyChangeStatusOfExpiredAdvertisemets();
 
 const PORT = config.port || 4000;
 
