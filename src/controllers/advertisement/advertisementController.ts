@@ -196,15 +196,21 @@ export const rePublishRequestAnAdvertisement = asyncHandler(async (req: Request,
 
 export const periodicallyChangeStatusOfExpiredAdvertisemets = () => {
   setInterval(async () => {
-    const expiredAdvertisements = await Advertisement.find({
-      expireAt: { $lt: new Date() },
-      isActive: true,
-    });
-    if(expiredAdvertisements) {
-      for (var expiredAd of expiredAdvertisements) {
-        expiredAd.isActive = false;
-        expiredAd.save();
+    try {
+      const expiredAdvertisements = await Advertisement.find({
+        expireAt: { $lt: new Date() },
+        isActive: true,
+      });
+      if (expiredAdvertisements) {
+        for (var expiredAd of expiredAdvertisements) {
+          expiredAd.isActive = false;
+          expiredAd.save();
+        }
       }
+    } catch (error) {
+      console.log("error at periodicallyChangeStatusOfExpiredAdvertisemets", error);
+
     }
+
   }, 60000 * 10);
 }
