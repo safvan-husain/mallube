@@ -8,7 +8,7 @@ export const fetchAllAdvertisement = asyncHandler(
     console.log("called fetch all ads");
 
     try {
-      const advertisements = await Advertisement.aggregate([
+      var advertisements = await Advertisement.aggregate([
         //finding store name using ID.
         {
           $lookup: {
@@ -70,7 +70,7 @@ export const fetchAllAdvertisement = asyncHandler(
         },
       ]);
 
-      res.status(200).json(advertisements);
+      res.status(200).json(advertisements.reverse());
     } catch (error) {
       console.log("error at fetch all ads", error);
       res.status(500).json({ message: "Internal server error" });
