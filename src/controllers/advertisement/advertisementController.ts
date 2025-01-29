@@ -95,7 +95,9 @@ export const fetchRelaventAdvertisement = asyncHandler(
               $function: {
                 //calculating distance between two points (userLocation, advertisementLocation)
                 //then checking that distance is less than or equal to radius ( checking whether user is in the area of advertisement)
-                body: function (location: { coordinates: Array<number> } | undefined | null, lat1: number, long1: number, radius: number): boolean {
+                body: function (location: { coordinates: Array<number> } | undefined | null, lat1: number, long1: number, radius: number, isPostedByAdmin: boolean): boolean {
+                  //we want to show admin posted ads to everyone regarless of location.
+                  if (isPostedByAdmin) return true;
                   if (location === null || location === undefined) {
                     return false;
                   }
@@ -113,7 +115,7 @@ export const fetchRelaventAdvertisement = asyncHandler(
                   return distance <= radius;
 
                 },
-                args: ["$location", latitude, longitude, "$radius"],
+                args: ["$location", latitude, longitude, "$radius", "$isPostedByAdmin"],
                 lang: "js"
               }
             }
