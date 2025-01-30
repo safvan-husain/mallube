@@ -30,6 +30,28 @@ const { TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN } = process.env;
 
 const twilioServiceId = process.env.TWILIO_SERVICE_ID;
 
+export const deleteStore = asyncHandler(async (req: ICustomRequest<undefined>, res: Response) => {
+  const storeId = req.store?._id;
+  try {
+    const store = await Store.findById(storeId);
+    if(!store) {
+      res.status(401).json({ message: "User not found"});
+      return;
+    }
+    await Advertisement.deleteMany({
+      store: new mongoose.Types.ObjectId(req.store?._id)
+    })
+    await Product.deleteMany({
+      store: new mongoose.Types.ObjectId(req.store?._id)
+    });
+    await Store.findByIdAndDelete(storeId)
+    res.status(200).json({ message: "Succfully deleted" });
+  } catch (error) {
+    console.log("error at delete store", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 export const login = async (req: Request, res: Response) => {
   try {
     const { phone, password, email } = req.body;
@@ -837,7 +859,7 @@ export const updateStoreProfile = async (req: any, res: Response) => {
         error: error.errmsg,
       });
     } else {
-    res.status(500).json({ message: "Internal server error", error });
+      res.status(500).json({ message: "Internal server error", error });
     }
   }
 };

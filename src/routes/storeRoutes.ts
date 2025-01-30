@@ -21,7 +21,8 @@ import {
   fetchTimeSlot,
   deleteTimeSlots,
   stockUpdate,
-  getProfile
+  getProfile,
+  deleteStore
 } from "../controllers/store/storeController";
 import { store } from "../middleware/auth";
 import { addSpecialisation, fetchAllSpecialisation } from "../controllers/specialisation/specialisationController";
@@ -35,7 +36,11 @@ router.route("/signup").post(signup);
 router.route("/profile").get(store, getProfile);
 // router.route("/edit-profile").put(store, updateStoreProfile);
 // need to add store authentication middleware
-router.route("/").get(store, fetchStore).put(store, updateStoreProfile);
+router.route("/")
+  .get(store, fetchStore)
+  .put(store, updateStoreProfile)
+  .delete(store, deleteStore);
+
 router.route("/search-stores").get(searchStoresByProductName);
 router.route("/fetch-store-by-category").get(fetchStoreByCategory);
 router.route("/fetch-all-stores").get(fetchAllStore);
