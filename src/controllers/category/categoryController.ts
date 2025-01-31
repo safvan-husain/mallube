@@ -20,6 +20,8 @@ import Product from "../../models/productModel";
 // get all categories for admin category management
 export const getCategories = asyncHandler(
   async (req: Request, res: Response) => {
+    console.log("got call to get categories", req.query);
+    
     const categories = await getCategoriesInFormat({
       isActive: Boolean(req.query.isActive),
     });
