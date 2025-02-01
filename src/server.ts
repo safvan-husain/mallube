@@ -15,6 +15,7 @@ import advertisementRoutes from "./routes/advertisementRoutes";
 import utilsRoutes from "./routes/utilsRoutes";
 import subscriptionRoutes from "./routes/subscriptionRoutes"
 import bookingRoutes from './routes/bookingRoutes'
+import { notificationRouter } from "./routes/notificationRoute";
 import './utils/common'
 
 require("dotenv").config();
@@ -54,6 +55,7 @@ app.use("/api/advertisement", advertisementRoutes);
 app.use("/api/utils", utilsRoutes);
 app.use("/api/subscription", subscriptionRoutes);
 app.use("/api/booking", bookingRoutes);
+app.use("/api/notification", notificationRouter)
 
 app.use(notFound);
 app.use(errorHandler);
