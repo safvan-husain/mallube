@@ -41,7 +41,7 @@ export const getNotificationsForUser = asyncHandler(
             res.status(200).json({
                 notifications,
                 currentPage: page,
-                totalPages: Math.ceil(total / limit),
+                totalItems: total,
             });
         } catch (error) {
             console.log("error ar getNotification", error);
