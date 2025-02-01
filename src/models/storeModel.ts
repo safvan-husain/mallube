@@ -1,6 +1,8 @@
-import { Schema, model, Document ,Types} from "mongoose";
+import { Schema, model, Document, Types } from "mongoose";
 import jwt from "jsonwebtoken";
 import { config } from "../config/vars";
+
+type WorkingDay = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 
 export interface IStore extends Document {
   storeName: string;
@@ -29,9 +31,12 @@ export interface IStore extends Document {
   isAvailable: boolean; // this field will be used by store owner to change their shop status
   district: string;
   bio: string;
-  live:string;
-  instagram:string;
-  facebook:string;
+  workingDays: WorkingDay[];
+  //in 24 format.
+  openTime: number;
+  closeTime: number;
+  instagram: string;
+  facebook: string;
   generateAuthToken: () => string;
   location: {
     type: string;
@@ -39,7 +44,7 @@ export interface IStore extends Document {
   };
   createdAt?: Date;
   updatedAt?: Date;
-  storeProviding?:"productBased" |  "serviceBased"
+  storeProviding?: "productBased" | "serviceBased"
 }
 
 const storeSchema = new Schema<IStore>(
@@ -57,7 +62,7 @@ const storeSchema = new Schema<IStore>(
     category: {
       type: Schema.Types.ObjectId,
       ref: "categories",
-    }, 
+    },
     retail: { type: Boolean },
     wholesale: { type: Boolean },
     service: { type: Boolean },
@@ -98,11 +103,11 @@ const storeSchema = new Schema<IStore>(
     },
     instagram: {
       type: String,
-      default:''
+      default: ''
     },
     facebook: {
       type: String,
-      default:''
+      default: ''
     },
     bio: {
       type: String,
@@ -133,12 +138,21 @@ const storeSchema = new Schema<IStore>(
       type: Schema.Types.ObjectId,
       ref: "staffs",
     },
-    storeProviding:{
-      type:String,
-      default:"productBased"
+    storeProviding: {
+      type: String,
+      default: "productBased"
     },
-    visitors: {type:Number, default:0},
-    live:{type:String, default:'open'}
+    visitors: { type: Number, default: 0 },
+    workingDays: {
+      default: [],
+      type: [String]
+    },
+    openTime: {
+      type: Number
+    },
+    closeTime: {
+      type: Number
+    }
   },
   {
     timestamps: true,

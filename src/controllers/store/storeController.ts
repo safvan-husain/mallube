@@ -206,12 +206,12 @@ export const signup = async (req: ICustomRequest<ISignUpStoreSchema>, res: Respo
 
   }
 };
-
+//TODO: delete duplication.
 export const editStore = async (req: any, res: Response) => {
   const {
     name, email, storeName, uniqueName, category, phone,
-    location, shopImageUrl, bio, live,
-    isActive, subscription,
+    location, shopImageUrl, bio,
+    isAvailable, subscription,
   } = req.body;
 
   const storeId: any = req?.store._id;
@@ -229,8 +229,7 @@ export const editStore = async (req: any, res: Response) => {
     store.location = location || store.location;
     store.shopImgUrl = shopImageUrl || store.shopImgUrl;
     store.bio = bio || store.bio;
-    store.live = live || store.live;
-    store.isActive = isActive || store.isActive;
+    store.isAvailable = isAvailable || store.isAvailable;
     store.subscription = subscription || store.subscription;
     await store.save();
     res.status(200).json({ message: "Store updated successfully" });
@@ -266,16 +265,21 @@ export const fetchStore = asyncHandler(
 export const updateLiveStatus = async (
   req: any,
   res: Response,
-  next: NextFunction
 ) => {
   try {
     const storeId: string = req.store._id;
+    const { isAvailable } = req.body;
+    
+    if(isAvailable == undefined || isAvailable == null) {
+      res.status(401).json({ message: "isAvailable field is required"});
+      return;
+    }
     const store = await Store.findById(storeId);
 
     if (!store) {
       return res.status(404).json({ message: "Store not found" });
     }
-    store.live = req.body.storeLiveStatus.toString();
+    store.isAvailable = isAvailable;
     await store.save();
 
     return res
