@@ -58,11 +58,16 @@ export const getActiveSubCategories = asyncHandler(
 export const addCategory = asyncHandler(
   async (req: ICustomRequest<IAddCategorySchema>, res: Response) => {
     const { name, parentId, isActive, icon } = req.body;
+    let isPending = true
+    const { isAdmin } = req.query;
+    if(isAdmin) {
+      isPending = false; 
+    }
     const isDuplicate = await isDuplicateCategory(name, parentId);
 
     if (isDuplicate) res.status(409).json("Duplicate Category");
     else {
-      await Category.create({ name, parentId, isActive, icon });
+      await Category.create({ name, parentId, isActive, icon, isPending });
 
       res.status(201).json("ok");
     }
