@@ -22,6 +22,8 @@ require("dotenv").config();
 import { errorHandler, notFound } from "./middleware/error.middleware";
 import { config } from "./config/vars";
 import { periodicallyChangeStatusOfExpiredAdvertisemets } from "./controllers/advertisement/advertisementController";
+import expressAsyncHandler from "express-async-handler";
+import Store from "./models/storeModel";
 
 const app = express();
 
@@ -44,6 +46,37 @@ app.use(
 app.use("/api/healthcheck", (req, res) => {
   res.status(200).send("Server is healthy");
 });
+
+const updateData = expressAsyncHandler(
+  async (req, res) => {
+    try {
+      console.log("recieved update requirement");
+      
+      await Store.updateMany(
+        { workingDays: { $exists: false } },
+        { $set: { workingDays: [] } }
+      );
+      console.log("completed workind days");
+      
+      await Store.updateMany(
+        { openTime: { $exists: false } },
+        { $set: { openTime: 0 } }
+      );
+      console.log("completed opentime");
+      
+      await Store.updateMany(
+        { closeTime: { $exists: false } },
+        { $set: { closeTime: 0 } }
+      );
+      res.status(200).json({ message: "operation completed"});
+    } catch (error) {
+      res.status(400).json( {message: error})
+    }
+
+  }
+)
+
+app.use("/api/developer/transform", updateData);
 
 app.use("/api/admin", adminRoutes);
 app.use("/api/user", userRoutes);
