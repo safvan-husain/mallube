@@ -76,7 +76,7 @@ const updateData = expressAsyncHandler(
   }
 )
 
-app.use("/api/developer/transform", updateData);
+// app.use("/api/developer/transform", updateData);
 
 app.use("/api/admin", adminRoutes);
 app.use("/api/user", userRoutes);
