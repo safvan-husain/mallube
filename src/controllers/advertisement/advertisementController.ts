@@ -2,6 +2,7 @@ import asyncHandler from "express-async-handler";
 import { Request, Response } from "express";
 import Advertisement from "../../models/advertisementModel";
 import { IAddAdvertisementPlanSchema } from "../../schemas/advertisement.schema";
+import AdvertisementPlan from "../../models/advertismentPlanModel";
 
 export const fetchAllAdvertisement = asyncHandler(
   async (req: Request, res: Response) => {
@@ -177,6 +178,11 @@ export const rePublishRequestAnAdvertisement = asyncHandler(async (req: Request,
       return;
     }
     const { location, image, isActive, store, radius, radiusInRadians, adPlan, timestamp } = existingAdvertisement;
+    const advertisementPlan = await AdvertisementPlan.findById(adPlan);
+    if(!advertisementPlan) {
+      res.status(400).json({ message: "The same plan no longer exist, please create a new"});
+      return;
+    }
     var newAdvertisement = new Advertisement({
       location,
       image,

@@ -25,7 +25,7 @@ import {
 } from "../controllers/admin/adminController";
 import { updateAdvertisementStatus, fetchAllAdvertisement } from "../controllers/advertisement/advertisementController";
 import { admin } from "../middleware/auth";
-import { createNewAdvertisementPlan } from "../controllers/advertisement/advertisementPlanController";
+import { createNewAdvertisementPlan, deleteAdvertisementPlan } from "../controllers/advertisement/advertisementPlanController";
 const router = express.Router();
 
 router.route("/login").post(login);
@@ -56,13 +56,15 @@ router
   .get(admin, fetchAllAdvertisement);
 //TODO: add admin middleware.
 router.route("/advertisement/status").put(updateAdvertisementStatus);
-router
-  .route("/advertisement/:advertisementId")
-  .delete(admin, deleteAdvertisement);
+
 
 //TODO: add middleware admin.
 router.route("/advertisement/plan")
-  .post(createNewAdvertisementPlan);
+  .post(admin, createNewAdvertisementPlan)
+  .delete(admin, deleteAdvertisementPlan);
+router
+  .route("/advertisement/:advertisementId")
+  .delete(admin, deleteAdvertisement);
 //TODO: delete plan.
 router.route("/total-store")
   .get(admin, fetchTotalStoreByCategory);

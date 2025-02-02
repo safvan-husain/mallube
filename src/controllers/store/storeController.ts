@@ -149,10 +149,7 @@ export const getProfile = async (req: any, res: Response) => {
 
 export const signup = async (req: ICustomRequest<ISignUpStoreSchema>, res: Response) => {
   try {
-    const { shopImgUrl, latitude, longitude, ...rest } =
-
-
-      req.body;
+    const { shopImgUrl, latitude, longitude, ...rest } = req.body;
 
     let uniqueName = (req.body as ISignUpStoreSchema).uniqueName;
     let phone = (req.body as ISignUpStoreSchema).phone;

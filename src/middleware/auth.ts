@@ -22,7 +22,7 @@ export const admin = asyncHandler(
   async (req: RequestWithAdmin | any, res: Response, next: NextFunction) => {
     let token = req.headers.authorization;
     if (!token) {
-      res.status(401);
+      res.status(401).json({ message: "Not authorized"});
       throw new Error("Not authorized, no token available");
     }
 
