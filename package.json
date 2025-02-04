@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "npm install && nodemon --watch \"src/**\" --ext \"ts,json\" --exec \"ts-node src/server.ts\"",
+    "dev": "nodemon --watch \"src/**\" --ext \"ts,json\" --exec \"ts-node src/server.ts\"",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npm install && tsc",
+    "build": "tsc",
     "start": "node dist/server.js"
   },
   "keywords": [],
