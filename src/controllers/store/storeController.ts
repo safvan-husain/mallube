@@ -841,14 +841,17 @@ export const updateStoreProfile = async (req: any, res: Response) => {
       delete updatedFields.uniqueName;
     }
 //TODO: return name of category requested by anshif.
-    const response = await Store.findByIdAndUpdate(storeId, updatedFields, {
+    var response = await (await Store.findByIdAndUpdate(storeId, updatedFields, {
       new: true,
-    });
+    }))?.populate({path: 'category'});
 
     if (!response) {
       return res.status(404).json({ message: "Update failed" });
     }
+    (response as any).category_name = response?.category;
 
+    (response as any).category = (response?.category as any)._id;
+    
     res.status(200).json({
       message: "Store profile updated successfully",
       response,
