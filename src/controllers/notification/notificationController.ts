@@ -142,28 +142,28 @@ const getNotificationsAndCount = async ({ limit, skip, isForBusiness }: { limit:
 
 const sendPushNotifications = async ({ title, body, isForBusiness }: { title: string, body: string, isForBusiness: boolean }) => {
     try {
-        let fcmTokens;
-        if (isForBusiness) {
-            fcmTokens = await Store.find({ fcmToken: { $exists: true } }, 'fcmToken').lean() as string[];
-        } else {
-            fcmTokens = await User.find({ fcmToken: { $exists: true } }, 'fcmToken').lean() as string[];
-        }
-        for (let i = 0; i < fcmTokens.length; i += 100) {
-            const chunk = fcmTokens.slice(i, i + 100);
-            messaging().sendEachForMulticast({
-                data: {
-                    title,
-                    body
-                },
-                tokens: chunk
-            }).then((response) => {
-                console.log('Multicast notification sent:', response);
-            })
-                .catch((error) => {
-                    console.error('Error sending multicast notification:', error);
-                });
-        }
-        console.log("tokens", fcmTokens);
+        // let fcmTokens;
+        // if (isForBusiness) {
+        //     fcmTokens = await Store.find({ fcmToken: { $exists: true } }, 'fcmToken').lean() as string[];
+        // } else {
+        //     fcmTokens = await User.find({ fcmToken: { $exists: true } }, 'fcmToken').lean() as string[];
+        // }
+        // for (let i = 0; i < fcmTokens.length; i += 100) {
+        //     const chunk = fcmTokens.slice(i, i + 100);
+        //     messaging().sendEachForMulticast({
+        //         data: {
+        //             title,
+        //             body
+        //         },
+        //         tokens: chunk
+        //     }).then((response) => {
+        //         console.log('Multicast notification sent:', response);
+        //     })
+        //         .catch((error) => {
+        //             console.error('Error sending multicast notification:', error);
+        //         });
+        // }
+        // console.log("tokens", fcmTokens);
     } catch (error) {
         console.log("error at sendPushNotificationToUsers", error);
     }

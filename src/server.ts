@@ -6,7 +6,7 @@ import { initializeApp } from "firebase-admin/app";
 import { credential } from "firebase-admin";
 
 import connectDb from "./config/db";
-const serviceAccount = require('./secrets/serviceAccountKey.json');
+// const serviceAccount = require('./secrets/serviceAccountKey.json');
 
 import adminRoutes from "./routes/adminRoutes";
 import userRoutes from "./routes/userRoutes";
@@ -31,7 +31,7 @@ import Store from "./models/storeModel";
 const app = express();
 
 connectDb();
-initializeApp({ credential: credential.cert(serviceAccount) });
+// initializeApp({ credential: credential.cert(serviceAccount) });
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));
