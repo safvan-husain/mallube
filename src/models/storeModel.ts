@@ -1,8 +1,10 @@
-import { Schema, model, Document, Types } from "mongoose";
+import { Schema, model, Document } from "mongoose";
 import jwt from "jsonwebtoken";
 import { config } from "../config/vars";
 
 type WorkingDay = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+//TODO: suggest the feature to dynamiclly showing the available service type in the front-end.
+type ServiceType = 'salon, beauty parlour & spa' | 'other' ;
 
 export interface IStore extends Document {
   fcmToken?: string;
@@ -28,8 +30,8 @@ export interface IStore extends Document {
   retail?: boolean;
   wholesale?: boolean;
   service?: boolean;
+  serviceType: ServiceType;
   isActive: boolean; //this field will be used by admin to block and unblock a shop
-
   isAvailable: boolean; // this field will be used by store owner to change their shop status
   district: string;
   bio: string;
@@ -76,6 +78,7 @@ const storeSchema = new Schema<IStore>(
     retail: { type: Boolean },
     wholesale: { type: Boolean },
     service: { type: Boolean },
+    serviceType: { type: String },
     location: {
       type: {
         type: String,

@@ -22,6 +22,7 @@ import {
 } from "../../schemas/store.schema";
 import { getNextYearSameDateMinusOneDay } from "../../utils/misc";
 import { store } from "../../middleware/auth";
+import { FeedBack } from "../../models/feedbackModel";
 
 const { TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN } = process.env;
 // const twilioclient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN, {
@@ -149,7 +150,7 @@ export const getProfile = async (req: any, res: Response) => {
 
 export const signup = async (req: ICustomRequest<ISignUpStoreSchema>, res: Response) => {
   try {
-    const { shopImgUrl, latitude, longitude, ...rest } = req.body;
+    const { shopImgUrl, latitude, longitude, feedback, ...rest } = req.body;
 
     let uniqueName = (req.body as ISignUpStoreSchema).uniqueName;
     let phone = (req.body as ISignUpStoreSchema).phone;
@@ -195,6 +196,18 @@ export const signup = async (req: ICustomRequest<ISignUpStoreSchema>, res: Respo
 
     const newStore = new Store(storeDetails);
     var store = await newStore.save();
+    if (feedback) {
+      const newFeedback = new FeedBack({
+        storeId: store._id,
+        ourQuestion: "Describe your service for store",
+        answer: feedback   
+      });
+      try {
+        await newFeedback.save();
+      } catch (e) {
+        console.log("error saving feedback from store signup", e);
+      }
+    }
     const token = store.generateAuthToken();
     res.status(201).json({ message: "Store created", authToken: token });
   } catch (error) {
