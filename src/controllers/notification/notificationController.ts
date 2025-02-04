@@ -1,6 +1,9 @@
 import { Request, Response } from "express";
+import { messaging } from 'firebase-admin';
 import asyncHandler from "express-async-handler";
 import Notification from "../../models/notificationModel";
+import User from "../../models/userModel";
+import Store from "../../models/storeModel";
 
 
 export const getNotificationsForBusiness = asyncHandler(
@@ -10,7 +13,7 @@ export const getNotificationsForBusiness = asyncHandler(
             const limit = parseInt(req.query.limit as string) || 10;
             const skip = (page - 1) * limit;
 
-            const { notifications, count: total} = await getNotificationsAndCount({
+            const { notifications, count: total } = await getNotificationsAndCount({
                 limit,
                 skip,
                 isForBusiness: true
@@ -18,7 +21,7 @@ export const getNotificationsForBusiness = asyncHandler(
             res.status(200).json({
                 notifications,
                 currentPage: page,
-                totalItems:total,
+                totalItems: total,
             });
         } catch (error) {
             console.log("error ar getNotification", error);
@@ -33,7 +36,7 @@ export const getNotificationsForUser = asyncHandler(
             const limit = parseInt(req.query.limit as string) || 10;
             const skip = (page - 1) * limit;
 
-            const { notifications, count: total} = await getNotificationsAndCount({
+            const { notifications, count: total } = await getNotificationsAndCount({
                 limit,
                 skip,
                 isForBusiness: false
@@ -59,6 +62,11 @@ export const createNotificationForUsers = asyncHandler(
                 description,
                 isForBusiness: false
             });
+            sendPushNotifications({
+                title,
+                body: description,
+                isForBusiness: false
+            });
             res.status(201).json({ message: "Successfully created notification", notification });
         } catch (error) {
             console.log("error ar postNotification", error);
@@ -74,6 +82,11 @@ export const createNotificationForBusiness = asyncHandler(
             const notification = await createNotification({
                 title,
                 description,
+                isForBusiness: true
+            });
+            sendPushNotifications({
+                title,
+                body: description,
                 isForBusiness: true
             });
             res.status(201).json({ message: "Successfully created notification", notification });
@@ -125,4 +138,33 @@ const getNotificationsAndCount = async ({ limit, skip, isForBusiness }: { limit:
     })
 
     return { notifications, count: totalCount };
+}
+
+const sendPushNotifications = async ({ title, body, isForBusiness }: { title: string, body: string, isForBusiness: boolean }) => {
+    try {
+        let fcmTokens;
+        if (isForBusiness) {
+            fcmTokens = await Store.find({ fcmToken: { $exists: true } }, 'fcmToken').lean() as string[];
+        } else {
+            fcmTokens = await User.find({ fcmToken: { $exists: true } }, 'fcmToken').lean() as string[];
+        }
+        for (let i = 0; i < fcmTokens.length; i += 100) {
+            const chunk = fcmTokens.slice(i, i + 100);
+            messaging().sendEachForMulticast({
+                data: {
+                    title,
+                    body
+                },
+                tokens: chunk
+            }).then((response) => {
+                console.log('Multicast notification sent:', response);
+            })
+                .catch((error) => {
+                    console.error('Error sending multicast notification:', error);
+                });
+        }
+        console.log("tokens", fcmTokens);
+    } catch (error) {
+        console.log("error at sendPushNotificationToUsers", error);
+    }
 }

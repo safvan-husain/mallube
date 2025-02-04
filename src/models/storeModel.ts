@@ -5,6 +5,7 @@ import { config } from "../config/vars";
 type WorkingDay = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 
 export interface IStore extends Document {
+  fcmToken?: string;
   storeName: string;
   uniqueName: string;
   storeOwnerName: string;
@@ -20,6 +21,7 @@ export interface IStore extends Document {
   };
   password: string;
   category: Schema.Types.ObjectId;
+  subCategories: Schema.Types.ObjectId[];
   addedBy: Schema.Types.ObjectId;
   visitors: number;
   shopImgUrl: string;
@@ -49,6 +51,9 @@ export interface IStore extends Document {
 
 const storeSchema = new Schema<IStore>(
   {
+    fcmToken: {
+      type: String,
+    },
     storeName: {
       type: String,
       required: true,
@@ -62,6 +67,11 @@ const storeSchema = new Schema<IStore>(
     category: {
       type: Schema.Types.ObjectId,
       ref: "categories",
+    },
+    subCategories: {
+      type: [Schema.Types.ObjectId],
+      ref: "categories",
+      default: []
     },
     retail: { type: Boolean },
     wholesale: { type: Boolean },
@@ -145,13 +155,15 @@ const storeSchema = new Schema<IStore>(
     visitors: { type: Number, default: 0 },
     workingDays: {
       default: [],
-      type: [String]
+      type: [String],
     },
     openTime: {
-      type: Number
+      type: Number,
+      default: 0
     },
     closeTime: {
-      type: Number
+      type: Number,
+      default: 0
     }
   },
   {

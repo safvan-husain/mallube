@@ -4,17 +4,18 @@ import {
     createNotificationForUsers, deleteNotification,
     getNotificationsForBusiness, getNotificationsForUser
 } from "../controllers/notification/notificationController";
+import { admin } from "../middleware/auth";
 
 const router = Router();
 
-router.route('/').delete(deleteNotification);
+router.route('/').delete(admin, deleteNotification);
 
 router.route('/user')
-    .post(createNotificationForUsers)
-    .get(getNotificationsForUser);
+    .post(admin, createNotificationForUsers)
+    .get(admin,getNotificationsForUser);
 router.route('/business')
-    .post(createNotificationForBusiness)
-    .get(getNotificationsForBusiness);
+    .post(admin, createNotificationForBusiness)
+    .get(admin, getNotificationsForBusiness);
 
 
 export { router as notificationRouter };

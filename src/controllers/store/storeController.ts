@@ -840,7 +840,7 @@ export const updateStoreProfile = async (req: any, res: Response) => {
     if (updatedFields.uniqueName && updatedFields.uniqueName === store.uniqueName) {
       delete updatedFields.uniqueName;
     }
-
+//TODO: return name of category requested by anshif.
     const response = await Store.findByIdAndUpdate(storeId, updatedFields, {
       new: true,
     });

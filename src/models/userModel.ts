@@ -5,6 +5,7 @@ import { config } from "../config/vars";
 
 export interface IUser {
   _id: string;
+  fcmToken: string;
   username: string;
   fullName: string;
   email: string;
@@ -49,6 +50,9 @@ const userSchema = new Schema<IUser>(
     isBlocked:{
       type:Boolean,
       default:false
+    },
+    fcmToken: {
+      type: String
     }
   },
   {
