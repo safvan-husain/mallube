@@ -57,8 +57,12 @@ const updateData = expressAsyncHandler(
       console.log("recieved update requirement");
       
       await Store.updateMany(
-        { subCategories: { $exists: false } },
-        { $set: { subCategories: [] } }
+        { serviceType: { $exists: false } },
+        { $set: { serviceType: ['other'] } }
+      );
+      await Store.updateMany(
+        { serviceTypeSuggestion: { $exists: false } },
+        { $set: { serviceTypeSuggestion: ''} }
       );
       res.status(200).json({ message: "operation completed"});
     } catch (error) {

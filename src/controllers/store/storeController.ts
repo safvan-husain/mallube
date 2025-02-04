@@ -150,7 +150,7 @@ export const getProfile = async (req: any, res: Response) => {
 
 export const signup = async (req: ICustomRequest<ISignUpStoreSchema>, res: Response) => {
   try {
-    const { shopImgUrl, latitude, longitude, feedback, ...rest } = req.body;
+    const { shopImgUrl, latitude, longitude, ...rest } = req.body;
 
     let uniqueName = (req.body as ISignUpStoreSchema).uniqueName;
     let phone = (req.body as ISignUpStoreSchema).phone;
@@ -196,11 +196,11 @@ export const signup = async (req: ICustomRequest<ISignUpStoreSchema>, res: Respo
 
     const newStore = new Store(storeDetails);
     var store = await newStore.save();
-    if (feedback) {
+    if (rest.serviceTypeSuggestion) {
       const newFeedback = new FeedBack({
         storeId: store._id,
         ourQuestion: "Describe your service for store",
-        answer: feedback   
+        answer: rest.serviceTypeSuggestion   
       });
       try {
         await newFeedback.save();

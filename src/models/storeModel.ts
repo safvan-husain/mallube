@@ -30,7 +30,8 @@ export interface IStore extends Document {
   retail?: boolean;
   wholesale?: boolean;
   service?: boolean;
-  serviceType: ServiceType;
+  serviceType: ServiceType[];
+  serviceTypeSuggestion: string;
   isActive: boolean; //this field will be used by admin to block and unblock a shop
   isAvailable: boolean; // this field will be used by store owner to change their shop status
   district: string;
@@ -75,10 +76,14 @@ const storeSchema = new Schema<IStore>(
       ref: "categories",
       default: []
     },
-    retail: { type: Boolean },
-    wholesale: { type: Boolean },
-    service: { type: Boolean },
-    serviceType: { type: String },
+    retail: { type: Boolean, default: false },
+    wholesale: { type: Boolean, default: false },
+    service: { type: Boolean, default: false },
+    serviceType: { type: [String], default: [] },
+    serviceTypeSuggestion: {
+      type: String,
+      default: ""
+    },
     location: {
       type: {
         type: String,
