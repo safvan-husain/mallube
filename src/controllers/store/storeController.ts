@@ -35,8 +35,8 @@ export const deleteStore = asyncHandler(async (req: ICustomRequest<undefined>, r
   const storeId = req.store?._id;
   try {
     const store = await Store.findById(storeId);
-    if(!store) {
-      res.status(401).json({ message: "User not found"});
+    if (!store) {
+      res.status(401).json({ message: "User not found" });
       return;
     }
     await Advertisement.deleteMany({
@@ -200,7 +200,7 @@ export const signup = async (req: ICustomRequest<ISignUpStoreSchema>, res: Respo
       const newFeedback = new FeedBack({
         storeId: store._id,
         ourQuestion: "Describe your service for store",
-        answer: rest.serviceTypeSuggestion   
+        answer: rest.serviceTypeSuggestion
       });
       try {
         await newFeedback.save();
@@ -279,9 +279,9 @@ export const updateLiveStatus = async (
   try {
     const storeId: string = req.store._id;
     const { isAvailable } = req.body;
-    
-    if(isAvailable == undefined || isAvailable == null) {
-      res.status(401).json({ message: "isAvailable field is required"});
+
+    if (isAvailable == undefined || isAvailable == null) {
+      res.status(401).json({ message: "isAvailable field is required" });
       return;
     }
     const store = await Store.findById(storeId);
@@ -853,10 +853,10 @@ export const updateStoreProfile = async (req: any, res: Response) => {
     if (updatedFields.uniqueName && updatedFields.uniqueName === store.uniqueName) {
       delete updatedFields.uniqueName;
     }
-//TODO: return name of category requested by anshif.
+    //TODO: return name of category requested by anshif.
     var response = await (await Store.findByIdAndUpdate(storeId, updatedFields, {
       new: true,
-    }))?.populate({path: 'category'});
+    }))?.populate({ path: 'category' });
 
     if (!response) {
       return res.status(404).json({ message: "Update failed" });
@@ -864,7 +864,7 @@ export const updateStoreProfile = async (req: any, res: Response) => {
     (response as any).category_name = response?.category;
 
     (response as any).category = (response?.category as any)._id;
-    
+
     res.status(200).json({
       message: "Store profile updated successfully",
       response,
@@ -982,4 +982,18 @@ export const stockUpdate = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Internal server error", error });
   }
 };
+
+export const updateFcmToken = asyncHandler(
+  async (req: ICustomRequest<any>, res: Response) => {
+    const storeId = req.store?._id;
+    try {
+      if (storeId) {
+        await Store.findByIdAndUpdate(storeId, { fcmToken: req.body.fcmToken });
+      }
+      res.status(200);
+    } catch (error) {
+      res.status(500);
+    }
+  }
+)
 
