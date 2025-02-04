@@ -57,20 +57,8 @@ const updateData = expressAsyncHandler(
       console.log("recieved update requirement");
       
       await Store.updateMany(
-        { workingDays: { $exists: false } },
-        { $set: { workingDays: [] } }
-      );
-      console.log("completed workind days");
-      
-      await Store.updateMany(
-        { openTime: { $exists: false } },
-        { $set: { openTime: 0 } }
-      );
-      console.log("completed opentime");
-      
-      await Store.updateMany(
-        { closeTime: { $exists: false } },
-        { $set: { closeTime: 0 } }
+        { subCategories: { $exists: false } },
+        { $set: { subCategories: [] } }
       );
       res.status(200).json({ message: "operation completed"});
     } catch (error) {
@@ -80,7 +68,7 @@ const updateData = expressAsyncHandler(
   }
 )
 
-// app.use("/api/developer/transform", updateData);
+app.use("/api/developer/transform", updateData);
 
 app.use("/api/admin", adminRoutes);
 app.use("/api/user", userRoutes);
