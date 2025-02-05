@@ -12,10 +12,10 @@ router.route('/').delete(admin, deleteNotification);
 
 router.route('/user')
     .post(admin, createNotificationForUsers)
-    .get(admin,getNotificationsForUser);
+    .get(getNotificationsForUser);
 router.route('/business')
     .post(admin, createNotificationForBusiness)
-    .get(admin, getNotificationsForBusiness);
+    .get(getNotificationsForBusiness);
 
 
 export { router as notificationRouter };
