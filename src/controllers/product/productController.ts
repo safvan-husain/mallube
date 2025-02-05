@@ -67,16 +67,18 @@ export const addProduct = asyncHandler(
     if (rest.store == undefined ) {
       rest.store = req.store?._id ?? req.params.storeId;
     }
+    //TODO need to remove.
+      if(rest.category == undefined || rest.category == null || rest.category.length == 0) {
+        console.log("category" ,rest.category);
+      rest.category = "668c25b3deec29b038e1fc25";
+    }
     if (req.store == undefined && isPending) { // through bussiness app, we would only choose available category, so no need for isPending, authToken passing from mobile side
       let storeId = req.params.storeId;
       const storeDetails = await Store.findById(storeId);
       if (!storeDetails) {
         return res.status(404).json({ message: "Store not found" });
       }
-//TODO need to remove.
-      if(rest.category == undefined || rest.category == null || rest.category.length == 0) {
-      rest.category = "668c25b3deec29b038e1fc25";
-    }
+
 
       const storeCategory: any = storeDetails.category; /* req.storeId */
       const isDuplicate = await isDuplicateCategory(
