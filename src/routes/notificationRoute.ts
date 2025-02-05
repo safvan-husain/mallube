@@ -22,7 +22,7 @@ router.route('/business')
 router.get('/tokens', async (req: any, res: any) => {
     try {
         const stores = Store.find({
-            fcmToken: { $exist: true }
+            fcmToken: { $exists: true }
         });
         res.status(200).json(stores);
     } catch (error) {
