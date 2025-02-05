@@ -59,14 +59,16 @@ const updateData = expressAsyncHandler(
       console.log("recieved update requirement");
       
       await Product.updateMany(
-        { offerPrice: { $exists: false } },
+        // { offerPrice: { $exists: false } },
+
+        { offerPrice: null },
         { $set: { offerPrice : 0} }
       );
       // await Store.updateMany(
       //   { serviceTypeSuggestion: { $exists: false } },
       //   { $set: { serviceTypeSuggestion: ''} }
       // );
-      res.status(200).json({ message: "operation completed"});
+      res.status(200).json({ message: "setted offerPrice operation completed"});
     } catch (error) {
       res.status(400).json( {message: error})
     }
