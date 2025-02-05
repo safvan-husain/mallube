@@ -56,18 +56,10 @@ app.use("/api/healthcheck", (req, res) => {
 const updateData = expressAsyncHandler(
   async (req, res) => {
     try {
-      console.log("recieved update requirement");
-      
-      await Product.updateMany(
-        // { offerPrice: { $exists: false } },
-
-        { offerPrice: null },
-        { $set: { offerPrice : 0} }
+      await Category.updateMany(
+        { subCategoryType: { $exists: false }, parentId: { $exists: false} },
+        { $set: { subCategoryType : 'product'} }
       );
-      // await Store.updateMany(
-      //   { serviceTypeSuggestion: { $exists: false } },
-      //   { $set: { serviceTypeSuggestion: ''} }
-      // );
       res.status(200).json({ message: "setted offerPrice operation completed"});
     } catch (error) {
       res.status(400).json( {message: error})
