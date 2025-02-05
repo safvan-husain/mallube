@@ -27,6 +27,7 @@ import { config } from "./config/vars";
 import { periodicallyChangeStatusOfExpiredAdvertisemets } from "./controllers/advertisement/advertisementController";
 import expressAsyncHandler from "express-async-handler";
 import Store from "./models/storeModel";
+import Category from "./models/categoryModel";
 
 const app = express();
 
@@ -56,14 +57,14 @@ const updateData = expressAsyncHandler(
     try {
       console.log("recieved update requirement");
       
-      await Store.updateMany(
-        { serviceType: { $exists: false } },
-        { $set: { serviceType: ['other'] } }
+      await Category.updateMany(
+        { icon: { $exists: false } },
+        { $set: { icon: ['https://sin1.contabostorage.com/eb23de04d375490f89955c112d0422fd:mallumart/1738421851959_145_a.webp'] } }
       );
-      await Store.updateMany(
-        { serviceTypeSuggestion: { $exists: false } },
-        { $set: { serviceTypeSuggestion: ''} }
-      );
+      // await Store.updateMany(
+      //   { serviceTypeSuggestion: { $exists: false } },
+      //   { $set: { serviceTypeSuggestion: ''} }
+      // );
       res.status(200).json({ message: "operation completed"});
     } catch (error) {
       res.status(400).json( {message: error})
