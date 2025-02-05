@@ -55,7 +55,7 @@ export const deleteStore = asyncHandler(async (req: ICustomRequest<undefined>, r
 
 export const login = async (req: Request, res: Response) => {
   try {
-    const { phone, password, email } = req.body;
+    const { phone, password, email, fcmToken } = req.body;
 
     let storeOwner: any;
 
@@ -78,6 +78,9 @@ export const login = async (req: Request, res: Response) => {
     }
 
     const token = storeOwner.generateAuthToken();
+
+    storeOwner.fcmToken = fcmToken;
+    await storeOwner.save();
 
     res.status(200).json({
       _id: storeOwner._id,
