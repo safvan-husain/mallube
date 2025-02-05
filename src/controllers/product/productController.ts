@@ -99,6 +99,10 @@ export const addProduct = asyncHandler(
       rest.category = categoryId._id;
     }
     const store = req.params.storeId;
+//TODO: correct on the flutter app.
+    if (rest.offerPrice == null) {
+      rest.offerPrice = 0;
+    }
     
 
     const product = new Product({
