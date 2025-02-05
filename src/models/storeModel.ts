@@ -37,6 +37,7 @@ export interface IStore extends Document {
   district: string;
   bio: string;
   workingDays: WorkingDay[];
+  live: string;
   //in 24 format.
   openTime: number;
   closeTime: number;
@@ -60,6 +61,11 @@ const storeSchema = new Schema<IStore>(
     storeName: {
       type: String,
       required: true,
+    },
+    //TODO: remove.
+    live: {
+      type: String,
+      default: ""
     },
     uniqueName: {
       type: String,

@@ -57,9 +57,9 @@ const updateData = expressAsyncHandler(
     try {
       console.log("recieved update requirement");
       
-      await Category.updateMany(
-        { icon: { $exists: false } },
-        { $set: { icon: 'https://sin1.contabostorage.com/eb23de04d375490f89955c112d0422fd:mallumart/1738421851959_145_a.webp' } }
+      await Store.updateMany(
+        { live: { $exists: false } },
+        { $set: { live : 'live' } }
       );
       // await Store.updateMany(
       //   { serviceTypeSuggestion: { $exists: false } },
