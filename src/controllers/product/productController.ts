@@ -63,7 +63,7 @@ export const addProduct = asyncHandler(
     req: ICustomRequest<IAddProductSchema>,
     res: Response
   ): Promise<any> => {
-    const { isPending, ...rest } = req.body;
+    var { isPending, ...rest } = req.body;
     if (rest.store == undefined ) {
       rest.store = req.store?._id ?? req.params.storeId;
     }
@@ -93,6 +93,9 @@ export const addProduct = asyncHandler(
       rest.category = categoryId._id;
     }
     const store = req.params.storeId;
+    if(rest.category == undefined || rest.category == null) {
+      rest.category = "668c25b3deec29b038e1fc25";
+    }
 
     const product = new Product({
       isPending,
