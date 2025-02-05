@@ -74,7 +74,7 @@ export const addProduct = asyncHandler(
         return res.status(404).json({ message: "Store not found" });
       }
 //TODO need to remove.
-      if(rest.category == undefined || rest.category == null) {
+      if(rest.category == undefined || rest.category == null || rest.category == "") {
       rest.category = "668c25b3deec29b038e1fc25";
     }
 
