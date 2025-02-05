@@ -15,6 +15,7 @@ export const addStoreSchema = z.object({
       "Shop name can only contain lowercase letters, numbers, hyphens, and underscores"
     ),
   category: z.string(),
+  subCategories: z.array(z.string()),
   retail: z.boolean().default(false),
   wholesale: z.boolean().default(false),
   latitude: z.number(),
@@ -56,6 +57,7 @@ const signUpStoreSchema = z.object({
       "Shop name can only contain lowercase letters, numbers, hyphens, and underscores"
     ),
   category: z.string(),
+   subCategories: z.array(z.string()),
   retail: z.boolean().default(false),
   wholesale: z.boolean().default(false),
   service: z.boolean().default(false),

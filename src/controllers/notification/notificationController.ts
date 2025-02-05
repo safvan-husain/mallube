@@ -142,26 +142,26 @@ const getNotificationsAndCount = async ({ limit, skip, isForBusiness }: { limit:
 
 const sendPushNotifications = async ({ title, body, isForBusiness }: { title: string, body: string, isForBusiness: boolean }) => {
     try {
-        let fcmTokens;
+        let result;
         if (isForBusiness) {
-            fcmTokens = await Store.find({ fcmToken: { $exists: true } }, 'fcmToken').lean() as string[];
+            result = await Store.find({ fcmToken: { $exists: true } }, 'fcmToken').lean() as { fcmToken: string }[];
         } else {
-            fcmTokens = await User.find({ fcmToken: { $exists: true } }, 'fcmToken').lean() as string[];
+            result = await User.find({ fcmToken: { $exists: true } }, 'fcmToken').lean() as { fcmToken: string }[];
         }
-        for (let i = 0; i < fcmTokens.length; i += 100) {
-            const chunk = fcmTokens.slice(i, i + 100);
+        for (let i = 0; i < result.length; i += 100) {
+            const chunk = result.slice(i, i + 100);
             messaging().sendEachForMulticast({
                 data: {
                     title,
                     body
                 },
-                tokens: chunk
-            }).then((response) => {
-                console.log('Multicast notification sent:', response);
-            })
-                .catch((error) => {
-                    console.error('Error sending multicast notification:', error);
-                });
+                tokens: chunk.map(e => e.fcmToken)
+        }).then((response: any) => {
+            console.log('Multicast notification sent:', response);
+        })
+            .catch((error) => {
+                console.error('Error sending multicast notification:', error);
+            });
         }
     } catch (error) {
         console.log("error at sendPushNotificationToUsers", error);

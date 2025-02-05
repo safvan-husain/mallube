@@ -50,10 +50,11 @@ router.route("/store/status-update/:storeId")
   .put(admin, updateStoreStatus);
 router.route("/change-password")
   .put(admin, changePassword)
+//TODO: add admin middleware for post ads
 router
   .route("/advertisement")
-  .post(admin, addAdvertisement)
-  .get(admin, fetchAllAdvertisement);
+  .post(addAdvertisement)
+  .get(fetchAllAdvertisement);
 //TODO: add admin middleware.
 router.route("/advertisement/status").put(updateAdvertisementStatus);
 
