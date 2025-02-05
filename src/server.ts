@@ -28,6 +28,7 @@ import { periodicallyChangeStatusOfExpiredAdvertisemets } from "./controllers/ad
 import expressAsyncHandler from "express-async-handler";
 import Store from "./models/storeModel";
 import Category from "./models/categoryModel";
+import Product from "./models/productModel";
 
 const app = express();
 
@@ -57,9 +58,9 @@ const updateData = expressAsyncHandler(
     try {
       console.log("recieved update requirement");
       
-      await Store.updateMany(
-        { live: { $exists: false } },
-        { $set: { live : 'live' } }
+      await Product.updateMany(
+        { offerPrice: { $exists: false } },
+        { $set: { offerPrice : 0} }
       );
       // await Store.updateMany(
       //   { serviceTypeSuggestion: { $exists: false } },
