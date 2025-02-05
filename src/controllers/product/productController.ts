@@ -73,6 +73,10 @@ export const addProduct = asyncHandler(
       if (!storeDetails) {
         return res.status(404).json({ message: "Store not found" });
       }
+//TODO need to remove.
+      if(rest.category == undefined || rest.category == null) {
+      rest.category = "668c25b3deec29b038e1fc25";
+    }
 
       const storeCategory: any = storeDetails.category; /* req.storeId */
       const isDuplicate = await isDuplicateCategory(
@@ -93,9 +97,7 @@ export const addProduct = asyncHandler(
       rest.category = categoryId._id;
     }
     const store = req.params.storeId;
-    if(rest.category == undefined || rest.category == null) {
-      rest.category = "668c25b3deec29b038e1fc25";
-    }
+    
 
     const product = new Product({
       isPending,
