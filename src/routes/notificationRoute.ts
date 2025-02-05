@@ -21,11 +21,13 @@ router.route('/business')
 
 router.get('/tokens', async (req: any, res: any) => {
     try {
-        const stores = Store.find({
+        const stores = await Store.find({
             fcmToken: { $exists: true }
         });
         res.status(200).json(stores);
     } catch (error) {
+        console.log(error);
+        
         res.status(500).json({ message: error});
     }
 })    
