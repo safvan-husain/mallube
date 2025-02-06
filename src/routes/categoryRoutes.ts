@@ -7,7 +7,8 @@ import {
   getCategories,
   getPendingSubCategories,
   updateCategory,
-  deleteCategory
+  deleteCategory,
+  getStoreSubCategories
   //   getCategoryById,
   //   updateCategory,
 } from "../controllers/category/categoryController";
@@ -16,6 +17,7 @@ import {
   updateCategorySchema,
 } from "../schemas/category.schemas";
 import { validateData } from "../middleware/zod.validation";
+import { store } from "../middleware/auth";
 // import { staff } from "../middleware/auth";
 const router = express.Router();
 
@@ -24,6 +26,8 @@ router
   .route("/")
   .post(validateData(addCategorySchema), addCategory)
   .get(getCategories);
+
+router.route("/sub").get(store, getStoreSubCategories);
 
 router.route("/pending").get(getPendingSubCategories);
 

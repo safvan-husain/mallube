@@ -1,5 +1,6 @@
 import { Schema, model, Document } from "mongoose";
 
+type SubCategoryType = "product" | "store";
 export interface ICategory extends Document {
   name: string;
   parentId: Schema.Types.ObjectId;
@@ -8,9 +9,10 @@ export interface ICategory extends Document {
   isShowOnHomePage: boolean;
   icon: string;
   isDeclined:boolean;
+  subCategoryType: SubCategoryType; //if not and parent is null, it means this category is a 
 }
 
-const categorySchema = new Schema(
+const categorySchema = new Schema<ICategory>(
   {
     name: {
       type: String,
@@ -41,6 +43,9 @@ const categorySchema = new Schema(
     isDeclined:{
       type:Boolean,
       default:false
+    },
+    subCategoryType: {
+      type: String,
     }
   },
   {

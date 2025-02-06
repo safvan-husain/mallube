@@ -17,7 +17,8 @@ const addCategory = z.object({
       return isParentCategory(val);
     }),
   isActive: z.boolean(),
-  icon: z.string(),
+  icon: z.string().optional(),
+  subCategoryType: z.string().optional(),
 });
 
 export const addCategorySchema = addCategory.refine(

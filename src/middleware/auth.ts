@@ -82,8 +82,8 @@ export const store = asyncHandler(
 
 
     if (!token) {
-      res.status(401);
-      throw new Error("Not authorized, no token available");
+      res.status(401).json({ message: "Not authorized, no token available"});
+      return;
     }
     if (token.startsWith("Bearer")) {
       token = token.split(" ")[1];

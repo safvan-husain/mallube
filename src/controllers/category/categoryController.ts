@@ -16,6 +16,7 @@ import {
 } from "../../service/category";
 import { Types } from "mongoose";
 import Product from "../../models/productModel";
+import Store from "../../models/storeModel";
 
 // get all categories for admin category management
 export const getCategories = asyncHandler(
@@ -57,22 +58,44 @@ export const getActiveSubCategories = asyncHandler(
 // adding category for admin and staff
 export const addCategory = asyncHandler(
   async (req: ICustomRequest<IAddCategorySchema>, res: Response) => {
-    const { name, parentId, isActive, icon } = req.body;
-    let isPending = true
-    const { isAdmin } = req.query;
-    if(isAdmin) {
-      isPending = false; 
-    }
-    const isDuplicate = await isDuplicateCategory(name, parentId);
+    console.log("create category");
+    
+    try {
 
-    if (isDuplicate) res.status(409).json("Duplicate Category");
-    else {
-      await Category.create({ name, parentId, isActive, icon, isPending });
+      const { name, parentId, isActive, icon, subCategoryType } = req.body;
+      let isPending = true;
+      const { isAdmin } = req.query;
+      if (isAdmin) {
+        isPending = false; //if category added by admin, the accept right away.
+      }
+      const isDuplicate = await isDuplicateCategory(name, parentId);
 
-      res.status(201).json("ok");
+      if (isDuplicate) res.status(409).json("Duplicate Category");
+      else {
+        await Category.create({ name, parentId, isActive, icon, isPending, subCategoryType });
+
+        res.status(201).json({ message: "ok"});
+      }
+    } catch (error) {
+      console.log(error);
+      
     }
   }
 );
+
+
+export const getStoreSubCategories = asyncHandler(
+  async (req: ICustomRequest<undefined>, res: any) => {
+    const storeId = req.store!._id;
+    try {
+      const storeData = await Store.findById(storeId, 'category').lean();
+      const categories = await Category.find({ parentId: storeData?.category, subCategoryType: 'store' });
+      res.status(200).json(categories);
+    } catch (error) {
+      res.status(500).json({ message: `Internal server error ${error}` });
+    }
+  }
+)
 
 // update category
 export const updateCategory = asyncHandler(
@@ -92,10 +115,10 @@ export const updateCategory = asyncHandler(
 
       if (!isPending) {
         if (Types.ObjectId.isValid(updatedParentId)) {
-          const parent=await Category.findById(updatedParentId)
-          if(parent){
-            let icon=parent.icon
-            await Category.findByIdAndUpdate(id,{isPending,...rest,parentId:updatedParentId,icon:icon})
+          const parent = await Category.findById(updatedParentId)
+          if (parent) {
+            let icon = parent.icon
+            await Category.findByIdAndUpdate(id, { isPending, ...rest, parentId: updatedParentId, icon: icon })
           }
           await Product.updateMany({ category: id }, { isPending: false });
         }
