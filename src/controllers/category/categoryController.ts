@@ -62,7 +62,7 @@ export const addCategory = asyncHandler(
     
     try {
 
-      const { name, parentId, isActive, icon, subCategoryType } = req.body;
+      const { name, parentId, isActive, icon, categorySubType: subCategoryType } = req.body;
       let isPending = true;
       const { isAdmin } = req.query;
       if (isAdmin) {

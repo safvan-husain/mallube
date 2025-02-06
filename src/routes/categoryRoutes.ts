@@ -24,9 +24,10 @@ const router = express.Router();
 // need to add middleware here
 router
   .route("/")
-  .post(validateData(addCategorySchema), addCategory)
+  .post(addCategory)
   .get(getCategories);
 
+//TODO: remove later.
 router.route("/sub").get(store, getStoreSubCategories);
 
 router.route("/pending").get(getPendingSubCategories);

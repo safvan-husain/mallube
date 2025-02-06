@@ -76,6 +76,7 @@ export async function getCategoriesInFormat({ isActive = false }) {
               name: "$$subcategory.name",
               isActive: "$$subcategory.isActive",
               icon: "$$subcategory.icon",
+              subType: "$$subcategory.subCategoryType",
             },
           },
         },
@@ -139,6 +140,7 @@ export async function listPendingSubCategories() {
         name: 1,
         isDeclined: 1,
         isPending: 1,
+        subCategoryType: 1,
         parentId: { $ifNull: ["$parentId", null] },
         icon: {
           $cond: {
