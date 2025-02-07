@@ -22,7 +22,7 @@ import Store from "../../models/storeModel";
 export const getCategories = asyncHandler(
   async (req: Request, res: Response) => {
     console.log("got call to get categories", req.query);
-    
+
     const categories = await getCategoriesInFormat({
       isActive: Boolean(req.query.isActive),
     });
@@ -59,7 +59,7 @@ export const getActiveSubCategories = asyncHandler(
 export const addCategory = asyncHandler(
   async (req: ICustomRequest<IAddCategorySchema>, res: Response) => {
     console.log("create category");
-    
+
     try {
 
       const { name, parentId, isActive, icon, categorySubType: subCategoryType } = req.body;
@@ -74,11 +74,11 @@ export const addCategory = asyncHandler(
       else {
         await Category.create({ name, parentId, isActive, icon, isPending, subCategoryType });
 
-        res.status(201).json({ message: "ok"});
+        res.status(201).json({ message: "ok" });
       }
     } catch (error) {
       console.log(error);
-      
+
     }
   }
 );
@@ -144,6 +144,19 @@ export const deleteCategory = asyncHandler(
     }
   }
 );
+
+export const deleteCategoryPermenently = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { categoryId } = req.query;
+    try {
+      await Category.findByIdAndDelete(categoryId);
+      await Category.deleteMany({ parentId: categoryId});
+      res.status(200).json({ message: "Successfully deleted"});
+    } catch (error) {
+      res.status(500)
+    }
+  }
+)
 
 // // delete product
 

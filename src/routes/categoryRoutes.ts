@@ -8,7 +8,8 @@ import {
   getPendingSubCategories,
   updateCategory,
   deleteCategory,
-  getStoreSubCategories
+  getStoreSubCategories,
+  deleteCategoryPermenently
   //   getCategoryById,
   //   updateCategory,
 } from "../controllers/category/categoryController";
@@ -17,7 +18,7 @@ import {
   updateCategorySchema,
 } from "../schemas/category.schemas";
 import { validateData } from "../middleware/zod.validation";
-import { store } from "../middleware/auth";
+import { admin, store } from "../middleware/auth";
 // import { staff } from "../middleware/auth";
 const router = express.Router();
 
@@ -25,7 +26,8 @@ const router = express.Router();
 router
   .route("/")
   .post(addCategory)
-  .get(getCategories);
+  .get(getCategories)
+  .delete(admin, deleteCategoryPermenently);
 
 //TODO: remove later.
 router.route("/sub").get(store, getStoreSubCategories);
