@@ -57,8 +57,12 @@ const updateData = expressAsyncHandler(
   async (req, res) => {
     try {
       await Category.updateMany(
-        { subCategoryType: { $exists: false }, parentId: { $exists: false} },
+        { subCategoryType: { $exists: false }, parentId: { $exists: true} },
         { $set: { subCategoryType : 'product'} }
+      ); 
+      await Category.updateMany(
+        { parentId: { $exists: false} },
+        { $unset: { subCategoryType: 1 } }
       );
       res.status(200).json({ message: "setted offerPrice operation completed"});
     } catch (error) {
