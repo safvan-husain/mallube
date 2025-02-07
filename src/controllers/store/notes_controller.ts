@@ -8,10 +8,11 @@ export const createNote = asyncHandler(
         const storeId = req.store?._id;
         const { title, body } = req.body;
         try {
-            var note = new Note({
+            var note: any = new Note({
                 title,
                 body,
-                storeId
+                storeId,
+                timestamp: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })
             });
             note = await note.save()
             res.status(201).json(note);

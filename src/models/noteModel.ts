@@ -5,7 +5,7 @@ interface INote extends Document {
     storeId: Schema.Types.ObjectId;
     title: string,
     body: string;
-    timestamps: string;
+    timestamp: string;
 }
 
 const noteSchema = new Schema<INote>(
@@ -21,10 +21,15 @@ const noteSchema = new Schema<INote>(
         body: {
             type: String,
             required: true,
-        }
+        },
+        timestamp: {
+            type: String,
+            required: true,
+        },
+
     },
     {
-        timestamps: true,
+        timestamps: true
     }
 )
 
