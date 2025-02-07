@@ -2,6 +2,7 @@ import { Response } from "express";
 import asyncHandler from "express-async-handler";
 import { ICustomRequest } from "../../types/requestion";
 import { Note } from "../../models/noteModel";
+import { getIST } from "../../utils/ist_time";
 
 export const createNote = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {
@@ -12,7 +13,7 @@ export const createNote = asyncHandler(
                 title,
                 body,
                 storeId,
-                timestamp: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })
+                timestamp: getIST()
             });
             note = await note.save()
             res.status(201).json(note);

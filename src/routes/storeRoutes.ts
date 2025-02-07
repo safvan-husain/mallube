@@ -31,6 +31,7 @@ import { addDoctor, changeDrAvailability, deleteDoctor, fetchAllDoctors } from "
 import { addProduct, deleteProductOfAStore, getProductsOfAStore, switchStockStatusOfAProduct, updateProduct } from "../controllers/product/productController";
 import { rePublishRequestAnAdvertisement } from "../controllers/advertisement/advertisementController";
 import { createNote, deleteNote, getNotesForStore, updateNote } from "../controllers/store/notes_controller";
+import { createBillForCustomer, createCustomer, deleteCustomer, deleteSpecificBill, getAllCustomers, getCustomerPurchaseHistory, getSpecificBill, updateCustomer, updateSpecificBill } from "../controllers/store/pattu_book_controller";
 const router = express.Router();
 
 router.route("/login").post(login);
@@ -48,7 +49,22 @@ router.route('/note')
   .get(store, getNotesForStore)
   .post(store, createNote)
   .put(store, updateNote)
-  .delete(store, deleteNote)
+  .delete(store, deleteNote);
+
+router.route('/customer')
+  .get(store, getAllCustomers)
+  .post(store, createCustomer)
+  .put(store, updateCustomer)
+  .delete(store, deleteCustomer)
+
+router.route('/customer/bill')
+  .get(store, getSpecificBill)
+  .post(store, createBillForCustomer)
+  .put(store, updateSpecificBill)
+  .delete(store, deleteSpecificBill)
+
+router.route('/customer/history')
+  .get(store, getCustomerPurchaseHistory);
 
 router.route("/search-stores").get(searchStoresByProductName);
 router.route("/fetch-store-by-category").get(fetchStoreByCategory);
