@@ -30,6 +30,7 @@ import { addSpecialisation, fetchAllSpecialisation } from "../controllers/specia
 import { addDoctor, changeDrAvailability, deleteDoctor, fetchAllDoctors } from "../controllers/doctor/doctorController";
 import { addProduct, deleteProductOfAStore, getProductsOfAStore, switchStockStatusOfAProduct, updateProduct } from "../controllers/product/productController";
 import { rePublishRequestAnAdvertisement } from "../controllers/advertisement/advertisementController";
+import { createNote, deleteNote, getNotesForStore, updateNote } from "../controllers/store/notes_controller";
 const router = express.Router();
 
 router.route("/login").post(login);
@@ -42,6 +43,12 @@ router.route("/")
   .get(store, fetchStore)
   .put(store, updateStoreProfile)
   .delete(store, deleteStore);
+
+router.route('/note')
+  .get(store, getNotesForStore)
+  .post(store, createNote)
+  .put(store, updateNote)
+  .delete(store, deleteNote)
 
 router.route("/search-stores").get(searchStoresByProductName);
 router.route("/fetch-store-by-category").get(fetchStoreByCategory);
