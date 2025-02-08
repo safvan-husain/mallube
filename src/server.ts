@@ -56,15 +56,38 @@ app.use("/api/healthcheck", (req, res) => {
 const updateData = expressAsyncHandler(
   async (req, res) => {
     try {
-      await Category.updateMany(
-        { subCategoryType: { $exists: false }, parentId: { $exists: true} },
-        { $set: { subCategoryType : 'product'} }
-      ); 
-      await Category.updateMany(
-        { parentId: { $exists: false} },
-        { $unset: { subCategoryType: 1 } }
-      );
-      res.status(200).json({ message: "setted offerPrice operation completed"});
+      // await Category.updateMany(
+      //   { subCategoryType: { $exists: false }, parentId: { $exists: true} },
+      //   { $set: { subCategoryType : 'product'} }
+      // ); 
+      // await Category.updateMany(
+      //   { parentId: { $exists: false} },
+      //   { $unset: { subCategoryType: 1 } }
+      // );
+      let products = await Product.aggregate([
+        {
+          $lookup: {
+            from: 'categories',
+            localField: 'category',
+            foreignField: '_id',
+            as: 'categoryExists'
+          }
+        },
+        {
+          $match: {
+            categoryExists: { $eq: [] }
+          }
+        },
+        {
+          $project: {
+            categoryExists: 0
+          }
+        }
+      ]);
+
+      let category = await Category.find({ name: "Electronics"})
+
+      res.status(200).json({ message: "setted offerPrice operation completed", products, category});
     } catch (error) {
       res.status(400).json( {message: error})
     }
