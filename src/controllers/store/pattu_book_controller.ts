@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import { ICustomRequest } from "../../types/requestion";
 import { Customer } from "../../models/customerModel";
 import { CustomerBill } from "../../models/customerBillModel";
-import { getIST } from "../../utils/ist_time";
+import { formatLastPurchaseDate, getIST } from "../../utils/ist_time";
 
 
 export const createCustomer = asyncHandler(
@@ -11,8 +11,8 @@ export const createCustomer = asyncHandler(
         try {
             const { name, contact } = req.body;
             const existingCustomer = await Customer.find({ contact });
-            if(existingCustomer) {
-                res.status(401).json({ message: "Customer already exist with same contact"});
+            if (existingCustomer) {
+                res.status(401).json({ message: "Customer already exist with same contact" });
                 return;
             }
             const storeId = req.store?._id;
@@ -27,7 +27,10 @@ export const createCustomer = asyncHandler(
             res.status(201).json({
                 _id: customer._id,
                 name: customer.name,
-                contact: customer.contact
+                contact: customer.contact,
+                totalAmount: 0,
+                lastPurchase: 'just created',
+
             });
         } catch (error) {
             console.log("error ", error);
@@ -40,7 +43,34 @@ export const getAllCustomers = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {
         try {
             const storeId = req.store?._id;
-            const customers = await Customer.find({ storeId }, { name: 1, contact: 1, _id: 1 });
+            var tempCustomers: any[] = await Customer.find({ storeId }, { name: 1, contact: 1, _id: 1 });
+            let customers: any[] = [];
+            for (var customer of tempCustomers) {
+                var purchaseHistory = await CustomerBill.aggregate([
+                    {
+                        $match: {
+                            customerId: customer._id,
+                        },
+
+                    },
+                    {
+                        $group: {
+                            _id: null,
+                            totalAmount: { $sum: "$totalAmount" },
+                            lastPurchaseDate: { $max: "$createdAt" }
+                        }
+                    }
+                ]);
+
+                customers.push({
+                    name: customer.name,
+                    contact: customer.contact,
+                    _id: customer._id,
+                    totalAmount: purchaseHistory[0].totalAmount,
+                    lastPurchase: formatLastPurchaseDate(purchaseHistory[0].lastPurchaseDate),
+                });
+            }
+
             res.status(200).json(customers);
         } catch (error) {
             console.log("error ", error);
