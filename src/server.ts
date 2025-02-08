@@ -64,10 +64,8 @@ const updateData = expressAsyncHandler(
       //   { parentId: { $exists: false} },
       //   { $unset: { subCategoryType: 1 } }
       // );
-      let category: any = await Category.find({ name: "watch"})
 
-      await Product.updateMany({ category: "668c25b3deec29b038e1fc25"}, { category: category._id})
-      
+
       let products = await Product.aggregate([
         {
           $lookup: {
@@ -89,16 +87,35 @@ const updateData = expressAsyncHandler(
         }
       ]);
 
-      
+      let category: any = await Category.find({ name: "watch" });
 
-      
+      if (!category) {
+        res.status(200).json({ message: "no categeroy" })
+        return;
+      }
 
-      res.status(200).json({ message: "setted offerPrice operation completed", products, category});
+      const productIds = products.map((product) => product._id);
+
+      if (productIds.length > 0) {
+        await Product.updateMany(
+          { _id: { $in: productIds } }, // Match all orphaned products
+          { $set: { category: category._id } } // Set their category to the valid category
+        );
+      } else {
+        console.log('No orphaned products found.');
+      }
+
+
+
+
+
+
+      res.status(200).json({ message: "setted offerPrice operation completed", products, category });
     } catch (error) {
-      res.status(400).json( {message: error})
+      res.status(400).json({ message: error })
     }
-
   }
+
 )
 
 app.use("/api/developer/transform", updateData);
