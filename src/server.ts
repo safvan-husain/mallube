@@ -58,61 +58,7 @@ app.use("/api/healthcheck", (req, res) => {
 const updateData = expressAsyncHandler(
   async (req, res) => {
     try {
-      // await Category.updateMany(
-      //   { subCategoryType: { $exists: false }, parentId: { $exists: true} },
-      //   { $set: { subCategoryType : 'product'} }
-      // ); 
-      // await Category.updateMany(
-      //   { parentId: { $exists: false} },
-      //   { $unset: { subCategoryType: 1 } }
-      // );
-
-
-      let store = await Advertisement.aggregate([
-        {
-          $lookup: {
-            localField: 'adPlan',
-            from: 'advertisements',
-            foreignField: '_id',
-            as: 'categoryExists'
-          }
-        },
-        {
-          $match: {
-            categoryExists: { $eq: [] }
-          }
-        },
-        {
-          $project: {
-            categoryExists: 0
-          }
-        }
-      ]);
-
-      let category: any = await AdvertisementPlan.findOne({});
-
-      // if (!category) {
-      //   res.status(200).json({ message: "no categeroy" })
-      //   return;
-      // }
-
-      const productIds = store.map((product) => product._id);
-
-      if (productIds.length > 0) {
-        await Advertisement.updateMany(
-          { _id: { $in: productIds } }, // Match all orphaned products
-          { $set: { adPlan: category._id} } // Set their category to the valid category
-        );
-      } else {
-        console.log('No orphaned products found.');
-      }
-
-
-
-
-
-
-      res.status(200).json({ message: "setted offerPrice operation completed", store, category});
+      res.status(200).json({ message: "Nothing to teansform"});
     } catch (error) {
       res.status(400).json({ message: error })
     }
