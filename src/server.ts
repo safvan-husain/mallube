@@ -87,23 +87,23 @@ const updateData = expressAsyncHandler(
         }
       ]);
 
-      // let category: any = await Category.findOne({ name: "watch" });
+      let category: any = await Category.findOne({ parentId: {$exists: false}});
 
       // if (!category) {
       //   res.status(200).json({ message: "no categeroy" })
       //   return;
       // }
 
-      // const productIds = products.map((product) => product._id);
+      const productIds = store.map((product) => product._id);
 
-      // if (productIds.length > 0) {
-      //   await Product.updateMany(
-      //     { _id: { $in: productIds } }, // Match all orphaned products
-      //     { $set: { category: "66b1cd9ea515ec29bbf649c2" } } // Set their category to the valid category
-      //   );
-      // } else {
-      //   console.log('No orphaned products found.');
-      // }
+      if (productIds.length > 0) {
+        await Store.updateMany(
+          { _id: { $in: productIds } }, // Match all orphaned products
+          { $set: { category: category._id} } // Set their category to the valid category
+        );
+      } else {
+        console.log('No orphaned products found.');
+      }
 
 
 
