@@ -62,13 +62,22 @@ export const getAllCustomers = asyncHandler(
                     }
                 ]);
 
-                customers.push({
-                    name: customer.name,
-                    contact: customer.contact,
-                    _id: customer._id,
-                    totalAmount: purchaseHistory[0].totalAmount,
-                    lastPurchase: formatLastPurchaseDate(purchaseHistory[0].lastPurchaseDate),
-                });
+                if (purchaseHistory.length > 0) {
+                    customers.push({
+                        name: customer.name,
+                        contact: customer.contact,
+                        _id: customer._id,
+                        totalAmount: purchaseHistory[0].totalAmount,
+                        lastPurchase: purchaseHistory[0].lastPurchaseDate ? formatLastPurchaseDate(purchaseHistory[0].lastPurchaseDate) : "none",
+                    });
+                } else {
+                    customers.push({
+                        name: customer.name,
+                        contact: customer.contact,
+                        _id: customer._id, totalAmount: 0,
+                        lastPurchase: 'not purchased yet',
+                    });
+                }
             }
 
             res.status(200).json(customers);
