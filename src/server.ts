@@ -101,7 +101,7 @@ const updateData = expressAsyncHandler(
       if (productIds.length > 0) {
         await Advertisement.updateMany(
           { _id: { $in: productIds } }, // Match all orphaned products
-          { $set: { category: category._id} } // Set their category to the valid category
+          { $set: { adPlan: category._id} } // Set their category to the valid category
         );
       } else {
         console.log('No orphaned products found.');
