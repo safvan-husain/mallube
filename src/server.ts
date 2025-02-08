@@ -29,6 +29,8 @@ import expressAsyncHandler from "express-async-handler";
 import Store from "./models/storeModel";
 import Category from "./models/categoryModel";
 import Product from "./models/productModel";
+import Advertisement from "./models/advertisementModel";
+import AdvertisementPlan from "./models/advertismentPlanModel";
 
 const app = express();
 
@@ -66,11 +68,11 @@ const updateData = expressAsyncHandler(
       // );
 
 
-      let store = await Store.aggregate([
+      let store = await Advertisement.aggregate([
         {
           $lookup: {
-            from: 'categories',
-            localField: 'category',
+            from: 'adPlan',
+            localField: 'advertisements',
             foreignField: '_id',
             as: 'categoryExists'
           }
@@ -87,30 +89,30 @@ const updateData = expressAsyncHandler(
         }
       ]);
 
-      let category: any = await Category.findOne({ parentId: {$exists: false}});
+      let category: any = await AdvertisementPlan.findOne({});
 
       // if (!category) {
       //   res.status(200).json({ message: "no categeroy" })
       //   return;
       // }
 
-      const productIds = store.map((product) => product._id);
+      // const productIds = store.map((product) => product._id);
 
-      if (productIds.length > 0) {
-        await Store.updateMany(
-          { _id: { $in: productIds } }, // Match all orphaned products
-          { $set: { category: category._id} } // Set their category to the valid category
-        );
-      } else {
-        console.log('No orphaned products found.');
-      }
-
-
+      // if (productIds.length > 0) {
+      //   await Store.updateMany(
+      //     { _id: { $in: productIds } }, // Match all orphaned products
+      //     { $set: { category: category._id} } // Set their category to the valid category
+      //   );
+      // } else {
+      //   console.log('No orphaned products found.');
+      // }
 
 
 
 
-      res.status(200).json({ message: "setted offerPrice operation completed", store});
+
+
+      res.status(200).json({ message: "setted offerPrice operation completed", store, category});
     } catch (error) {
       res.status(400).json({ message: error })
     }
