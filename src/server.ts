@@ -71,8 +71,8 @@ const updateData = expressAsyncHandler(
       let store = await Advertisement.aggregate([
         {
           $lookup: {
-            from: 'adPlan',
-            localField: 'advertisements',
+            localField: 'adPlan',
+            from: 'advertisements',
             foreignField: '_id',
             as: 'categoryExists'
           }
