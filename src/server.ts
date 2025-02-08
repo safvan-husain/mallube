@@ -64,6 +64,10 @@ const updateData = expressAsyncHandler(
       //   { parentId: { $exists: false} },
       //   { $unset: { subCategoryType: 1 } }
       // );
+      let category: any = await Category.find({ name: "watch"})
+
+      await Product.updateMany({ category: "668c25b3deec29b038e1fc25"}, { category: category._id})
+      
       let products = await Product.aggregate([
         {
           $lookup: {
@@ -85,7 +89,9 @@ const updateData = expressAsyncHandler(
         }
       ]);
 
-      let category = await Category.find({ name: "Electronics"})
+      
+
+      
 
       res.status(200).json({ message: "setted offerPrice operation completed", products, category});
     } catch (error) {
