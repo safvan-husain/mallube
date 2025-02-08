@@ -87,19 +87,19 @@ const updateData = expressAsyncHandler(
         }
       ]);
 
-      let category: any = await Category.find({ name: "watch" });
+      // let category: any = await Category.findOne({ name: "watch" });
 
-      if (!category) {
-        res.status(200).json({ message: "no categeroy" })
-        return;
-      }
+      // if (!category) {
+      //   res.status(200).json({ message: "no categeroy" })
+      //   return;
+      // }
 
       const productIds = products.map((product) => product._id);
 
       if (productIds.length > 0) {
         await Product.updateMany(
           { _id: { $in: productIds } }, // Match all orphaned products
-          { $set: { category: category._id } } // Set their category to the valid category
+          { $set: { category: "66b1cd9ea515ec29bbf649c2" } } // Set their category to the valid category
         );
       } else {
         console.log('No orphaned products found.');
@@ -110,7 +110,7 @@ const updateData = expressAsyncHandler(
 
 
 
-      res.status(200).json({ message: "setted offerPrice operation completed", products, category });
+      res.status(200).json({ message: "setted offerPrice operation completed", products});
     } catch (error) {
       res.status(400).json({ message: error })
     }
