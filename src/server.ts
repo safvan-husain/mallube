@@ -96,16 +96,16 @@ const updateData = expressAsyncHandler(
       //   return;
       // }
 
-      // const productIds = store.map((product) => product._id);
+      const productIds = store.map((product) => product._id);
 
-      // if (productIds.length > 0) {
-      //   await Store.updateMany(
-      //     { _id: { $in: productIds } }, // Match all orphaned products
-      //     { $set: { category: category._id} } // Set their category to the valid category
-      //   );
-      // } else {
-      //   console.log('No orphaned products found.');
-      // }
+      if (productIds.length > 0) {
+        await Advertisement.updateMany(
+          { _id: { $in: productIds } }, // Match all orphaned products
+          { $set: { category: category._id} } // Set their category to the valid category
+        );
+      } else {
+        console.log('No orphaned products found.');
+      }
 
 
 
