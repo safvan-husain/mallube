@@ -66,7 +66,7 @@ const updateData = expressAsyncHandler(
       // );
 
 
-      let products = await Product.aggregate([
+      let store = await Store.aggregate([
         {
           $lookup: {
             from: 'categories',
@@ -94,23 +94,23 @@ const updateData = expressAsyncHandler(
       //   return;
       // }
 
-      const productIds = products.map((product) => product._id);
+      // const productIds = products.map((product) => product._id);
 
-      if (productIds.length > 0) {
-        await Product.updateMany(
-          { _id: { $in: productIds } }, // Match all orphaned products
-          { $set: { category: "66b1cd9ea515ec29bbf649c2" } } // Set their category to the valid category
-        );
-      } else {
-        console.log('No orphaned products found.');
-      }
-
-
+      // if (productIds.length > 0) {
+      //   await Product.updateMany(
+      //     { _id: { $in: productIds } }, // Match all orphaned products
+      //     { $set: { category: "66b1cd9ea515ec29bbf649c2" } } // Set their category to the valid category
+      //   );
+      // } else {
+      //   console.log('No orphaned products found.');
+      // }
 
 
 
 
-      res.status(200).json({ message: "setted offerPrice operation completed", products});
+
+
+      res.status(200).json({ message: "setted offerPrice operation completed", store});
     } catch (error) {
       res.status(400).json({ message: error })
     }
