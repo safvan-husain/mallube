@@ -12,7 +12,7 @@ interface ICustomerBill extends Document {
     customerId: Schema.Types.ObjectId;
     items: SingleProductItemBill[],
     totalAmount: number;
-    date: string
+    date: Date
 }
 
 const customerBillSchema = new Schema<ICustomerBill>(
@@ -30,12 +30,24 @@ const customerBillSchema = new Schema<ICustomerBill>(
             default: 0
         },
         date: {
-            type: String,
+            type: Date,
             required: true,
         }
     },
     {
-        timestamps: true
+        timestamps: true,
+        toJSON: {
+            transform: function (doc, ret) {
+                ret.date = ret.date.getTime();
+                return ret;
+            }
+        },
+        toObject: {
+            transform: function (doc, ret) {
+                ret.date = ret.date.getTime();
+                return ret;
+            }
+        }
     }
 )
 

@@ -120,12 +120,12 @@ export const deleteCustomer = asyncHandler(
 export const createBillForCustomer = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {
         try {
-            const { customerId, items, totalAmount } = req.body;
+            const { customerId, items, totalAmount, date } = req.body;
             var new_bill = new CustomerBill({
                 customerId,
                 items,
                 totalAmount,
-                date: getIST().split(",")[0]
+                date: new Date(date)
             });
             new_bill = await new_bill.save();
             res.status(201).json(new_bill);
@@ -139,12 +139,12 @@ export const createBillForCustomer = asyncHandler(
 export const markRecievedPayment = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {
         try {
-            const { customerId, amount } = req.body;
+            const { customerId, amount, date } = req.body;
             var new_bill = new CustomerBill({
                 customerId,
                 items: [],
                 totalAmount: -amount,
-                date: getIST().split(",")[0]
+                date: new Date(date)
             });
             new_bill = await new_bill.save();
             res.status(201).json({ message: "Success"});
