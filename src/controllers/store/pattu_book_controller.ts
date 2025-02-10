@@ -185,7 +185,7 @@ export const getSpecificBill = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {
         try {
             const { billId } = req.query;
-            const bill = await CustomerBill.findById(billId, { _id: true, date: true, items: true, totalAmount: true})
+            const bill = await CustomerBill.findById(billId, { _id: true, date: true, items: true, totalAmount: true, customerId: true})
             res.status(200).json(bill);
         } catch (error) {
             console.log("error ", error);
