@@ -59,7 +59,7 @@ app.use("/api/healthcheck", (req, res) => {
 const updateData = expressAsyncHandler(
   async (req, res) => {
     try {
-      const items = await CustomerBill.updateMany({ date: { $exists: false }}, { date: "7/2/2025"})
+      const items = await CustomerBill.updateMany({ date: { $exists: true }}, { date: Date.now()})
       res.status(200).json({ message: "Nothing to teansform"});
     } catch (error) {
       res.status(400).json({ message: error })
