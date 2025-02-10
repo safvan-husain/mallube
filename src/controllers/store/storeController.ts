@@ -393,7 +393,10 @@ export const fetchAllAdvertisement = async (req: any, res: Response) => {
       },
       {
         $addFields: {
-          plan_name: '$ad_plan_details.name', // Map storeDetails.name to store
+          plan_name: '$ad_plan_details.name', // Map storeDetails.name to
+          // 
+          // TODO: remove later (added as fix for initila play store fix)
+          advertisementDisplayStatus: "hideFromBothCarousal"
         },
       },
       {
