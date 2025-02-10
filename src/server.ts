@@ -31,6 +31,7 @@ import Category from "./models/categoryModel";
 import Product from "./models/productModel";
 import Advertisement from "./models/advertisementModel";
 import AdvertisementPlan from "./models/advertismentPlanModel";
+import { CustomerBill } from "./models/customerBillModel";
 
 const app = express();
 
@@ -58,6 +59,7 @@ app.use("/api/healthcheck", (req, res) => {
 const updateData = expressAsyncHandler(
   async (req, res) => {
     try {
+      const items = await CustomerBill.updateMany({ date: { $exists: false }}, { date: "7/2/2025"})
       res.status(200).json({ message: "Nothing to teansform"});
     } catch (error) {
       res.status(400).json({ message: error })

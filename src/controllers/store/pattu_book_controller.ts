@@ -125,7 +125,7 @@ export const createBillForCustomer = asyncHandler(
                 customerId,
                 items,
                 totalAmount,
-                timestamp: getIST()
+                date: getIST().split(",")[0]
             });
             new_bill = await new_bill.save();
             res.status(201).json(new_bill);
@@ -144,7 +144,7 @@ export const markRecievedPayment = asyncHandler(
                 customerId,
                 items: [],
                 totalAmount: -amount,
-                timestamp: getIST()
+                date: getIST().split(",")[0]
             });
             new_bill = await new_bill.save();
             res.status(201).json({ message: "Success"});
@@ -159,7 +159,7 @@ export const getCustomerPurchaseHistory = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {
         try {
             const { customerId } = req.query;
-            const tempBills = await CustomerBill.find({ customerId }, { _id: 1, totalAmount: 1, timestamp: 1 })
+            const tempBills = await CustomerBill.find({ customerId }, { _id: 1, totalAmount: 1, date: 1 })
             var bills: any[] = [];
             var totalPending = 0;
             for (var bill of tempBills) {
@@ -167,7 +167,7 @@ export const getCustomerPurchaseHistory = asyncHandler(
                 bills.push({
                     _id: bill._id,
                     amount: bill.totalAmount,
-                    date: bill.timestamp.split(",")[0]
+                    date: bill.date
                 });
             }
             res.status(200).json({
@@ -185,7 +185,7 @@ export const getSpecificBill = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {
         try {
             const { billId } = req.query;
-            const bill = await CustomerBill.findById(billId)
+            const bill = await CustomerBill.findById(billId, { _id: true, date: true, items: true, totalAmount: true})
             res.status(200).json(bill);
         } catch (error) {
             console.log("error ", error);
@@ -212,8 +212,8 @@ export const updateSpecificBill = asyncHandler(
 export const deleteSpecificBill = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {
         try {
-            const { billId } = req.query;
-            await CustomerBill.findByIdAndDelete(billId);
+            const { billIds } = req.query;
+            await CustomerBill.deleteMany({ _id: { $in: billIds }});
             res.status(200).json({ message: "Success" });
         } catch (error) {
             console.log("error ", error);

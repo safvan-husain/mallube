@@ -12,7 +12,7 @@ interface ICustomerBill extends Document {
     customerId: Schema.Types.ObjectId;
     items: SingleProductItemBill[],
     totalAmount: number;
-    timestamp: string
+    date: string
 }
 
 const customerBillSchema = new Schema<ICustomerBill>(
@@ -29,7 +29,7 @@ const customerBillSchema = new Schema<ICustomerBill>(
             type: Number,
             default: 0
         },
-        timestamp: {
+        date: {
             type: String,
             required: true,
         }
