@@ -167,7 +167,7 @@ export const getCustomerPurchaseHistory = asyncHandler(
                 bills.push({
                     _id: bill._id,
                     amount: bill.totalAmount,
-                    date: bill.date
+                    date: bill.date.toDateString()
                 });
             }
             res.status(200).json({
