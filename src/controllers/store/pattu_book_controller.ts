@@ -212,7 +212,7 @@ export const updateSpecificBill = asyncHandler(
 export const deleteSpecificBill = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {
         try {
-            const { billIds } = req.query;
+            const { billIds } = req.body;
             await CustomerBill.deleteMany({ _id: { $in: billIds }});
             res.status(200).json({ message: "Success" });
         } catch (error) {
