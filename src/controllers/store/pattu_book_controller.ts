@@ -136,12 +136,44 @@ export const createBillForCustomer = asyncHandler(
     }
 )
 
+export const markRecievedPayment = asyncHandler(
+    async (req: ICustomRequest<any>, res: Response) => {
+        try {
+            const { customerId, amount } = req.body;
+            var new_bill = new CustomerBill({
+                customerId,
+                items: [],
+                totalAmount: -amount,
+                timestamp: getIST()
+            });
+            new_bill = await new_bill.save();
+            res.status(201).json({ message: "Success"});
+        } catch (error) {
+            console.log("error ", error);
+            res.status(500).json({ message: "Internal server error" })
+        }
+    }
+)
+
 export const getCustomerPurchaseHistory = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {
         try {
             const { customerId } = req.query;
-            const bills = await CustomerBill.find({ customerId }, { _id: 1, totalAmount: 1, timestamp: 1 })
-            res.status(200).json(bills);
+            const tempBills = await CustomerBill.find({ customerId }, { _id: 1, totalAmount: 1, timestamp: 1 })
+            var bills: any[] = [];
+            var totalPending = 0;
+            for (var bill of tempBills) {
+                totalPending += bill.totalAmount;
+                bills.push({
+                    _id: bill._id,
+                    amount: bill.totalAmount,
+                    date: bill.timestamp.split(",")[0]
+                });
+            }
+            res.status(200).json({
+                totalPending,
+                bills
+            });
         } catch (error) {
             console.log("error ", error);
             res.status(500).json({ message: "Internal server error" })
