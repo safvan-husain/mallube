@@ -23,7 +23,12 @@ import {
   stockUpdate,
   getProfile,
   deleteStore,
-  updateFcmToken
+  updateFcmToken,
+  addTimeSlotV2,
+  getBookingsV2,
+  confirmBookingV2,
+  getTimeSlotV2,
+  deleteTimeSlotV2
 } from "../controllers/store/storeController";
 import { store } from "../middleware/auth";
 import { addSpecialisation, fetchAllSpecialisation } from "../controllers/specialisation/specialisationController";
@@ -87,6 +92,12 @@ router.route("/otp-send-forgot-password").post(forgotPasswordOtpSendToPhone);
 router.route("/otp-verify-forgot-password").post(OtpVerify);
 router.route("/update-password-request").put(updatePassword);
 router.route("/time-slots").post(store, addTimeSlot).get(store, fetchTimeSlot).delete(store, deleteTimeSlots)
+router.route('/time-slots-v2')
+  .post(store, addTimeSlotV2)
+  .get(store, getTimeSlotV2)
+  .delete(store, deleteTimeSlotV2)
+router.route('/bookings-v2').get(store, getBookingsV2)
+router.route('/booking/confirm').put(store, confirmBookingV2);
 router.route("/update-product-stock").put(store, stockUpdate)
 router.route("/specialisation").get(store, fetchAllSpecialisation).post(addSpecialisation)
 router.route("/doctor").post(store, addDoctor).delete(store, deleteDoctor)

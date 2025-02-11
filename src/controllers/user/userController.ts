@@ -539,6 +539,133 @@ export const slotBooking = async (req: any, res: Response) => {
   }
 };
 
+export const getAvailableTimeSlotForStoreV2 = asyncHandler(
+  async (req: any, res: any) => {
+    try {
+
+      const { storeId } = req.query;
+      //TODO: remove slots later.
+      const tempTimeSlots = await TimeSlot.find({ storeId, numberOfAvailableSeats: { $gt: 0 }, slots: { $exists: false } });
+      var timeSlots = [];
+      for (var slot of tempTimeSlots) {
+        try {
+          timeSlots.push(
+            {
+              startTime: slot.startTime.getTime(),
+              endTime: slot.endTime.getTime(),
+              numberOfAvailableSeats: slot.numberOfAvailableSeats,
+              _id: slot._id
+            }
+          );
+        } catch (error) {
+          console.log("delete old times", error);
+          //TODO:
+        }
+      }
+      res.status(200).json(timeSlots);
+    } catch (error) {
+      console.log("getAvailableTimeSlotForStoreV2 error ", error);
+      res.status(500).json({ message: "Internal server error", error });
+    }
+  }
+)
+
+//
+export const slotBookingV2 = async (req: any, res: Response) => {
+  try {
+    const { slotId } = req.body;
+
+    const userId = req.user._id;
+    // Validate the slotData and storeId
+    if (!slotId) {
+      return res.status(400).json({ message: "Invalid booking data" });
+    }
+    // check if the slot is available
+    const timeslot: ITimeSlot | null = await TimeSlot.findById(slotId);
+
+    if (!timeslot) {
+      return res.status(400).json({ message: "Invalid booking data" });
+    }
+
+    if (timeslot.numberOfAvailableSeats < 1) {
+      return res.status(401).json({ message: "No available seats on this specific time" });
+    }
+
+    const newBooking = new Booking({
+      timeSlotId: slotId,
+      userId,
+    });
+
+    await newBooking.save();
+
+    res.status(201).json({
+      message: `Requested. You will get a call from shop owner.`,
+      newBooking,
+    });
+  } catch (error) {
+    console.log("booking error ", error);
+    res.status(500).json({ message: "Internal server error", error });
+  }
+};
+
+export const getBookingsV2 = asyncHandler(
+  async (req: any, res: any) => {
+    try {
+      const userId = req.user._id;
+      // const bookings = await Booking.find({ userId }, { timeSlotId: true, isActive: true }).populate('timeSlotId');
+      const bookings = await Booking.aggregate([
+        {
+          $match: {
+            userId
+          },
+        },
+        {
+          $lookup: {
+            from: "timeslots",
+            localField: "timeSlotId",
+            foreignField: "_id",
+            as: "timeslot",
+          },
+        },
+        {
+          $unwind: {
+            path: "$timeslot",
+            preserveNullAndEmptyArrays: true
+          },
+        },
+        {
+          $lookup: {
+            from: "stores",
+            localField: "timeslot.storeId",
+            foreignField: "_id",
+            as: "store"
+          }
+        },
+         {
+          $unwind: {
+            path: "$store",
+            preserveNullAndEmptyArrays: true
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            isActive: 1,
+            "store.storeName": 1,
+            "store.phone": 1,
+            "timeslot.startTime": 1,
+            "timeslot.endTime": 1,
+          }
+        }
+      ])
+      res.status(200).json(bookings);
+    } catch (error) {
+      console.log("get booking error ", error);
+      res.status(500).json({ message: "Internal server error", error });
+    }
+  }
+)
+
 export const fetchAllDoctors = async (req: Request, res: Response) => {
   try {
     const { uniqueName } = req.params;
@@ -583,7 +710,7 @@ export const fetchAllDoctors = async (req: Request, res: Response) => {
   }
 };
 
-export const fetchAllSpecialisations = async (req:Request , res:Response) => {
+export const fetchAllSpecialisations = async (req: Request, res: Response) => {
   try {
     const { uniqueName } = req.params;
 
@@ -603,7 +730,7 @@ export const fetchAllSpecialisations = async (req:Request , res:Response) => {
       return res.status(404).json({ message: "No store found" });
     }
 
-    const specialisations = await Specialisation.find({storeId:store?._id})
+    const specialisations = await Specialisation.find({ storeId: store?._id })
 
     if (!specialisations) {
       return res.status(404).json({ message: "No specialisations found" });

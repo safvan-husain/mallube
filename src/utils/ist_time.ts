@@ -38,3 +38,14 @@ export function formatLastPurchaseDate(lastPurchaseDate: string): string {
     return `on ${purchaseDate.toLocaleDateString()}`;
   }
 }
+
+export function DateFromMilliSecondSinceEpoach(timestamp: number): Date {
+  return new Date(timestamp);
+}
+
+//using this when we don't care about the date coming from client, since we are focusing on time, 
+//this will help us sort items, even if they are added or updated frok different dates. 
+export function toTimeOnly(timestamp: number): Date {
+  const date = new Date(timestamp);
+  return new Date(1970, 0, 1, date.getHours(), date.getMinutes(), date.getSeconds());
+}

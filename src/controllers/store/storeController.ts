@@ -11,7 +11,7 @@ import Product from "../../models/productModel";
 import ProductSearch from "../../models/productSearch";
 import jwt from "jsonwebtoken";
 // import twilio from "twilio";
-import TimeSlot from "../../models/timeSlotModel";
+import { TimeSlot } from "../../models/timeSlotModel";
 import Booking from "../../models/bookingModel";
 import Specialisation from "../../models/specialisationModel";
 import { ICustomRequest } from "../../types/requestion";
@@ -23,6 +23,7 @@ import {
 import { getNextYearSameDateMinusOneDay } from "../../utils/misc";
 import { store } from "../../middleware/auth";
 import { FeedBack } from "../../models/feedbackModel";
+import { toTimeOnly } from "../../utils/ist_time";
 
 const { TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN } = process.env;
 // const twilioclient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN, {
@@ -402,7 +403,6 @@ export const fetchAllAdvertisement = async (req: any, res: Response) => {
       {
         $unset: 'ad_plan_details', // Optionally remove the storeDetails field
       },
-
     ]);
     //TODO: remove the maping for efficancy, added since some older data don't have isActive field
     res.status(200).json(advertisements.map((i) => {
@@ -886,6 +886,188 @@ export const updateStoreProfile = async (req: any, res: Response) => {
     }
   }
 };
+//TODO: write a function to delte all time slote and booking to be deleted.
+export const addTimeSlotV2 = asyncHandler(
+  async (req: ICustomRequest<any>, res: Response) => {
+    try {
+      var { startTime, endTime, numberOfTotalSeats } = req.body;
+      console.log("adding time slot", req.body);
+      
+      const storeId = req.store?._id;
+      //converting milli second since epoach format to Date
+      startTime = toTimeOnly(parseInt(startTime));
+      endTime = toTimeOnly(parseInt(endTime));
+
+      var timeSlot = new TimeSlot({
+        storeId,
+        startTime,
+        endTime,
+        numberOfTotalSeats,
+        numberOfAvaiableSeats: numberOfTotalSeats
+      });
+      timeSlot = await timeSlot.save();
+      res.status(200).json({
+        startTime: timeSlot.startTime.getTime(),
+        endTime: timeSlot.endTime.getTime(),
+        numberOfTotalSeats: timeSlot.numberOfTotalSeats,
+        _id: timeSlot._id,
+      });
+    } catch (error) {
+      console.log(`error addTimeSlot V2 ${error}`);
+      res.status(500).json({ message: "Internal server error" })
+    }
+  }
+);
+
+export const getTimeSlotV2 = asyncHandler(
+  async (req: ICustomRequest<any>, res: Response) => {
+    try {
+      const storeId = req.store?._id;
+      const tempTimeSlots = await TimeSlot.find({ storeId });
+      var timeSlots = [];
+      for (var slot of tempTimeSlots) {
+        try {
+          timeSlots.push(
+            {
+              startTime: slot.startTime.getTime(),
+              endTime: slot.endTime.getTime(),
+              numberOfTotalSeats: slot.numberOfTotalSeats,
+              _id: slot._id
+            }
+          );
+        } catch (error) {
+          console.log("delete old times", error);
+          //TODO:
+        }
+      }
+      res.status(200).json(timeSlots);
+    } catch (error) {
+      console.log(`error addTimeSlot V2 ${error}`);
+      res.status(500).json({ message: "Internal server error" })
+    }
+  }
+);
+
+export const deleteTimeSlotV2 = asyncHandler(
+   async (req: ICustomRequest<any>, res: Response) => {
+    try {
+      const { id } = req.query;
+      await Booking.deleteMany({ timeSlotId: id});
+      await TimeSlot.findByIdAndDelete(id);
+      res.status(200).json({ message: "Success"});
+    } catch (error) {
+      console.log(`error addTimeSlot V2 ${error}`);
+      res.status(500).json({ message: "Internal server error" })
+    }
+  }
+)
+
+export const confirmBookingV2 = asyncHandler(
+  async (req: ICustomRequest<any>, res: Response) => {
+    try {
+      const { bookingId } = req.query;
+
+      console.log(`recieved confirm for ${bookingId}`);
+      
+
+      const booking = await Booking.findById(bookingId);
+      if (!booking) {
+        res.status(400).json({ message: "booking not found" });
+        return;
+      }
+      const timeSlot = await TimeSlot.findById(booking.timeSlotId);
+      if (timeSlot.numberOfAvailableSeats > 0) {
+        await TimeSlot.findByIdAndUpdate(
+          booking.timeSlotId,
+          { $inc: { numberOfAvailableSeats: -1 } }
+        );
+        booking!.isActive = true;
+        await booking.save();
+        res.status(200).json({ message: "Booking confirmed" });
+      } else {
+        res.status(400).json({ message: "No available seats left" });
+      }
+    } catch (error) {
+      console.log(`error addTimeSlot V2 ${error}`);
+      res.status(500).json({ message: "Internal server error" })
+    }
+  }
+)
+
+export const getBookingsV2 = asyncHandler(
+  async (req: ICustomRequest<any>, res: Response) => {
+    try {
+      const storeId = req.store?._id;
+      console.log("recieved calls");
+      
+      //TODO
+      const slots = await TimeSlot.find({ storeId }, { _id: 1 });
+      const tempBookings = await Booking.aggregate([
+        {
+          $match: {
+            timeSlotId: { $in: slots.map((e) => e._id) }
+          },
+
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: "userId",
+            foreignField: '_id',
+            as: 'customer'
+          }
+        },
+        {
+          $unwind: {
+            path: "$customer",
+            preserveNullAndEmptyArrays: true
+          },
+        },
+        {
+          $lookup: {
+            from: 'timeslots',
+            localField: "timeSlotId",
+            foreignField: '_id',
+            as: 'timeslot'
+          }
+        },
+        {
+          $unwind: {
+            path: "$timeslot",
+            preserveNullAndEmptyArrays: true
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            isActive: 1,
+            'customer.fullName': 1,
+            'customer.phone': 1,
+            'timeslot.startTime': 1,
+            'timeslot.endTime': 1,
+          }
+        }
+      ]);
+      var bookings: any[] = [];
+      for (var {_id, isActive, customer, timeslot } of tempBookings) {
+        bookings.push({
+          _id,
+          isActive,
+          customer,
+          timeslot: {
+            startTime: timeslot.startTime.getTime(),
+            endTime: timeslot.endTime.getTime(),
+          }
+        })
+      }
+
+      res.status(200).json(bookings.reverse());
+    } catch (error) {
+      console.log(`error addTimeSlot V2 ${error}`);
+      res.status(500).json({ message: "Internal server error" })
+    }
+  }
+)
 
 export const addTimeSlot = async (req: any, res: Response) => {
   try {

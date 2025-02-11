@@ -1,5 +1,5 @@
 import express from "express";
-import { register,login, verifyOtp, addToCart, getCart, removeCart,updateProfile, forgetPasswordOtpSend, verifyOtpForPasswrodReset, updatePassword, updateProfilePassword,fetchUser,fetchTimeSlot, slotBooking , fetchAllDoctors, fetchAllSpecialisations } from "../controllers/user/userController";
+import { register,login, verifyOtp, addToCart, getCart, removeCart,updateProfile, forgetPasswordOtpSend, verifyOtpForPasswrodReset, updatePassword, updateProfilePassword,fetchUser,fetchTimeSlot, slotBooking , fetchAllDoctors, fetchAllSpecialisations, slotBookingV2, getAvailableTimeSlotForStoreV2, getBookingsV2 } from "../controllers/user/userController";
 import { user } from "../middleware/auth";
 import { validateData } from "../middleware/zod.validation";
 import { addCartSchema } from "../schemas/cart.schema";
@@ -18,8 +18,10 @@ router.route('/verify-otp-for-password-reset').post(verifyOtpForPasswrodReset)
 router.route("/update-password").put(updatePassword)
 router.route("/change-profile-password").put(user,updateProfilePassword)
 router.route("/fetch-user-details").get(user,fetchUser)
-router.route("/time-slots/:id").get(user,fetchTimeSlot)
+router.route("/time-slots/:id").get(user, fetchTimeSlot)
+router.route('/available-time-slots').get(user, getAvailableTimeSlotForStoreV2)
 router.route("/booking").post(user,slotBooking)
+router.route("/booking-v2").post(user,slotBookingV2).get(user, getBookingsV2)
 router.route("/dr-booking").post(user,drBooking)
 router.route("/specialisations/:uniqueName").get(fetchAllSpecialisations)
 router.route("/doctors/:uniqueName").get(fetchAllDoctors)

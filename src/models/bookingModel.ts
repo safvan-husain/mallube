@@ -1,5 +1,5 @@
 import { Schema, model, Document } from "mongoose";
-
+//TODO: remove uneccessery fields later.
 export interface IBooking extends Document {
     timeSlotId: Schema.Types.ObjectId;
     storeId: Schema.Types.ObjectId;
@@ -10,7 +10,8 @@ export interface IBooking extends Document {
     date:Date;
     name:string;
     phone:string;
-    doctor:Schema.Types.ObjectId
+    doctor:Schema.Types.ObjectId;
+    isActive: boolean;
 }
 const bookingSchema = new Schema<IBooking>(
     {
@@ -19,7 +20,11 @@ const bookingSchema = new Schema<IBooking>(
         },
         storeId:{
             type:Schema.Types.ObjectId,
-            required:true
+            required: false
+        },
+        isActive: {
+            type: Boolean,
+            default: false,
         },
         userId:{
             type:Schema.Types.ObjectId,
@@ -44,12 +49,12 @@ const bookingSchema = new Schema<IBooking>(
         },
         date:{
             type:Date,
-            expires:"1d"
+            expires:"1d",
+            default: Date.now
         },
         doctor:{
             type:Schema.Types.ObjectId
         }
-        
     },
     {
         timestamps:true
