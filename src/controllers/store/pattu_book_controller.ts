@@ -197,10 +197,9 @@ export const getSpecificBill = asyncHandler(
 export const updateSpecificBill = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {
         try {
-            const { items, totalAmount, id } = req.body;
-            var bill: any = await CustomerBill.findByIdAndUpdate(id, { items, totalAmount });
-            bill.items = items;
-            bill.totalAmount = totalAmount;
+            const { items, totalAmount, id, date } = req.body;
+            await CustomerBill.findByIdAndUpdate(id, { items, totalAmount, date: new Date(date) });
+            const bill = await CustomerBill.findById(id, { _id: true, date: true, items: true, totalAmount: true, customerId: true})
             res.status(200).json(bill);
         } catch (error) {
             console.log("error ", error);
@@ -209,7 +208,7 @@ export const updateSpecificBill = asyncHandler(
     }
 )
 
-export const deleteSpecificBill = asyncHandler(
+export const deleteSelectedBills = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {
         try {
             const { billIds } = req.body;

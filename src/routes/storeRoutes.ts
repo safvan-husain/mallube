@@ -31,7 +31,7 @@ import { addDoctor, changeDrAvailability, deleteDoctor, fetchAllDoctors } from "
 import { addProduct, deleteProductOfAStore, getProductsOfAStore, switchStockStatusOfAProduct, updateProduct } from "../controllers/product/productController";
 import { rePublishRequestAnAdvertisement } from "../controllers/advertisement/advertisementController";
 import { createNote, deleteNote, getNotesForStore, updateNote } from "../controllers/store/notes_controller";
-import { createBillForCustomer, createCustomer, deleteCustomer, deleteSpecificBill, getAllCustomers, getCustomerPurchaseHistory, getSpecificBill, markRecievedPayment, updateCustomer, updateSpecificBill } from "../controllers/store/pattu_book_controller";
+import { createBillForCustomer, createCustomer, deleteCustomer, deleteSelectedBills, getAllCustomers, getCustomerPurchaseHistory, getSpecificBill, markRecievedPayment, updateCustomer, updateSpecificBill } from "../controllers/store/pattu_book_controller";
 const router = express.Router();
 
 router.route("/login").post(login);
@@ -61,7 +61,7 @@ router.route('/customer/bill')
   .get(store, getSpecificBill)
   .post(store, createBillForCustomer)
   .put(store, updateSpecificBill)
-  .delete(store, deleteSpecificBill)
+  .delete(store, deleteSelectedBills)
 
 router.route('/customer/history')
   .get(store, getCustomerPurchaseHistory);
