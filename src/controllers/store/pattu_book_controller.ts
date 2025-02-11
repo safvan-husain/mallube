@@ -106,9 +106,9 @@ export const updateCustomer = asyncHandler(
 export const deleteCustomer = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {
         try {
-            const { customerId } = req.query;
-            await Customer.findByIdAndDelete(customerId);
-            await CustomerBill.deleteMany({ customerId });
+            const { customerIds } = req.body;
+            await Customer.deleteMany({ _id: { $in: customerIds}});
+            await CustomerBill.deleteMany({ customerId: { $in: customerIds } });
             res.status(200).json({ message: "success" });
         } catch (error) {
             console.log("error ", error);
