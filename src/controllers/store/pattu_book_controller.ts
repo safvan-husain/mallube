@@ -10,7 +10,7 @@ export const createCustomer = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {
         try {
             const { name, contact } = req.body;
-            const existingCustomer = await Customer.find({ contact, customerId: req.store?._id });
+            const existingCustomer = await Customer.findOne({ contact, customerId: req.store?._id });
             if (existingCustomer) {
                 res.status(401).json({ message: "Customer already exist with same contact" });
                 return;
