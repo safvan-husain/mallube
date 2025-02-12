@@ -51,6 +51,7 @@ export const updateNote = asyncHandler(
         }
     }
 )
+
 export const deleteNote = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {
         const { noteIds } = req.body;
