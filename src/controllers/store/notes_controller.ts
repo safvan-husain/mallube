@@ -53,9 +53,9 @@ export const updateNote = asyncHandler(
 )
 export const deleteNote = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {
-        const { noteId } = req.query;
+        const { noteIds } = req.body;
         try {
-            var note = await Note.findByIdAndDelete(noteId);
+            await Note.deleteMany({ _id: { $in: noteIds }});
             res.status(200).json({ message: "deleted"});
         } catch (error) {
             console.log("error delete note", error);
