@@ -914,7 +914,7 @@ export const addTimeSlotV2 = asyncHandler(
       });
     } catch (error) {
       console.log(`error addTimeSlot V2 ${error}`);
-      res.status(500).json({ message: "Internal server error" })
+      res.status(500).json({ message: "Internal server error", error })
     }
   }
 );
