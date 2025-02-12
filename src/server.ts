@@ -60,7 +60,7 @@ app.use("/api/healthcheck", (req, res) => {
 const updateData = expressAsyncHandler(
   async (req, res) => {
     try {
-      var result = await TimeSlot.listIndexes();
+      var result = await TimeSlot.dropSearchIndex('storeId_1');
       // await Store.findOneAndUpdate({ phone: "8086527077" }, { service: true });
       res.status(200).json({ message: "Nothing to teansform", result});
     } catch (error) {
