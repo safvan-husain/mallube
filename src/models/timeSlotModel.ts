@@ -1,7 +1,7 @@
 import { Schema, model, Document, models } from "mongoose";
 
 export interface ITimeSlot extends Document {
-  storeId: Schema.Types.ObjectId;
+  businessId: Schema.Types.ObjectId;
   date: Date,
   startTime: Date;
   endTime: Date;
@@ -13,7 +13,7 @@ export interface ITimeSlot extends Document {
 
 const timeSlotSchema = new Schema<ITimeSlot>(
   {
-    storeId: {
+    businessId: {
       type: Schema.Types.ObjectId,
       ref: "stores",
       requried: true,

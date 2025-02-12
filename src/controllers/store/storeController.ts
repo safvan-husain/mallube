@@ -899,7 +899,7 @@ export const addTimeSlotV2 = asyncHandler(
       endTime = toTimeOnly(parseInt(endTime));
 
       var timeSlot = new TimeSlot({
-        storeId,
+        businessId: storeId,
         startTime,
         endTime,
         numberOfTotalSeats,
@@ -923,7 +923,7 @@ export const getTimeSlotV2 = asyncHandler(
   async (req: ICustomRequest<any>, res: Response) => {
     try {
       const storeId = req.store?._id;
-      const tempTimeSlots = await TimeSlot.find({ storeId });
+      const tempTimeSlots = await TimeSlot.find({ businessId: storeId });
       var timeSlots = [];
       for (var slot of tempTimeSlots) {
         try {
