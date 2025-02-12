@@ -4,6 +4,7 @@ import cors from "cors";
 import fileUpload from "express-fileupload";
 import { initializeApp } from "firebase-admin/app";
 import { credential } from "firebase-admin";
+import mongoose from "mongoose";
 
 import connectDb from "./config/db";
 const serviceAccount = require('./secrets/serviceAccountKey.json');
@@ -60,9 +61,14 @@ app.use("/api/healthcheck", (req, res) => {
 const updateData = expressAsyncHandler(
   async (req, res) => {
     try {
-      var result = await TimeSlot.dropSearchIndex('storeId_1');
+      // Access the native collection object
+      const collection = TimeSlot.collection;
+
+      // Drop the index
+      await collection.dropIndex('storeId_1');
+      // var result = await TimeSlot.inde
       // await Store.findOneAndUpdate({ phone: "8086527077" }, { service: true });
-      res.status(200).json({ message: "Nothing to teansform", result});
+      res.status(200).json({ message: "Nothing to teansform" });
     } catch (error) {
       res.status(400).json({ message: error })
     }
