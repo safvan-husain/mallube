@@ -62,13 +62,16 @@ const updateData = expressAsyncHandler(
   async (req, res) => {
     try {
       // Access the native collection object
-      const collection = TimeSlot.collection;
+      // const collection = TimeSlot.collection;
 
-      // Drop the index
-      await collection.dropIndex('storeId_1');
+      // // Drop the index
+      // await collection.dropIndex('storeId_1');
+      await Store.updateMany({ storeProviding: 'serviceBased'}, { service: true });
+
+      let result = await Store.find( { phone: "8848305163" });
       // var result = await TimeSlot.inde
       // await Store.findOneAndUpdate({ phone: "8086527077" }, { service: true });
-      res.status(200).json({ message: "Nothing to teansform" });
+      res.status(200).json({ message: "Nothing to teansform", result });
     } catch (error) {
       res.status(400).json({ message: error })
     }
