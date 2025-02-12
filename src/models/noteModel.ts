@@ -16,11 +16,11 @@ const noteSchema = new Schema<INote>(
         },
         title: {
             type: String,
-            default: ""
+            required: true,
         },
         body: {
             type: String,
-            required: true,
+            default: ""
         },
         timestamp: {
             type: String,
