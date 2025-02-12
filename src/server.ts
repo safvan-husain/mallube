@@ -32,6 +32,7 @@ import Product from "./models/productModel";
 import Advertisement from "./models/advertisementModel";
 import AdvertisementPlan from "./models/advertismentPlanModel";
 import { CustomerBill } from "./models/customerBillModel";
+import TimeSlot from "./models/timeSlotModel";
 
 const app = express();
 
@@ -59,8 +60,9 @@ app.use("/api/healthcheck", (req, res) => {
 const updateData = expressAsyncHandler(
   async (req, res) => {
     try {
+      var result = await TimeSlot.listIndexes();
       // await Store.findOneAndUpdate({ phone: "8086527077" }, { service: true });
-      res.status(200).json({ message: "Nothing to teansform"});
+      res.status(200).json({ message: "Nothing to teansform", result});
     } catch (error) {
       res.status(400).json({ message: error })
     }
