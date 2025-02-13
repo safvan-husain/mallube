@@ -890,7 +890,7 @@ export const updateStoreProfile = async (req: any, res: Response) => {
 export const addTimeSlotV2 = asyncHandler(
   async (req: ICustomRequest<any>, res: Response) => {
     try {
-      var { startTime, endTime, numberOfTotalSeats } = req.body;
+      var { startTime, endTime, numberOfTotalSeats, slotIndex } = req.body;
       console.log("adding time slot", req.body);
       
       const storeId = req.store?._id;
@@ -899,6 +899,7 @@ export const addTimeSlotV2 = asyncHandler(
       endTime = toTimeOnly(parseInt(endTime));
 
       var timeSlot = new TimeSlot({
+        slotIndex,
         storeId,
         startTime,
         endTime,
@@ -907,6 +908,7 @@ export const addTimeSlotV2 = asyncHandler(
       });
       timeSlot = await timeSlot.save();
       res.status(200).json({
+        slotIndex: timeSlot.slotIndex ?? 0,
         startTime: timeSlot.startTime.getTime(),
         endTime: timeSlot.endTime.getTime(),
         numberOfTotalSeats: timeSlot.numberOfTotalSeats,
@@ -929,6 +931,7 @@ export const getTimeSlotV2 = asyncHandler(
         try {
           timeSlots.push(
             {
+              slotIndex: slot.slotIndex ?? 0,
               startTime: slot.startTime.getTime(),
               endTime: slot.endTime.getTime(),
               numberOfTotalSeats: slot.numberOfTotalSeats,

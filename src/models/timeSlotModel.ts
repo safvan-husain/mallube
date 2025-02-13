@@ -13,6 +13,10 @@ export interface ITimeSlot extends Document {
 
 const timeSlotSchema = new Schema<ITimeSlot>(
   {
+    slotIndex: {
+      type: Number,
+      default: 0,
+    },
     storeId: {
       type: Schema.Types.ObjectId,
       ref: "stores",
