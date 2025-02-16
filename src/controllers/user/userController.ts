@@ -50,6 +50,7 @@ export const register = async (req: Request, res: Response) => {
         await User.deleteOne({ _id: exist._id });
       } else {
         res.status(422).json({ message: "email or phone already been used!" });
+        return;
       }
     }
     //hash the password
