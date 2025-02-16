@@ -154,21 +154,25 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     });
     if (!user) {
       res.status(404).json({ message: "Invalid email or phone", login: false });
+      return;
     }
 
     if (user?.isBlocked) {
       res.status(400).json({ message: "You are blocked. Contact the owner" });
+      return;
     }
 
     //verify password
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
       res.status(400).json({ message: "Invalid password", login: false });
+      return;
     }
 
     //check if user is verified
     if (!user.isVerified) {
       res.status(400).json({ message: "Please verify your account" });
+      return;
     }
 
     //generate jwt token
