@@ -39,7 +39,6 @@ const bookingSchema = new Schema<IBooking>(
         token:{
             type:Number,
             default:1
-
         },
         startTime:{
             type:String,
