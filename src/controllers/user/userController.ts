@@ -29,9 +29,17 @@ export const register = async (req: Request, res: Response) => {
   const { fullName, email, password, phone } = req.body;
   const { v2 } = req.query;
   try {
-    const exist: any = await User.findOne({
-      $or: [{ email }, { phone }],
-    });
+    let exist: any;
+    var collection = User.collection;
+    await collection.dropIndex('email');
+    if (email) {
+      exist = await User.findOne({
+        $or: [{ email }, { phone }],
+      });
+    } else {
+      exist = await User.findOne({ phone });
+    }
+
 
     if (exist) {
       const currentTime = new Date().getTime();
@@ -64,7 +72,7 @@ export const register = async (req: Request, res: Response) => {
 
     user = await user.save();
 
-    if(v2) {
+    if (v2) {
       res.status(201).json({
         fullName: fullName,
         email: email,
@@ -652,7 +660,7 @@ export const getBookingsV2 = asyncHandler(
             as: "store"
           }
         },
-         {
+        {
           $unwind: {
             path: "$store",
             preserveNullAndEmptyArrays: true
@@ -681,7 +689,7 @@ export const fetchAllDoctors = async (req: Request, res: Response) => {
   try {
     const { uniqueName } = req.params;
     console.log(uniqueName);
-    
+
     if (!uniqueName || typeof uniqueName !== "string") {
       return res
         .status(404)
@@ -725,7 +733,7 @@ export const fetchAllSpecialisations = async (req: Request, res: Response) => {
   try {
     const { uniqueName } = req.params;
 
-    
+
     if (!uniqueName || typeof uniqueName !== "string") {
       return res
         .status(404)
@@ -753,6 +761,6 @@ export const fetchAllSpecialisations = async (req: Request, res: Response) => {
   } catch (error) {
     console.log("error while fetching specialisation", error);
     res.status(500).json({ message: "Internal server error", error });
-    
+
   }
 }
