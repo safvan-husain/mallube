@@ -30,8 +30,6 @@ export const register = async (req: Request, res: Response) => {
   const { v2 } = req.query;
   try {
     let exist: any;
-    var collection = User.collection;
-    await collection.dropIndex('email');
     if (email) {
       exist = await User.findOne({
         $or: [{ email }, { phone }],
@@ -98,6 +96,7 @@ export const register = async (req: Request, res: Response) => {
       otpSend: true,
     });
   } catch (error) {
+    res.status(500).json({ message: "Internal server error", error});
     console.log(error);
   }
 };

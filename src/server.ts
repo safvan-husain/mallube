@@ -34,6 +34,7 @@ import Advertisement from "./models/advertisementModel";
 import AdvertisementPlan from "./models/advertismentPlanModel";
 import { CustomerBill } from "./models/customerBillModel";
 import TimeSlot from "./models/timeSlotModel";
+import User from "./models/userModel";
 
 const app = express();
 
@@ -66,9 +67,12 @@ const updateData = expressAsyncHandler(
 
       // // Drop the index
       // await collection.dropIndex('storeId_1');
-      await Store.updateMany({ storeProviding: 'serviceBased'}, { service: true });
+      var collection = User.collection;
+      var result = collection.listIndexes();
+      // await collection.dropIndex('email');
+      // await Store.updateMany({ storeProviding: 'serviceBased' }, { service: true });
 
-      let result = await Store.find( { phone: "8848305163" });
+      // let result = await Store.find({ phone: "8848305163" });
       // var result = await TimeSlot.inde
       // await Store.findOneAndUpdate({ phone: "8086527077" }, { service: true });
       res.status(200).json({ message: "Nothing to teansform", result });
