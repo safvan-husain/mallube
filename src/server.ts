@@ -69,7 +69,7 @@ const updateData = expressAsyncHandler(
       // await collection.dropIndex('storeId_1');
       var collection = User.collection;
       var result = collection.listIndexes();
-      // await collection.dropIndex('email');
+      await collection.dropIndex('email_1');
       // await Store.updateMany({ storeProviding: 'serviceBased' }, { service: true });
 
       // let result = await Store.find({ phone: "8848305163" });
