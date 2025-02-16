@@ -27,6 +27,7 @@ const EXPIRATION_TIME = 5 * 60 * 1000;
 
 export const register = async (req: Request, res: Response) => {
   const { fullName, email, password, phone } = req.body;
+  const { v2 } = req.query;
   try {
     const exist: any = await User.findOne({
       $or: [{ email }, { phone }],
@@ -52,7 +53,7 @@ export const register = async (req: Request, res: Response) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     //create new user
-    const user = new User({
+    var user = new User({
       fullName,
       email,
       password: hashedPassword,
@@ -61,7 +62,16 @@ export const register = async (req: Request, res: Response) => {
       isVerified: true,
     });
 
-    await user.save();
+    user = await user.save();
+
+    if(v2) {
+      res.status(201).json({
+        fullName: fullName,
+        email: email,
+        phone: phone
+      });
+      return;
+    }
 
     if (!twilioServiceId) {
       return res
