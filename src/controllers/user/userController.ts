@@ -68,7 +68,8 @@ export const register = async (req: Request, res: Response) => {
       res.status(201).json({
         fullName: fullName,
         email: email,
-        phone: phone
+        phone: phone,
+        token: user.generateAuthToken()
       });
       return;
     }
@@ -168,7 +169,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     // res.status(200).json({ message: "Login successful", token });
 
     if (match) {
-      const token = user.generateAuthToken(user._id);
+      const token = user.generateAuthToken();
       res.status(200).json({
         _id: user._id,
         name: user.fullName,
