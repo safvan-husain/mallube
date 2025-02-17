@@ -41,7 +41,7 @@ export const updateNote = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {
         const { id, title, body } = req.body;
         try {
-            var note = await Note.findByIdAndUpdate(id, { title, body});
+            var note = await Note.findByIdAndUpdate(id, { title, body, timestamp: getIST() });
             note!.body = body;
             note!.title = title;
             res.status(200).json(note);
