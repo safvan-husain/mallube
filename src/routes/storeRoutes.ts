@@ -29,7 +29,8 @@ import {
   confirmBookingV2,
   getTimeSlotV2,
   deleteTimeSlotV2,
-  fetchStoresNearByV2
+  fetchStoresNearByV2,
+  fetchStoreByCategoryV2
 } from "../controllers/store/storeController";
 import { store } from "../middleware/auth";
 import { addSpecialisation, fetchAllSpecialisation } from "../controllers/specialisation/specialisationController";
@@ -76,6 +77,7 @@ router.route('/customer/mark-recieved-payment').post(store, markRecievedPayment)
 
 router.route("/search-stores").get(searchStoresByProductName);
 router.route("/fetch-store-by-category").get(fetchStoreByCategory);
+router.route("/fetch-store-by-category-v2").get(fetchStoreByCategoryV2);
 router.route("/fetch-all-stores").get(fetchAllStore);
 router.route("/update-live-status").put(store, updateLiveStatus);
 router

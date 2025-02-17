@@ -208,7 +208,7 @@ export const getStoreDetails = asyncHandler(
         openTime: true, closeTime: true, isDeliveryAvailable: true,
         instagram: true, facebook: true, whatsapp: true,
         phone: true, shopImgUrl: true,
-        service: true
+        service: true, location: true
       });
       if (!store) {
         res.status(401).json({ message: "Store not found" });

@@ -636,6 +636,84 @@ export const fetchStoreByCategory = async (req: Request, res: Response) => {
   }
 };
 
+export const fetchStoreByCategoryV2 = async (req: Request, res: Response) => {
+  try {
+    const { categoryId, longitude, latitude }: any = req.query;
+
+    let response: any;
+    if (longitude === "null" || latitude === "null") {
+      return res
+        .status(400)
+        .json({ message: "longitude and latitude are required" });
+    }
+    const findStores = async (query: any) => {
+      const stores = await Store.find(query, {
+        storeName: true, bio: true, address: true,
+        openTime: true, closeTime: true, isDeliveryAvailable: true,
+        instagram: true, facebook: true, whatsapp: true,
+        phone: true, shopImgUrl: true,
+        service: true, location: true
+      }).populate('category');
+      if (!stores || stores.length === 0) {
+        return res.status(404).json({ message: "No stores found" });
+      }
+      const storesWithDistance = stores.map((tStore: any) => {
+        const distance = calculateDistance(
+          parseFloat(latitude),
+          parseFloat(longitude),
+          tStore.location.coordinates[1],
+          tStore.location.coordinates[0]
+        );
+        var store = tStore.toObject();
+        store.category = store.category.name;
+        return {
+          ...store,
+          distance: distance.toFixed(2),
+        };
+      });
+
+      return res.status(200).json(storesWithDistance);
+    };
+
+    if (categoryId && mongoose.Types.ObjectId.isValid(categoryId)) {
+      response = await findStores({
+        category: categoryId,
+        location: {
+          $near: {
+            $geometry: {
+              type: "Point",
+              coordinates: [parseFloat(longitude), parseFloat(latitude)],
+            },
+            // $maxDistance: 10000, // in meters
+          },
+        },
+        isActive: true,
+        isAvailable: true,
+      });
+    } else {
+      response = await findStores({
+        location: {
+          $near: {
+            $geometry: {
+              type: "Point",
+              coordinates: [parseFloat(longitude), parseFloat(latitude)],
+            },
+            // $maxDistance: 10000,
+          },
+        },
+        isActive: true,
+        isAvailable: true,
+      });
+    }
+    if (!response || response.length === 0) {
+      return res.status(404).json({ message: "No stores found" });
+    }
+  } catch (error) {
+    console.log(" fetching category  error =>>>>>>>>>>>>>>>>>>", error);
+    res.status(500).json({ message: "Internal server error", error });
+  }
+};
+
 export const searchStoresByProductName = asyncHandler(
   async (req: Request, res: Response) => {
     try {
@@ -941,7 +1019,7 @@ export const addTimeSlotV2 = asyncHandler(
     try {
       var { startTime, endTime, numberOfTotalSeats, slotIndex } = req.body;
       console.log("adding time slot", req.body);
-      
+
       const storeId = req.store?._id;
       //converting milli second since epoach format to Date
       startTime = toTimeOnly(parseInt(startTime));
@@ -1001,12 +1079,12 @@ export const getTimeSlotV2 = asyncHandler(
 );
 
 export const deleteTimeSlotV2 = asyncHandler(
-   async (req: ICustomRequest<any>, res: Response) => {
+  async (req: ICustomRequest<any>, res: Response) => {
     try {
       const { id } = req.query;
-      await Booking.deleteMany({ timeSlotId: id});
+      await Booking.deleteMany({ timeSlotId: id });
       await TimeSlot.findByIdAndDelete(id);
-      res.status(200).json({ message: "Success"});
+      res.status(200).json({ message: "Success" });
     } catch (error) {
       console.log(`error addTimeSlot V2 ${error}`);
       res.status(500).json({ message: "Internal server error" })
@@ -1020,7 +1098,7 @@ export const confirmBookingV2 = asyncHandler(
       const { bookingId } = req.query;
 
       console.log(`recieved confirm for ${bookingId}`);
-      
+
 
       const booking = await Booking.findById(bookingId);
       if (!booking) {
@@ -1051,7 +1129,7 @@ export const getBookingsV2 = asyncHandler(
     try {
       const storeId = req.store?._id;
       console.log("recieved calls");
-      
+
       //TODO
       const slots = await TimeSlot.find({ storeId }, { _id: 1 });
       const tempBookings = await Booking.aggregate([
@@ -1101,7 +1179,7 @@ export const getBookingsV2 = asyncHandler(
         }
       ]);
       var bookings: any[] = [];
-      for (var {_id, isActive, customer, timeslot } of tempBookings) {
+      for (var { _id, isActive, customer, timeslot } of tempBookings) {
         bookings.push({
           _id,
           isActive,
