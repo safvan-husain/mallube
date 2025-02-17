@@ -146,7 +146,7 @@ const sendPushNotifications = async ({ title, body, isForBusiness }: { title: st
         if (isForBusiness) {
             result = await Store.find({ fcmToken: { $exists: true } }, 'fcmToken').lean() as { fcmToken: string }[];
         } else {
-            result = await User.find({ fcmToken: { $exists: true } }, 'fcmToken').lean() as { fcmToken: string }[];
+            result = await User.find({ fcmToken: { $exists: true }, isPushNotificationEnabled: true }, 'fcmToken').lean() as { fcmToken: string }[];
         }
         for (let i = 0; i < result.length; i += 100) {
             const chunk = result.slice(i, i + 100);

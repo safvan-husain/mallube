@@ -14,7 +14,8 @@ export interface IUser {
   phone: string;
   otp: string;
   isVerified: boolean;
-  isBlocked:boolean;
+  isBlocked: boolean;
+  isPushNotificationEnabled: boolean;
 }
 
 const userSchema = new Schema<IUser>(
@@ -47,13 +48,18 @@ const userSchema = new Schema<IUser>(
       default: false,
       required: true,
     },
-    isBlocked:{
-      type:Boolean,
-      default:false
+    isBlocked: {
+      type: Boolean,
+      default: false
     },
     fcmToken: {
       type: String
+    },
+    isPushNotificationEnabled: {
+      type: Boolean,
+      default: true,
     }
+
   },
   {
     timestamps: true,

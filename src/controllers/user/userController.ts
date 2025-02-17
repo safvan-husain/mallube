@@ -97,7 +97,7 @@ export const register = async (req: Request, res: Response) => {
       otpSend: true,
     });
   } catch (error) {
-    res.status(500).json({ message: "Internal server error", error});
+    res.status(500).json({ message: "Internal server error", error });
     console.log(error);
   }
 };
@@ -480,6 +480,18 @@ export const fetchUser = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Internal server error", error });
   }
 };
+
+export const changePushNotificationStatus = async (req: Request, res: Response) => {
+  const { status } = req.body;
+  try {
+    const userId = req.user?._id;
+    await User.findByIdAndUpdate(userId, { isPushNotificationEnabled: status })
+    res.status(200).json({ message: "Success" });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error", error });
+  }
+};
+
 
 export const fetchTimeSlot = async (req: Request, res: Response) => {
   try {

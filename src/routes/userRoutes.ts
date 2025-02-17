@@ -1,9 +1,10 @@
 import express from "express";
-import { register,login, verifyOtp, addToCart, getCart, removeCart,updateProfile, forgetPasswordOtpSend, verifyOtpForPasswrodReset, updatePassword, updateProfilePassword,fetchUser,fetchTimeSlot, slotBooking , fetchAllDoctors, fetchAllSpecialisations, slotBookingV2, getAvailableTimeSlotForStoreV2, getBookingsV2 } from "../controllers/user/userController";
+import { register,login, verifyOtp, addToCart, getCart, removeCart,updateProfile, forgetPasswordOtpSend, verifyOtpForPasswrodReset, updatePassword, updateProfilePassword,fetchUser,fetchTimeSlot, slotBooking , fetchAllDoctors, fetchAllSpecialisations, slotBookingV2, getAvailableTimeSlotForStoreV2, getBookingsV2, changePushNotificationStatus } from "../controllers/user/userController";
 import { user } from "../middleware/auth";
 import { validateData } from "../middleware/zod.validation";
 import { addCartSchema } from "../schemas/cart.schema";
 import { drBooking } from "../controllers/booking/bookingController";
+import { pushNotifcationStatusSchema } from "../schemas/user.schema";
 const router = express.Router();
 
 router.route("/register").post(register)
@@ -17,6 +18,7 @@ router.route('/forget-password').post(forgetPasswordOtpSend)
 router.route('/verify-otp-for-password-reset').post(verifyOtpForPasswrodReset)
 router.route("/update-password").put(updatePassword)
 router.route("/change-profile-password").put(user,updateProfilePassword)
+router.route("/change-notification-status").put(user, validateData(pushNotifcationStatusSchema), changePushNotificationStatus);
 router.route("/fetch-user-details").get(user,fetchUser)
 router.route("/time-slots/:id").get(user, fetchTimeSlot)
 router.route('/available-time-slots').get(user, getAvailableTimeSlotForStoreV2)
