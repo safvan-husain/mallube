@@ -199,6 +199,28 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
+export const getStoreDetails = asyncHandler(
+  async (req: ICustomRequest<undefined>, res: Response) => {
+    try {
+      const { storeId } = req.query;
+      const store = await Store.findById(storeId, {
+        storeName: true, bio: true, address: true,
+        openTime: true, closeTime: true, isDeliveryAvailable: true,
+        instagram: true, facebook: true, whatsapp: true,
+        phone: true, shopImgUrl: true,
+        service: true
+      });
+      if (!store) {
+        res.status(401).json({ message: "Store not found" });
+        return;
+      }
+      res.status(200).json(store);
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: "Internal server error", error });
+    }
+  })
+
 //CART
 export const addToCart = asyncHandler(
   async (req: ICustomRequest<IAddCartSchema>, res: Response) => {

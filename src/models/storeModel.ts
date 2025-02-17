@@ -50,7 +50,8 @@ export interface IStore extends Document {
   };
   createdAt?: Date;
   updatedAt?: Date;
-  storeProviding?: "productBased" | "serviceBased"
+  storeProviding?: "productBased" | "serviceBased";
+  isDeliveryAvailable: boolean;
 }
 
 const storeSchema = new Schema<IStore>(
@@ -178,6 +179,10 @@ const storeSchema = new Schema<IStore>(
     closeTime: {
       type: Number,
       default: 0
+    },
+     isDeliveryAvailable: {
+      type: Boolean,
+      default: false,
     }
   },
   {
