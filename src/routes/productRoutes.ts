@@ -11,6 +11,7 @@ import {
   updateProduct,
   uploadProductImages,
   addVisitors,
+  getNearbyProductsWithOffer,
 } from "../controllers/product/productController";
 // import { staff } from "../middleware/auth";
 import { validateData } from "../middleware/zod.validation";
@@ -43,6 +44,8 @@ router
     storeSubscription,
     uploadProductImages
   );
+
+router.route("/near-by-offers").get(getNearbyProductsWithOffer);
 
 router
   .route("/store/:productId")

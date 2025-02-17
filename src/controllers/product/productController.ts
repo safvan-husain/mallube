@@ -315,6 +315,46 @@ export const fetchProducts = asyncHandler(async (req: any, res: Response) => {
   }
 });
 
+export const getNearbyProductsWithOffer = asyncHandler(
+  async (req: any, res: any) => {
+    try {
+      const { longitude, latitude } = req.query;
+      if (!longitude || !latitude) {
+        return res.status(400).json({ message: "Longitude and latitude are required" });
+      }
+
+      // First find nearby stores
+      const nearbyStores = await Store.find({
+        location: {
+          $near: {
+            $geometry: {
+              type: "Point",
+              coordinates: [parseFloat(longitude), parseFloat(latitude)],
+            },
+          },
+        },
+        isActive: true,
+        isAvailable: true,
+      }).select('_id');
+
+      // Get store IDs
+      const storeIds = nearbyStores.map(store => store._id);
+
+      // Find products from these stores that have offers
+      const products = await Product.find({
+        store: { $in: storeIds },
+        offerPrice: { $exists: true, $gt: 0 },
+        isActive: true,
+        isAvailable: true
+      }).populate('store', 'storeName location');
+
+      res.status(200).json(products);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error", error });
+    }
+  }
+);
+
 export const uploadProductImages = asyncHandler(
   async (req: ICustomRequest<IUploadProdutImagesSchema>, res: Response) => {
     const maxProductImagesAllowedBasedOnSubscription = (req as any).store
@@ -351,14 +391,14 @@ export const uploadProductImages = asyncHandler(
             Math.random() * 1000
           )}_${sanitizedFileName}`;
 
-          await s3
-            .putObject({
-              Body: fileContent,
-              Bucket: config.s3BucketName,
-              Key: uniqueFileName,
-              ContentType: mimetype,
-            })
-            .promise();
+          // await s3
+          //   .putObject({
+          //     Body: fileContent,
+          //     Bucket: config.s3BucketName,
+          //     Key: uniqueFileName,
+          //     ContentType: mimetype,
+          //   })
+          //   .promise();
 
           return uniqueFileName;
         }
