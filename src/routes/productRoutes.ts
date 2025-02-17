@@ -29,6 +29,7 @@ router.route("/fetch-products").get(fetchProducts);
 //TODO: need to add middleware here
 router.route("/").get(getAllProducts);
 router.route("/category/:shopId").get(getAllSubCategories);
+router.route("/near-by-offers").get(getNearbyProductsWithOffer);
 
 router
   .route("/:storeId")
@@ -45,7 +46,7 @@ router
     uploadProductImages
   );
 
-router.route("/near-by-offers").get(getNearbyProductsWithOffer);
+
 
 router
   .route("/store/:productId")
