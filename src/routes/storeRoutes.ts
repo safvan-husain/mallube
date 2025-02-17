@@ -28,7 +28,8 @@ import {
   getBookingsV2,
   confirmBookingV2,
   getTimeSlotV2,
-  deleteTimeSlotV2
+  deleteTimeSlotV2,
+  fetchStoresNearByV2
 } from "../controllers/store/storeController";
 import { store } from "../middleware/auth";
 import { addSpecialisation, fetchAllSpecialisation } from "../controllers/specialisation/specialisationController";
@@ -87,6 +88,7 @@ router
   .route("/advertisement/:advertisementId")
   .delete(store, deleteAdvertisement);
 router.route("/near-by-shop/:longitude/:latitude").get(fetchStoresNearBy);
+router.route("/near-by-shop-v2/:longitude/:latitude").get(fetchStoresNearByV2);
 router.route("/change-password").put(store, changePassword);
 router.route("/otp-send-forgot-password").post(forgotPasswordOtpSendToPhone);
 router.route("/otp-verify-forgot-password").post(OtpVerify);

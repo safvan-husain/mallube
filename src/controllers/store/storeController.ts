@@ -417,6 +417,55 @@ export const fetchAllAdvertisement = async (req: any, res: Response) => {
   }
 };
 
+export const fetchStoresNearByV2 = async (req: Request, res: Response) => {
+  try {
+    const { longitude, latitude } = req.params;
+    if (!longitude || !latitude) {
+      return res
+        .status(400)
+        .json({ message: "Longitude and latitude are required" });
+    }
+
+    const nearStores = await Store.find({
+      location: {
+        $near: {
+          $geometry: {
+            type: "Point",
+            coordinates: [parseFloat(longitude), parseFloat(latitude)],
+          },
+          // $maxDistance: 10000, // in meters
+        },
+      },
+      isActive: true,
+      isAvailable: true,
+    })
+      .populate("category", "name icon")
+      .limit(20);
+
+    // distance geting wrong. need to work on this
+    const storeWithDistance = nearStores.map((tStore) => {
+      const distance = calculateDistance(
+        parseFloat(latitude),
+        parseFloat(longitude),
+        tStore.location.coordinates[1],
+        tStore.location.coordinates[0]
+      );
+      var store : any = tStore.toObject();
+      store.category = store.category.name;
+      return {
+        ...store,
+        category: store.category,
+        distance: distance.toFixed(2),
+      };
+    });
+
+    res.status(200).json(storeWithDistance);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 export const fetchStoresNearBy = async (req: Request, res: Response) => {
   try {
     const { longitude, latitude } = req.params;
