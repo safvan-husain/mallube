@@ -208,7 +208,7 @@ export const getStoreDetails = asyncHandler(
         openTime: true, closeTime: true, isDeliveryAvailable: true,
         instagram: true, facebook: true, whatsapp: true,
         phone: true, shopImgUrl: true,
-        service: true, location: true, category: true
+        service: true, location: true, city: true
       }).populate('category');
       store.category = store?.category.name;
       if (!store) {

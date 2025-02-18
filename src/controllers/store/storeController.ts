@@ -438,7 +438,13 @@ export const fetchStoresNearByV2 = async (req: Request, res: Response) => {
       },
       isActive: true,
       isAvailable: true,
-    })
+    }, {
+        storeName: true, bio: true, address: true,
+        openTime: true, closeTime: true, isDeliveryAvailable: true,
+        instagram: true, facebook: true, whatsapp: true,
+        phone: true, shopImgUrl: true,
+        service: true, location: true, city: true
+      })
       .populate("category", "name icon")
       .limit(20);
 
@@ -652,7 +658,7 @@ export const fetchStoreByCategoryV2 = async (req: Request, res: Response) => {
         openTime: true, closeTime: true, isDeliveryAvailable: true,
         instagram: true, facebook: true, whatsapp: true,
         phone: true, shopImgUrl: true,
-        service: true, location: true
+        service: true, location: true, city: true
       }).populate('category');
       if (!stores || stores.length === 0) {
         return res.status(404).json({ message: "No stores found" });
