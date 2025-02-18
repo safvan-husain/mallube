@@ -48,33 +48,27 @@ const productSchema = new Schema<IProduct>(
     },
     isActive: {
       type: Boolean,
-      default: false,
-      required: true,
+      default: true,
     },
     isAvailable: {
       type: Boolean,
       default: true,
-      required: true,
     },
     isPending: {
       type: Boolean,
       default: false,
-      required: true,
     },
     stock:{
       type:Boolean,
       default:true,
-      required:true
     },
     addToCartActive:{
       type:Boolean,
       default:false,
-      required:true
     },
     isEnquiryAvailable: {
       type: Boolean,
       default: false,
-      required: true
     },
   },
   {
