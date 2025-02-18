@@ -36,12 +36,15 @@ const searchProductsAndStores = asyncHandler(
             // Search products
             const products = await Product.find({
                 name: { $regex: trimmedSearchTerm, $options: "i" },
-            }).populate("store", "storeName uniqueName location");
+            }).populate("store", "storeName uniqueName location").lean();
+            
 
             // Search stores by name, bio, and category
             const categories = await Category.find({
                 name: { $regex: trimmedSearchTerm, $options: "i" }
             });
+            const filteredProducts = products.filter(product => product.store); // Remove products with no store
+
 
             const categoryIds = categories.map(category => category._id);
 
@@ -66,9 +69,9 @@ const searchProductsAndStores = asyncHandler(
             }));
 
             res.status(200).json({
-                products,
+                products: filteredProducts,
                 stores,
-                total: products.length + stores.length
+                total: filteredProducts.length + stores.length
             });
         } catch (error) {
             console.error("Error in combined search:", error);
