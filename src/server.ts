@@ -35,6 +35,7 @@ import AdvertisementPlan from "./models/advertismentPlanModel";
 import { CustomerBill } from "./models/customerBillModel";
 import TimeSlot from "./models/timeSlotModel";
 import User from "./models/userModel";
+import { searchRouter } from "./routes/searchRoutes";
 
 const app = express();
 
@@ -96,6 +97,7 @@ app.use("/api/utils", utilsRoutes);
 app.use("/api/subscription", subscriptionRoutes);
 app.use("/api/booking", bookingRoutes);
 app.use("/api/notification", notificationRouter)
+app.use('/api/search', searchRouter);
 
 app.use(notFound);
 app.use(errorHandler);
