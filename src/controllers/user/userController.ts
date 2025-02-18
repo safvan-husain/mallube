@@ -195,7 +195,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "Internal server error", error });
+    res.status(501).json({ message: "Internal server error", error });
   }
 });
 
@@ -312,18 +312,33 @@ export const removeCart = asyncHandler(
 
 export const updateProfile = async (req: Request, res: Response) => {
   try {
-    const user = req.user;
+    const user: any = req.user;
 
     if (!user || !user._id) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const updatingValues = req.body;
+    const { fullName, phone, email } = req.body;
+    if(phone && phone != "" && phone != user.phone) {
+      let tUser = await User.findOne({ phone });
+      if(tUser) {
+        res.status(401).json({ message: "User already exist with this phone"});
+        return;
+      }
+    }
+
+    if(email && email != "" && email != user.email) {
+      let tUser = await User.findOne({ email });
+      if(tUser) {
+        res.status(401).json({ message: "User already exist with this email"});
+        return;
+      }
+    }
 
     // Perform the update and log the response
     const response = await User.findByIdAndUpdate(
       user._id,
-      { $set: updatingValues },
+      { $set: req.body },
       { new: true }
     ).exec(); // Add exec() to return a Promise
 
@@ -333,7 +348,7 @@ export const updateProfile = async (req: Request, res: Response) => {
 
     res.status(200).json(response);
   } catch (error) {
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error", error });
   }
 };
 
