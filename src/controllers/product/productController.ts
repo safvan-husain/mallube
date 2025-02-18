@@ -315,6 +315,91 @@ export const fetchProducts = asyncHandler(async (req: any, res: Response) => {
   }
 });
 
+export const fetchProductsV2 = asyncHandler(async (req: any, res: Response) => {
+  try {
+    const {
+      category,
+      sort,
+      searchTerm,
+      storeId,
+      page = 1,
+      limit = 12,
+    } = req.query;
+    console.log("on getch v2");
+    
+
+    let filter: any = {};
+
+    if (storeId) {
+      filter["store"] = storeId;
+    }
+    if (category) {
+      filter["category"] = category;
+    }
+
+    if (searchTerm && searchTerm.trim()) {
+      const trimmedSearchTerm = searchTerm.trim();
+      filter["name"] = { $regex: trimmedSearchTerm, $options: "i" };
+
+      // Search product name using searchTerm, if not exist, also create collection for adding count.
+      // Check if the searched product already exists in the ProductSearch collection
+      // If it exists, increment searchCount; if not, add a new document.
+      const productSearch = await ProductSearch.findOne({
+        productName: trimmedSearchTerm,
+      });
+      if (productSearch) {
+        await ProductSearch.findOneAndUpdate(
+          { productName: trimmedSearchTerm },
+          { $inc: { searchCount: 1 } }
+        );
+      } else {
+        await ProductSearch.create({
+          productName: trimmedSearchTerm,
+          searchCount: 1,
+        });
+      }
+    }
+
+    let sortOptions: any = {};
+
+    if (sort === "newest") {
+      sortOptions["createdAt"] = -1;
+    } else if (sort === "lowToHigh") {
+      sortOptions["price"] = 1;
+    } else if (sort === "highToLow") {
+      sortOptions["price"] = -1;
+    }
+
+    // Calculate the skip value for pagination
+    const skip = (page - 1) * limit;
+
+    console.log(await Product.find({ store: storeId}));
+    
+
+    const tProducts = await Product.find(filter).populate("store", "storeName uniqueName location")
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(parseInt(limit));
+    const products = tProducts.filter((e) => e.store);
+
+    // Get the total count of products for pagination calculation
+    const totalProducts = await Product.countDocuments(filter);
+
+    // Calculate the total number of pages
+    const totalPages = Math.ceil(totalProducts / limit);
+
+    res.status(200).json({
+      products,
+      totalPages,
+      currentPage: parseInt(page),
+      totalProducts,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error", error });
+  }
+});
+
+
 export const getNearbyProductsWithOffer = asyncHandler(
   async (req: any, res: any) => {
     try {

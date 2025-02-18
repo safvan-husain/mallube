@@ -12,6 +12,7 @@ import {
   uploadProductImages,
   addVisitors,
   getNearbyProductsWithOffer,
+  fetchProductsV2,
 } from "../controllers/product/productController";
 // import { staff } from "../middleware/auth";
 import { validateData } from "../middleware/zod.validation";
@@ -25,6 +26,7 @@ const router = express.Router();
 
 // for main website
 router.route("/fetch-products").get(fetchProducts);
+router.route("/fetch-products-v2").get(fetchProductsV2);
 
 //TODO: need to add middleware here
 router.route("/").get(getAllProducts);
