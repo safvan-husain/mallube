@@ -36,7 +36,7 @@ const searchProductsAndStores = asyncHandler(
             // Search products
             const products = await Product.find({
                 name: { $regex: trimmedSearchTerm, $options: "i" },
-            }).populate("store", "storeName uniqueName");
+            }).populate("store", "storeName uniqueName location");
 
             // Search stores by name, bio, and category
             const categories = await Category.find({
@@ -61,6 +61,7 @@ const searchProductsAndStores = asyncHandler(
 
             const stores = tStores.map((e: any) => ({
                 ...e.toObject(), 
+                distance: 0,
                 category: e.category.name, 
             }));
 
