@@ -64,7 +64,7 @@ const searchProductsAndStores = asyncHandler(
 
             const stores = tStores.map((e: any) => ({
                 ...e.toObject(), 
-                distance: 0,
+                distance: '0',
                 category: e.category.name, 
             }));
 
