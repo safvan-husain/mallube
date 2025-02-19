@@ -81,7 +81,7 @@ async function correctCoordinates() {
       // Update the document in the database
       await Store.updateOne(
         { _id: doc._id },
-        { $set: { "location.coordinates": coordinates } }
+        { $set: { "location_v2.coordinates": coordinates } }
       );
     }
   }
@@ -100,9 +100,9 @@ const updateData = expressAsyncHandler(
       // var collection = User.collection;
       // var result = collection.listIndexes();
       // await collection.dropIndex('email_1');
-      await correctCoordinates();
+      // await correctCoordinates();
 
-      var result = await Store.find({}, { location: true });
+      var result = await Store.find({}, { location_v2: true });
       // await Store.updateMany({ storeProviding: 'serviceBased' }, { service: true });
       // var result = await Product.updateMany({ isEnquiryAvailable: { $exists: false }}, { isEnquiryAvailable: true });
 

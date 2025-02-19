@@ -48,6 +48,10 @@ export interface IStore extends Document {
     type: string;
     coordinates: [number, number];
   };
+  location_v2: {
+    type: string;
+    coordinates: [number, number];
+  };
   createdAt?: Date;
   updatedAt?: Date;
   storeProviding?: "productBased" | "serviceBased";
@@ -92,6 +96,17 @@ const storeSchema = new Schema<IStore>(
       default: ""
     },
     location: {
+      type: {
+        type: String,
+        enum: ["Point"],
+        default: "Point",
+      },
+      coordinates: {
+        type: [Number],
+        required: true,
+      },
+    },
+    location_v2: {
       type: {
         type: String,
         enum: ["Point"],
