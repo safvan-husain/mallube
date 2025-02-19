@@ -60,6 +60,35 @@ app.use("/api/healthcheck", (req, res) => {
   res.status(200).send("Server is healthy");
 });
 
+async function correctCoordinates() {
+  // Fetch all documents with location data
+  var result = await Store.find({}, { location: true });
+
+  // Iterate through each document
+  for (let doc of result) {
+    let coordinates = doc.location.coordinates;
+
+    // Check if the first item is greater than 70 (likely longitude)
+    if (coordinates[0] > 70) {
+      // If the first item is longitude, no need to switch
+      continue;
+    } else {
+      // If the first item is not longitude, switch the coordinates
+      let temp = coordinates[0];
+      coordinates[0] = coordinates[1];
+      coordinates[1] = temp;
+
+      // Update the document in the database
+      await Store.updateOne(
+        { _id: doc._id },
+        { $set: { "location.coordinates": coordinates } }
+      );
+    }
+  }
+
+  console.log("Coordinates have been corrected.");
+}
+
 const updateData = expressAsyncHandler(
   async (req, res) => {
     try {
@@ -71,6 +100,8 @@ const updateData = expressAsyncHandler(
       // var collection = User.collection;
       // var result = collection.listIndexes();
       // await collection.dropIndex('email_1');
+      await correctCoordinates();
+
       var result = await Store.find({}, { location: true });
       // await Store.updateMany({ storeProviding: 'serviceBased' }, { service: true });
       // var result = await Product.updateMany({ isEnquiryAvailable: { $exists: false }}, { isEnquiryAvailable: true });
