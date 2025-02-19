@@ -60,50 +60,82 @@ app.use("/api/healthcheck", (req, res) => {
   res.status(200).send("Server is healthy");
 });
 
+// async function correctCoordinates() {
+//   // Fetch all documents with location data
+//   var result = await Store.find({}, { location: true, location_v2: true });
+
+//   // Iterate through each document
+//   for (let doc of result) {
+//     console.log(doc);
+
+//     let coordinates = doc.location_v2.coordinates;
+//     console.log(doc.location_v2.coordinates, " ", doc.location_v2.coordinates);
+
+//     await Store.updateOne(
+//         { _id: doc._id },
+//         { $set: { "location.coordinates": coordinates } }
+//       );
+//   }
+
+//   console.log("Coordinates have been corrected.");
+// }
 async function correctCoordinates() {
   // Fetch all documents with location data
-  var result = await Store.find({}, { location: true, location_v2: true });
+  var result = await Store.find({}, { location: true });
 
   // Iterate through each document
   for (let doc of result) {
-    console.log(doc);
-    
-    let coordinates = doc.location_v2.coordinates;
-    console.log(doc.location_v2.coordinates, " ", doc.location_v2.coordinates);
-    
-    await Store.updateOne(
+    let coordinates = doc.location.coordinates;
+
+    // Check if the first item is greater than 70 (likely longitude)
+    if (coordinates[0] < 70) {
+      await Store.updateOne(
         { _id: doc._id },
-        { $set: { "location.coordinates": coordinates } }
+        { $set: { "location_v2.coordinates": coordinates } }
       );
+      // If the first item is longitude, no need to switch
+      continue;
+    } else {
+      // If the first item is not longitude, switch the coordinates
+      let temp = coordinates[0];
+      coordinates[0] = coordinates[1];
+      coordinates[1] = temp;
+
+      // Update the document in the database
+      await Store.updateOne(
+        { _id: doc._id },
+        { $set: { "location_v2.coordinates": coordinates } }
+      );
+    }
   }
 
   console.log("Coordinates have been corrected.");
 }
 
 async function addLocationFieldToAllProducts() {
-    try {
-        // 1. Fetch all products
-        const products: any[] = await Product.find({}).populate('store');
+  try {
+    // 1. Fetch all products
+    const products: any[] = await Product.find({}).populate('store');
 
-        // 2. Iterate through each product
-        for (const product of products) {
-            if (product.store && product.store.location_v2) {
-                // 3. Set the product's location to the store's location
-                product.location = product.store.location_v2;
+    // 2. Iterate through each product
+    for (const product of products) {
+      if (product.store && product.store.location_v2) {
+        // 3. Set the product's location to the store's location
+        product.location = product.store.location_v2;
 
-                // 4. Save the updated product
-                await product.save();
-                console.log(`Updated location for product ${product._id}:`, product.location);
-            } else {
-                console.warn(`Store or store location not found for product ${product._id}`);
-            }
-        }
-
-        console.log('All product locations updated successfully.');
-    } catch (error: any) {
-        console.error('Error updating product locations:', error?.message);
-        throw error; // Re-throw the error for handling upstream
+        // 4. Save the updated product
+        await product.save();
+        console.log(`Updated location for product ${product._id}:`, product.location);
+      } else {
+        console.warn(`Store or store location not found for product ${product._id}`);
+      }
     }
+
+    console.log('All product locations updated successfully.');
+  } catch (error: any) {
+    console.error('Error updating product locations:', error?.message);
+    throw error; // Re-throw the error for handling upstream
+  }
 }
 
 const updateData = expressAsyncHandler(
