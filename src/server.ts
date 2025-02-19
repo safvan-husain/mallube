@@ -60,22 +60,6 @@ app.use("/api/healthcheck", (req, res) => {
   res.status(200).send("Server is healthy");
 });
 
-async function correctCoordinates() {
-  // Fetch all documents with location data
-  var result = await Store.find({}, { location: true, location_v2: true });
-
-  // Iterate through each document
-  for (let doc of result) {
-    let coordinates = doc.location_v2.coordinates;
-
-    await Store.updateOne(
-        { _id: doc._id },
-        { $set: { "location.coordinates": coordinates } }
-      );
-  }
-
-  console.log("Coordinates have been corrected.");
-}
 
 
 async function addLocationFieldToAllProducts() {
@@ -115,7 +99,6 @@ const updateData = expressAsyncHandler(
       // var collection = User.collection;
       // var result = collection.listIndexes();
       // await collection.dropIndex('email_1');
-      await correctCoordinates();
       // await addLocationFieldToAllProducts()
 
       var result = await Store.find({}, { location_v2: true, location: true });

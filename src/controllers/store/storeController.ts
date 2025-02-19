@@ -446,7 +446,7 @@ export const fetchStoresNearByV2 = async (req: Request, res: Response) => {
         service: true, location: true, city: true
       })
       .populate("category", "name icon")
-      .limit(20);
+      .limit(50);
 
     // distance geting wrong. need to work on this
     const storeWithDistance = nearStores.map((tStore) => {

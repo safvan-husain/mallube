@@ -108,6 +108,8 @@ productSchema.pre('save', async function (next) {
   next();
 });
 
+productSchema.index({ location: "2dsphere" });
+
 const Product = model<IProduct>("products", productSchema);
 
 export default Product;
