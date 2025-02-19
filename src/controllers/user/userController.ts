@@ -318,13 +318,16 @@ export const updateProfile = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const { fullName, phone, email } = req.body;
+    var updatedData: any = {};
+
+    const { fullName, phone, email, password } = req.body;
     if(phone && phone != "" && phone != user.phone) {
       let tUser = await User.findOne({ phone });
       if(tUser) {
         res.status(401).json({ message: "User already exist with this phone"});
         return;
       }
+      updatedData.phone = phone;
     }
 
     if(email && email != "" && email != user.email) {
@@ -333,12 +336,19 @@ export const updateProfile = async (req: Request, res: Response) => {
         res.status(401).json({ message: "User already exist with this email"});
         return;
       }
+      updatedData.email = email;
     }
+
+    if(password && password != "") {
+      const hashedPassword = await bcrypt.hash(password, 12);
+      updatedData.password = hashedPassword;
+    }
+    updatedData.fullName = fullName;
 
     // Perform the update and log the response
     const response = await User.findByIdAndUpdate(
       user._id,
-      { $set: req.body },
+      { $set: updatedData },
       { new: true }
     ).exec(); // Add exec() to return a Promise
 
