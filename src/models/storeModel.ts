@@ -114,7 +114,6 @@ const storeSchema = new Schema<IStore>(
       },
       coordinates: {
         type: [Number],
-        required: true,
       },
     },
     city: {

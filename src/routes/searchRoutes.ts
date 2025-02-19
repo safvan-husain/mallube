@@ -117,9 +117,9 @@ const searchProductsAndStores = asyncHandler(
                 },
                 {
                     $project: {
-                        storeName: 1, bio: 1, address: 1, openTime: { $ifNull: ["$openTime", 0] }, closeTime: { $ifNull: ["$closeTime", 0] },
-                        isDeliveryAvailable: { $ifNull: ["$isDeliveryAvailable", false] }, instagram: 1, facebook: 1, whatsapp: 1,
-                        phone: 1, shopImgUrl: 1, service: { $ifNull: ["$service", false] }, location: 1, city: 1,
+                        storeName: 1, bio: { $ifNull: ["$bio", false] }, address: { $ifNull: ["$address", false] }, openTime: { $ifNull: ["$openTime", 0] }, closeTime: { $ifNull: ["$closeTime", 0] },
+                        isDeliveryAvailable: { $ifNull: ["$isDeliveryAvailable", false] }, instagram: { $ifNull: ["$instagram", ""] }, facebook: { $ifNull: ["$facebook", false] }, whatsapp: { $ifNull: ["$whatsapp", false] },
+                        phone: { $ifNull: ["$phone", false] }, shopImgUrl: { $ifNull: ["$shopImgUrl", ""] }, service: { $ifNull: ["$service", false] }, location: 1, city: { $ifNull: ["$city", ""] },
                         distance: { $toString: "$distance" },
                         category: "$category.name"
                     }
