@@ -118,7 +118,7 @@ const searchProductsAndStores = asyncHandler(
                 {
                     $project: {
                         storeName: 1, bio: 1, address: 1, openTime: 1, closeTime: 1,
-                        isDeliveryAvailable: 1, instagram: 1, facebook: 1, whatsapp: 1,
+                        isDeliveryAvailable: { $ifNull: ["$isDeliveryAvailable", false] }, instagram: 1, facebook: 1, whatsapp: 1,
                         phone: 1, shopImgUrl: 1, service: 1, location: 1, city: 1,
                         distance: { $toString: "$distance" },
                         category: "$category.name"
