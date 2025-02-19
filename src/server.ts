@@ -62,15 +62,18 @@ app.use("/api/healthcheck", (req, res) => {
 
 async function correctCoordinates() {
   // Fetch all documents with location data
-  var result = await Store.find({}, { location: true });
+  var result = await Store.find({}, { location: true, location_v2: true });
 
   // Iterate through each document
   for (let doc of result) {
-    let coordinates = doc.location.coordinates;
-    let coordinates_v2 = doc.location_v2.coordinates;
+    console.log(doc);
+    
+    let coordinates = doc.location_v2.coordinates;
+    console.log(doc.location_v2.coordinates, " ", doc.location_v2.coordinates);
+    
     await Store.updateOne(
         { _id: doc._id },
-        { $set: { "location_v2.coordinates": coordinates, "location.coordinates": coordinates_v2 } }
+        { $set: { "location.coordinates": coordinates } }
       );
   }
 
