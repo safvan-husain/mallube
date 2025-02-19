@@ -1,4 +1,5 @@
 import { Schema, model, Document } from "mongoose";
+import Store from "./storeModel";
 
 export interface IProduct extends Document {
   name: string;
@@ -11,9 +12,13 @@ export interface IProduct extends Document {
   isActive: boolean; // controlled by admin
   isAvailable: boolean; // conrolled by admin/staff
   isPending: boolean;
-  stock:boolean;
-  addToCartActive:boolean;
+  stock: boolean;
+  addToCartActive: boolean;
   isEnquiryAvailable?: boolean;
+  location: {
+    type: string;
+    coordinates: [number, number];
+  };
 }
 
 const productSchema = new Schema<IProduct>(
@@ -58,23 +63,50 @@ const productSchema = new Schema<IProduct>(
       type: Boolean,
       default: false,
     },
-    stock:{
-      type:Boolean,
-      default:true,
+    stock: {
+      type: Boolean,
+      default: true,
     },
-    addToCartActive:{
-      type:Boolean,
-      default:false,
+    addToCartActive: {
+      type: Boolean,
+      default: false,
     },
     isEnquiryAvailable: {
       type: Boolean,
       default: false,
+    },
+    location: {
+      type: {
+        type: String,
+        enum: ["Point"],
+        default: "Point",
+      },
+      coordinates: {
+        type: [Number],
+        required: true,
+      },
     },
   },
   {
     timestamps: true,
   }
 );
+
+// Middleware to set the product's location from its store
+productSchema.pre('save', async function (next) {
+  // Check if the store field is modified or this is a new product
+  if (this.isModified('store') || this.isNew) {
+    // Fetch the associated store
+    const store = await Store.findById(this.store);
+    if (!store) {
+      throw new Error('Store not found');
+    }
+
+    // Set the product's location to the store's location
+    this.location = store.location;
+  }
+  next();
+});
 
 const Product = model<IProduct>("products", productSchema);
 

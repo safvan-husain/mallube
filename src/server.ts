@@ -95,6 +95,32 @@ async function correctCoordinates() {
   console.log("Coordinates have been corrected.");
 }
 
+async function addLocationFieldToAllProducts() {
+    try {
+        // 1. Fetch all products
+        const products: any[] = await Product.find({}).populate('store');
+
+        // 2. Iterate through each product
+        for (const product of products) {
+            if (product.store && product.store.location_v2) {
+                // 3. Set the product's location to the store's location
+                product.location = product.store.location_v2;
+
+                // 4. Save the updated product
+                await product.save();
+                console.log(`Updated location for product ${product._id}:`, product.location);
+            } else {
+                console.warn(`Store or store location not found for product ${product._id}`);
+            }
+        }
+
+        console.log('All product locations updated successfully.');
+    } catch (error: any) {
+        console.error('Error updating product locations:', error?.message);
+        throw error; // Re-throw the error for handling upstream
+    }
+}
+
 const updateData = expressAsyncHandler(
   async (req, res) => {
     try {
@@ -106,7 +132,8 @@ const updateData = expressAsyncHandler(
       // var collection = User.collection;
       // var result = collection.listIndexes();
       // await collection.dropIndex('email_1');
-      await correctCoordinates();
+      // await correctCoordinates();
+      await addLocationFieldToAllProducts()
 
       var result = await Store.find({}, { location_v2: true, location: true });
       // await Store.updateMany({ storeProviding: 'serviceBased' }, { service: true });
