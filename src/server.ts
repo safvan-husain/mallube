@@ -71,8 +71,9 @@ const updateData = expressAsyncHandler(
       // var collection = User.collection;
       // var result = collection.listIndexes();
       // await collection.dropIndex('email_1');
+      var result = await Store.find({}, { location: true });
       // await Store.updateMany({ storeProviding: 'serviceBased' }, { service: true });
-      var result = await Product.updateMany({ isEnquiryAvailable: { $exists: false }}, { isEnquiryAvailable: true });
+      // var result = await Product.updateMany({ isEnquiryAvailable: { $exists: false }}, { isEnquiryAvailable: true });
 
       // let result = await Store.find({ phone: "8848305163" });
       // var result = await TimeSlot.inde
