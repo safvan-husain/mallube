@@ -73,7 +73,7 @@ const searchProductsAndStores = asyncHandler(
                         stock: 1,
                         addToCartActive: 1,
                         isEnquiryAvailable: 1,
-                        store: { storeName: 1, uniqueName: 1, location: 1 }, // Keep only necessary fields
+                        store: { storeName: 1, uniqueName: 1, location: 1, _id: 1 }, // Keep only necessary fields
                         distance: { $toString: "$distance" },
                     },
                 },
