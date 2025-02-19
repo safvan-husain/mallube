@@ -431,7 +431,7 @@ export const fetchStoresNearByV2 = async (req: Request, res: Response) => {
         $near: {
           $geometry: {
             type: "Point",
-            coordinates: [parseFloat(longitude), parseFloat(latitude)],
+            coordinates: [parseFloat(latitude), parseFloat(longitude)],
           },
           // $maxDistance: 10000, // in meters
         },
@@ -453,8 +453,8 @@ export const fetchStoresNearByV2 = async (req: Request, res: Response) => {
       const distance = calculateDistance(
         parseFloat(latitude),
         parseFloat(longitude),
-        tStore.location.coordinates[1],
-        tStore.location.coordinates[0]
+        tStore.location.coordinates[0],
+        tStore.location.coordinates[1]
       );
       var store : any = tStore.toObject();
       store.category = store.category.name;
@@ -486,7 +486,7 @@ export const fetchStoresNearBy = async (req: Request, res: Response) => {
         $near: {
           $geometry: {
             type: "Point",
-            coordinates: [parseFloat(longitude), parseFloat(latitude)],
+            coordinates: [parseFloat(latitude), parseFloat(longitude)],
           },
           // $maxDistance: 10000, // in meters
         },
@@ -502,8 +502,8 @@ export const fetchStoresNearBy = async (req: Request, res: Response) => {
       const distance = calculateDistance(
         parseFloat(latitude),
         parseFloat(longitude),
-        store.location.coordinates[1],
-        store.location.coordinates[0]
+        store.location.coordinates[0],
+        store.location.coordinates[1]
       );
       return {
         ...store.toObject(),
@@ -591,8 +591,8 @@ export const fetchStoreByCategory = async (req: Request, res: Response) => {
         const distance = calculateDistance(
           parseFloat(latitude),
           parseFloat(longitude),
-          store.location.coordinates[1],
-          store.location.coordinates[0]
+          store.location.coordinates[0],
+          store.location.coordinates[1]
         );
         return {
           ...store.toObject(),
@@ -610,7 +610,7 @@ export const fetchStoreByCategory = async (req: Request, res: Response) => {
           $near: {
             $geometry: {
               type: "Point",
-              coordinates: [parseFloat(longitude), parseFloat(latitude)],
+              coordinates: [parseFloat(latitude), parseFloat(longitude)],
             },
             // $maxDistance: 10000, // in meters
           },
@@ -624,7 +624,7 @@ export const fetchStoreByCategory = async (req: Request, res: Response) => {
           $near: {
             $geometry: {
               type: "Point",
-              coordinates: [parseFloat(longitude), parseFloat(latitude)],
+              coordinates: [parseFloat(latitude), parseFloat(longitude)],
             },
             // $maxDistance: 10000,
           },
@@ -667,8 +667,8 @@ export const fetchStoreByCategoryV2 = async (req: Request, res: Response) => {
         const distance = calculateDistance(
           parseFloat(latitude),
           parseFloat(longitude),
-          tStore.location.coordinates[1],
-          tStore.location.coordinates[0]
+          tStore.location.coordinates[0],
+          tStore.location.coordinates[1]
         );
         var store = tStore.toObject();
         store.category = store.category.name;
@@ -688,7 +688,7 @@ export const fetchStoreByCategoryV2 = async (req: Request, res: Response) => {
           $near: {
             $geometry: {
               type: "Point",
-              coordinates: [parseFloat(longitude), parseFloat(latitude)],
+              coordinates: [parseFloat(latitude), parseFloat(longitude)],
             },
             // $maxDistance: 10000, // in meters
           },
@@ -702,7 +702,7 @@ export const fetchStoreByCategoryV2 = async (req: Request, res: Response) => {
           $near: {
             $geometry: {
               type: "Point",
-              coordinates: [parseFloat(longitude), parseFloat(latitude)],
+              coordinates: [parseFloat(latitude), parseFloat(longitude)],
             },
             // $maxDistance: 10000,
           },

@@ -102,7 +102,7 @@ export const fetchRelaventAdvertisement = asyncHandler(
                   if (location === null || location === undefined) {
                     return false;
                   }
-                  const [lon2, lat2] = location!.coordinates;
+                  const [lat2, lon2] = location!.coordinates;
                   const toRadians = (degrees: number) => degrees * (Math.PI / 180);
                   const R = 6371;
                   const dLat = toRadians(lat2 - lat1);
