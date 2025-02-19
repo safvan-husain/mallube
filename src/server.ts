@@ -67,9 +67,15 @@ async function correctCoordinates() {
   // Iterate through each document
   for (let doc of result) {
     let coordinates = doc.location.coordinates;
+    console.log(coordinates);
+
 
     // Check if the first item is greater than 70 (likely longitude)
-    if (coordinates[0] > 70) {
+    if (coordinates[0] < 70) {
+      await Store.updateOne(
+        { _id: doc._id },
+        { $set: { "location_v2.coordinates": coordinates } }
+      );
       // If the first item is longitude, no need to switch
       continue;
     } else {
@@ -100,7 +106,7 @@ const updateData = expressAsyncHandler(
       // var collection = User.collection;
       // var result = collection.listIndexes();
       // await collection.dropIndex('email_1');
-      // await correctCoordinates();
+      await correctCoordinates();
 
       var result = await Store.find({}, { location_v2: true, location: true });
       // await Store.updateMany({ storeProviding: 'serviceBased' }, { service: true });
