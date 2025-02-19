@@ -102,7 +102,7 @@ const updateData = expressAsyncHandler(
       // await collection.dropIndex('email_1');
       // await correctCoordinates();
 
-      var result = await Store.find({}, { location_v2: true });
+      var result = await Store.find({}, { location_v2: true, location: true });
       // await Store.updateMany({ storeProviding: 'serviceBased' }, { service: true });
       // var result = await Product.updateMany({ isEnquiryAvailable: { $exists: false }}, { isEnquiryAvailable: true });
 
