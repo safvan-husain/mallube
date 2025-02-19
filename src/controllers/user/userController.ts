@@ -310,6 +310,23 @@ export const removeCart = asyncHandler(
   }
 );
 
+export const removeProductFromCart = asyncHandler(
+  async (req: ICustomRequest<IAddCartSchema>, res: Response) => {
+    const userId = req.user!._id;
+    const { storeId, productId } = req.query;
+    try {
+      await Cart.updateOne(
+        { userId, storeId },
+        { $pull: { cartItems: { productId } } }
+      );
+      res.status(200).send({ message: "removed product" });
+    } catch (error) {
+      res.status(500).json(error);
+    }
+
+  }
+);
+
 export const updateProfile = async (req: Request, res: Response) => {
   try {
     const user: any = req.user;
@@ -321,25 +338,25 @@ export const updateProfile = async (req: Request, res: Response) => {
     var updatedData: any = {};
 
     const { fullName, phone, email, password } = req.body;
-    if(phone && phone != "" && phone != user.phone) {
+    if (phone && phone != "" && phone != user.phone) {
       let tUser = await User.findOne({ phone });
-      if(tUser) {
-        res.status(401).json({ message: "User already exist with this phone"});
+      if (tUser) {
+        res.status(401).json({ message: "User already exist with this phone" });
         return;
       }
       updatedData.phone = phone;
     }
 
-    if(email && email != "" && email != user.email) {
+    if (email && email != "" && email != user.email) {
       let tUser = await User.findOne({ email });
-      if(tUser) {
-        res.status(401).json({ message: "User already exist with this email"});
+      if (tUser) {
+        res.status(401).json({ message: "User already exist with this email" });
         return;
       }
       updatedData.email = email;
     }
 
-    if(password && password != "") {
+    if (password && password != "") {
       const hashedPassword = await bcrypt.hash(password, 12);
       updatedData.password = hashedPassword;
     }
