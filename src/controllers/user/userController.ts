@@ -102,6 +102,16 @@ export const register = async (req: Request, res: Response) => {
   }
 };
 
+export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?._id;
+    var deleted = await User.findByIdAndDelete(userId);
+    res.status(200).json({ message: "User deleted successfully", deleted }); 
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error", error });
+  }
+})
+
 //verify otp
 export const verifyOtp = async (req: Request, res: Response) => {
   if (!twilioServiceId) {
