@@ -409,18 +409,30 @@ export const getNearbyProductsWithOffer = asyncHandler(
       }
 
       // First find nearby stores
-      const nearbyStores = await Store.find({
-        location: {
-          $near: {
-            $geometry: {
-              type: "Point",
-              coordinates: [parseFloat(latitude), parseFloat(longitude)],
+      const nearbyStores = await Store.aggregate([
+        {
+          
+            $geoNear: {
+              near: {
+                type: "Point",
+                coordinates: [parseFloat(longitude), parseFloat(latitude)]
+              },
+              distanceField: "distance",
+              spherical: true
             },
-          },
+          
         },
-        isActive: true,
-        isAvailable: true,
-      }).select('_id');
+        {
+          $match: {
+            isActive: true
+          }
+        },
+        {
+          $project: {
+            _id: 1
+          }
+        }
+      ]);
 
       // Get store IDs
       const storeIds = nearbyStores.map(store => store._id);
