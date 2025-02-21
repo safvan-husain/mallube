@@ -415,7 +415,7 @@ export const getNearbyProductsWithOffer = asyncHandler(
             $geoNear: {
               near: {
                 type: "Point",
-                coordinates: [parseFloat(longitude), parseFloat(latitude)]
+                coordinates: [parseFloat(latitude), parseFloat(longitude)]
               },
               distanceField: "distance",
               spherical: true
@@ -444,6 +444,30 @@ export const getNearbyProductsWithOffer = asyncHandler(
         isActive: true,
         isAvailable: true
       }).populate('store', 'storeName location');
+
+      // const products2 = await Product.aggregate([
+      //   {
+      //      $geoNear: {
+      //         near: {
+      //           type: "Point",
+      //           coordinates: [parseFloat(latitude), parseFloat(longitude)]
+      //         },
+      //         distanceField: "distance",
+      //         spherical: true
+      //       },
+      //   },
+      //   {
+      //     $match: {
+      //       store: { $in: storeIds },
+      //       offerPrice: { $exists: true, $gt: 0 },
+      //       isActive: true,
+      //       isAvailable: true
+      //     }
+      //   },
+      //   {
+      //     $limit: 30
+      //   }
+      // ]);
 
       res.status(200).json(products);
     } catch (error) {
