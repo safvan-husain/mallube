@@ -408,76 +408,22 @@ export const getNearbyProductsWithOffer = asyncHandler(
         return res.status(400).json({ message: "Longitude and latitude are required" });
       }
 
-      // First find nearby stores
-      const nearbyStores = await Store.aggregate([
-        {
-
-          $geoNear: {
-            near: {
-              type: "Point",
-              coordinates: [parseFloat(latitude), parseFloat(longitude)]
-            },
-            distanceField: "distance",
-            spherical: true
-          },
-
-        },
-        {
-          $match: {
-            isActive: true
-          }
-        },
-        {
-          $project: {
-            _id: 1
-          }
-        }
-      ]);
-
-      // Get store IDs
-      const storeIds = nearbyStores.map(store => store._id);
-
-      // Find products from these stores that have offers
-      const products = await Product.find({
-        store: { $in: storeIds },
+      const products2 = await Product.find({
         offerPrice: { $exists: true, $gt: 0 },
         isActive: true,
-        isAvailable: true
-      }).populate('store', 'storeName location');
-
-      const products2 = await Product.aggregate([
-        {
-          $geoNear: {
-            near: {
+        isAvailable: true,
+        location: {
+          $near: {
+            $geometry: {
               type: "Point",
               coordinates: [parseFloat(latitude), parseFloat(longitude)]
-            },
-            distanceField: "distance",
-            spherical: true
-          },
-        },
-        {
-          $match: {
-            offerPrice: { $exists: true, $gt: 0 },
-            isActive: true,
-            isAvailable: true
+            }
           }
-        },
-        {
-          $limit: 30
-        },
-        {
-          $lookup: {
-            from: 'stores', // The name of the store collection
-            localField: 'store',
-            foreignField: '_id',
-            as: 'store'
-          }
-        },
-        {
-          $unwind: '$store' // Flatten the storeInfo array
-        },
-      ]);
+        }
+      })
+        .limit(80)
+        .populate('store', 'storeName location')
+        .lean();
 
       res.status(200).json(products2);
     } catch (error) {
