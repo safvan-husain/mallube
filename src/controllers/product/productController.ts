@@ -64,12 +64,12 @@ export const addProduct = asyncHandler(
     res: Response
   ): Promise<any> => {
     var { isPending, ...rest } = req.body;
-    if (rest.store == undefined ) {
+    if (rest.store == undefined) {
       rest.store = req.store?._id ?? req.params.storeId;
     }
     //TODO need to remove.
-      if(rest.category == undefined || rest.category == null || rest.category.length == 0) {
-        console.log("category" ,rest.category);
+    if (rest.category == undefined || rest.category == null || rest.category.length == 0) {
+      console.log("category", rest.category);
       rest.category = "668c25b3deec29b038e1fc25";
     }
     if (req.store == undefined && isPending) { // through bussiness app, we would only choose available category, so no need for isPending, authToken passing from mobile side
@@ -99,11 +99,11 @@ export const addProduct = asyncHandler(
       rest.category = categoryId._id;
     }
     const store = req.params.storeId;
-//TODO: correct on the flutter app.
+    //TODO: correct on the flutter app.
     if (rest.offerPrice == null) {
       rest.offerPrice = 0;
     }
-    
+
 
     const product = new Product({
       isPending,
@@ -111,7 +111,7 @@ export const addProduct = asyncHandler(
       ...rest,
     });
 
-    var newProduct = await (await product.save()).populate("category");    
+    var newProduct = await (await product.save()).populate("category");
     res.status(201).json(newProduct);
   }
 );
@@ -131,9 +131,9 @@ export const updateProduct = asyncHandler(
     );
 
     if (product) {
-      res.status(200).json({ message: "Product has been updated", product: product});
+      res.status(200).json({ message: "Product has been updated", product: product });
     } else {
-      res.status(400).json({ message: "Product not found"});
+      res.status(400).json({ message: "Product not found" });
       throw new Error("Products not found!");
     }
   }
@@ -188,7 +188,7 @@ export const getProductById = asyncHandler(
 export const getProductsOfAStore = asyncHandler(
   async (req: ICustomRequest<undefined>, res: Response) => {
     let storeId;
-    if (req.store?._id ) {
+    if (req.store?._id) {
       storeId = req.store._id;
     } else {
       storeId = req.params.storeId;
@@ -229,9 +229,9 @@ export const addVisitors = asyncHandler(async (req: Request, res: Response) => {
   const user = await User.findById(userId).exec();
 
   if (user && shop) {
-    shop.visitors+=1
+    shop.visitors += 1
     shop.save()
-     res.status(200).json({ message: "Visitor added successfully." });
+    res.status(200).json({ message: "Visitor added successfully." });
   }
 
   res.status(404).json({ message: "Shop or user not found." });
@@ -326,7 +326,7 @@ export const fetchProductsV2 = asyncHandler(async (req: any, res: Response) => {
       limit = 12,
     } = req.query;
     console.log("on getch v2");
-    
+
 
     let filter: any = {};
 
@@ -373,8 +373,8 @@ export const fetchProductsV2 = asyncHandler(async (req: any, res: Response) => {
     // Calculate the skip value for pagination
     const skip = (page - 1) * limit;
 
-    console.log(await Product.find({ store: storeId}));
-    
+    console.log(await Product.find({ store: storeId }));
+
 
     const tProducts = await Product.find(filter).populate("store", "storeName uniqueName location")
       .sort(sortOptions)
@@ -411,16 +411,16 @@ export const getNearbyProductsWithOffer = asyncHandler(
       // First find nearby stores
       const nearbyStores = await Store.aggregate([
         {
-          
-            $geoNear: {
-              near: {
-                type: "Point",
-                coordinates: [parseFloat(latitude), parseFloat(longitude)]
-              },
-              distanceField: "distance",
-              spherical: true
+
+          $geoNear: {
+            near: {
+              type: "Point",
+              coordinates: [parseFloat(latitude), parseFloat(longitude)]
             },
-          
+            distanceField: "distance",
+            spherical: true
+          },
+
         },
         {
           $match: {
@@ -445,31 +445,41 @@ export const getNearbyProductsWithOffer = asyncHandler(
         isAvailable: true
       }).populate('store', 'storeName location');
 
-      // const products2 = await Product.aggregate([
-      //   {
-      //      $geoNear: {
-      //         near: {
-      //           type: "Point",
-      //           coordinates: [parseFloat(latitude), parseFloat(longitude)]
-      //         },
-      //         distanceField: "distance",
-      //         spherical: true
-      //       },
-      //   },
-      //   {
-      //     $match: {
-      //       store: { $in: storeIds },
-      //       offerPrice: { $exists: true, $gt: 0 },
-      //       isActive: true,
-      //       isAvailable: true
-      //     }
-      //   },
-      //   {
-      //     $limit: 30
-      //   }
-      // ]);
+      const products2 = await Product.aggregate([
+        {
+          $geoNear: {
+            near: {
+              type: "Point",
+              coordinates: [parseFloat(latitude), parseFloat(longitude)]
+            },
+            distanceField: "distance",
+            spherical: true
+          },
+        },
+        {
+          $match: {
+            offerPrice: { $exists: true, $gt: 0 },
+            isActive: true,
+            isAvailable: true
+          }
+        },
+        {
+          $limit: 30
+        },
+        {
+          $lookup: {
+            from: 'stores', // The name of the store collection
+            localField: 'store',
+            foreignField: '_id',
+            as: 'store'
+          }
+        },
+        {
+          $unwind: '$store' // Flatten the storeInfo array
+        },
+      ]);
 
-      res.status(200).json(products);
+      res.status(200).json(products2);
     } catch (error) {
       res.status(500).json({ message: "Internal server error", error });
     }
