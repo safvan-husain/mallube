@@ -414,7 +414,7 @@ export const getNearbyProductsWithOffer = asyncHandler(
           $near: {
             $geometry: {
               type: "Point",
-              coordinates: [parseFloat(longitude), parseFloat(latitude)],
+              coordinates: [parseFloat(latitude), parseFloat(longitude)],
             },
           },
         },

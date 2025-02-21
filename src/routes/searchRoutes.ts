@@ -4,6 +4,7 @@ import ProductSearch from "../models/productSearch";
 import Product from "../models/productModel";
 import Category from "../models/categoryModel";
 import Store from "../models/storeModel";
+import { searchStoresByProductNameV2 } from "../controllers/store/storeController";
 
 const router = Router();
 
@@ -138,6 +139,6 @@ const searchProductsAndStores = asyncHandler(
     }
 );
 
-router.route('/').get(searchProductsAndStores);
+router.route('/').get(searchStoresByProductNameV2);
 
 export { router as searchRouter };

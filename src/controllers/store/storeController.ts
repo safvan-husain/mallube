@@ -439,12 +439,12 @@ export const fetchStoresNearByV2 = async (req: Request, res: Response) => {
       isActive: true,
       isAvailable: true,
     }, {
-        storeName: true, bio: true, address: true,
-        openTime: true, closeTime: true, isDeliveryAvailable: true,
-        instagram: true, facebook: true, whatsapp: true,
-        phone: true, shopImgUrl: true,
-        service: true, location: true, city: true
-      })
+      storeName: true, bio: true, address: true,
+      openTime: true, closeTime: true, isDeliveryAvailable: true,
+      instagram: true, facebook: true, whatsapp: true,
+      phone: true, shopImgUrl: true,
+      service: true, location: true, city: true
+    })
       .populate("category", "name icon")
       .limit(50);
 
@@ -456,7 +456,7 @@ export const fetchStoresNearByV2 = async (req: Request, res: Response) => {
         tStore.location.coordinates[0],
         tStore.location.coordinates[1]
       );
-      var store : any = tStore.toObject();
+      var store: any = tStore.toObject();
       store.category = store.category.name;
       return {
         ...store,
@@ -719,6 +719,122 @@ export const fetchStoreByCategoryV2 = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Internal server error", error });
   }
 };
+
+
+export const searchStoresByProductNameV2 = asyncHandler(
+  async (req: Request, res: Response) => {
+    try {
+      let productName: any = req.query.searchTerm;
+      const { latitude, longitude } = req.query;
+
+      if (!productName) {
+        res.status(400).json({ message: "Product name is required" });
+      }
+
+      if(!latitude || !longitude) {
+        res.status(400).json({ message: "Latitude and longitude are required" });
+      }
+
+      if (productName) {
+        const trimmedSearchTerm = productName.trim();
+        const productSearch = await ProductSearch.findOne({
+          productName: trimmedSearchTerm,
+        });
+        if (productSearch) {
+          await ProductSearch.findOneAndUpdate(
+            { productName: trimmedSearchTerm },
+            { $inc: { searchCount: 1 } }
+          );
+        } else {
+          await ProductSearch.create({
+            productName: trimmedSearchTerm,
+            searchCount: 1,
+          });
+        }
+      }
+
+      //ensure product name is a string
+      productName =
+        typeof productName === "string"
+          ? decodeURIComponent(productName).trim()
+          : "";
+
+
+
+      const trimmedSearchTerm = productName.trim();
+
+      const categories = await Category.find({
+        name: { $regex: trimmedSearchTerm, $options: "i" }
+      })
+
+      const categoryIds = categories.map((category) => category._id);
+
+      // Find products that match the search term and get the store ids
+      const productss = await Product.aggregate([
+        {
+          $geoNear: {
+            near: { type: "Point", coordinates: [parseFloat(latitude as string), parseFloat(longitude as string)] }, // Your target coordinates
+            distanceField: "distance", // Adds a field with the distance
+            spherical: true, // Required for GeoJSON points
+          }
+        },
+        {
+          $limit: 10 // Limit the number of stores to fetch
+        },
+        {
+          $match: {
+            name: { $regex: trimmedSearchTerm, $options: "i" }, // Search product name
+          }
+        }
+      ]);
+      const productStoreIds = productss.map((product) => product.store);
+
+      // const storesByCategory = await Store
+
+      const stores = await Store.find({
+        $or: [
+          { storeName: { $regex: trimmedSearchTerm, $options: "i" } }, // Search store name
+          { bio: { $regex: trimmedSearchTerm, $options: "i" } },        // Search bio
+          { category: { $in: categoryIds } }, // Search category name
+          { _id: { $in: productStoreIds }, }
+        ]
+      }, {
+        storeName: true, bio: true, address: true,
+        openTime: true, closeTime: true, isDeliveryAvailable: true,
+        instagram: true, facebook: true, whatsapp: true,
+        phone: true, shopImgUrl: true,
+        service: true, location: true, city: true
+      }).populate("category", "name");
+
+      const storesWithDistance = stores.map((tStore: any) => {
+        const distance = calculateDistance(
+          parseFloat(latitude as string),
+          parseFloat(longitude as string),
+          tStore.location.coordinates[0],
+          tStore.location.coordinates[1]
+        );
+        var store = tStore.toObject();
+        store.category = store.category.name;
+        return {
+          ...store,
+          distance: distance.toFixed(2),
+        };
+      });
+
+
+      // if (stores.length === 0) {
+      //   res
+      //     .status(404)
+      //     .json({ message: "No stores found for the given product" });
+      // }
+
+      res.status(200).json(storesWithDistance);
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
 
 export const searchStoresByProductName = asyncHandler(
   async (req: Request, res: Response) => {
