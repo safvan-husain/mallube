@@ -280,7 +280,7 @@ export const addToCart = asyncHandler(
             "cartItems.productId": productId,
           },
           {
-            $set: {
+            $inc: {
               "cartItems.$.quantity": quantity,
             },
           }
