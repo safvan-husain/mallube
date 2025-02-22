@@ -15,6 +15,7 @@ import Doctor from "../../models/doctorModel";
 import Store from "../../models/storeModel";
 import mongoose from "mongoose";
 import Specialisation from "../../models/specialisationModel";
+import { calculateDistance } from "../../utils/interfaces/common";
 
 const { TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN } = process.env;
 // const twilioclient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN, {
@@ -212,7 +213,14 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 export const getStoreDetails = asyncHandler(
   async (req: ICustomRequest<undefined>, res: Response) => {
     try {
-      const { storeId } = req.query;
+      const { storeId, latitude, longitude } = req.query;
+      if (!storeId) {
+        res.status(400).json({ message: "Store id is required" });
+        return;
+      }
+      if(!latitude || !longitude){
+        res.status(400).json({ message: "Latitude and longitude is required" });  
+      }
       var tStore = await Store.findById(storeId, {
         storeName: true, bio: true, address: true,
         openTime: true, closeTime: true, isDeliveryAvailable: true,
@@ -226,7 +234,14 @@ export const getStoreDetails = asyncHandler(
         return;
       }
       var store: any = tStore?.toObject();
+      const distance = calculateDistance(
+          parseFloat(latitude as string),
+          parseFloat(longitude as string),
+          tStore.location.coordinates[0],
+          tStore.location.coordinates[1]
+        );
       store.category = store.category.name;
+      store.distance = distance.toString();
       res.status(200).json(store);
     } catch (error) {
       console.log(error);
