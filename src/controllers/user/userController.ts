@@ -213,18 +213,20 @@ export const getStoreDetails = asyncHandler(
   async (req: ICustomRequest<undefined>, res: Response) => {
     try {
       const { storeId } = req.query;
-      var store: any = await Store.findById(storeId, {
+      var tStore = await Store.findById(storeId, {
         storeName: true, bio: true, address: true,
         openTime: true, closeTime: true, isDeliveryAvailable: true,
         instagram: true, facebook: true, whatsapp: true,
         phone: true, shopImgUrl: true,
         service: true, location: true, city: true
-      }).populate('category');
-      store.category = store?.category.name;
-      if (!store) {
+      }).populate('category', "name");
+      
+      if (!tStore) {
         res.status(401).json({ message: "Store not found" });
         return;
       }
+      var store: any = tStore?.toObject();
+      store.category = store.category.name;
       res.status(200).json(store);
     } catch (error) {
       console.log(error);
