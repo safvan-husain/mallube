@@ -857,20 +857,20 @@ export const searchStoresByProductNameV2 = asyncHandler(
         },
         {
           $project: {
-            storeName: 1,
-            bio: 1,
-            address: 1,
-            openTime: 1,
-            closeTime: 1,
-            isDeliveryAvailable: 1,
-            instagram: 1,
-            facebook: 1,
-            whatsapp: 1,
-            phone: 1,
-            shopImgUrl: 1,
-            service: 1,
+            storeName: { $ifNull: ["$storeName", "Unnamed Store"] },
+            bio: { $ifNull: ["$bio", ""] },
+            address: { $ifNull: ["$address", "No address provided"] },
+            openTime: { $ifNull: ["$openTime",0] }, // Example default
+            closeTime: { $ifNull: ["$closeTime",0] }, // Example default
+            isDeliveryAvailable: { $ifNull: ["$isDeliveryAvailable", false] },
+            instagram: { $ifNull: ["$instagram", ""] },
+            facebook: { $ifNull: ["$facebook", ""] },
+            whatsapp: { $ifNull: ["$whatsapp", ""] },
+            phone: { $ifNull: ["$phone", ""] },
+            shopImgUrl: { $ifNull: ["$shopImgUrl", ""] },
+            service: { $ifNull: ["$service", false] },
             location: 1,
-            city: 1,
+            city: { $ifNull: ["$city", "Unknown City"] },
             distance: {
               $toString: {
                 $round: ["$distance", 2],
