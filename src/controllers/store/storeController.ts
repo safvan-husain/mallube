@@ -731,7 +731,7 @@ export const searchStoresByProductNameV2 = asyncHandler(
         res.status(400).json({ message: "Product name is required" });
       }
 
-      if(!latitude || !longitude) {
+      if (!latitude || !longitude) {
         res.status(400).json({ message: "Latitude and longitude are required" });
       }
 
@@ -779,7 +779,7 @@ export const searchStoresByProductNameV2 = asyncHandler(
           }
         },
         {
-          $limit: 10 // Limit the number of stores to fetch
+          $limit: 80 // Limit the number of stores to fetch
         },
         {
           $match: {
@@ -791,35 +791,96 @@ export const searchStoresByProductNameV2 = asyncHandler(
 
       // const storesByCategory = await Store
 
-      const stores = await Store.find({
-        $or: [
-          { storeName: { $regex: trimmedSearchTerm, $options: "i" } }, // Search store name
-          { bio: { $regex: trimmedSearchTerm, $options: "i" } },        // Search bio
-          { category: { $in: categoryIds } }, // Search category name
-          { _id: { $in: productStoreIds }, }
-        ]
-      }, {
-        storeName: true, bio: true, address: true,
-        openTime: true, closeTime: true, isDeliveryAvailable: true,
-        instagram: true, facebook: true, whatsapp: true,
-        phone: true, shopImgUrl: true,
-        service: true, location: true, city: true
-      }).populate("category", "name");
+      // const stores = await Store.find({
+      //   $or: [
+      //     { storeName: { $regex: trimmedSearchTerm, $options: "i" } }, // Search store name
+      //     { bio: { $regex: trimmedSearchTerm, $options: "i" } },        // Search bio
+      //     { category: { $in: categoryIds } }, // Search category name
+      //     { _id: { $in: productStoreIds }, }
+      //   ]
+      // }, {
+      //   storeName: true, bio: true, address: true,
+      //   openTime: true, closeTime: true, isDeliveryAvailable: true,
+      //   instagram: true, facebook: true, whatsapp: true,
+      //   phone: true, shopImgUrl: true,
+      //   service: true, location: true, city: true
+      // }).populate("category", "name");
 
-      const storesWithDistance = stores.map((tStore: any) => {
-        const distance = calculateDistance(
-          parseFloat(latitude as string),
-          parseFloat(longitude as string),
-          tStore.location.coordinates[0],
-          tStore.location.coordinates[1]
-        );
-        var store = tStore.toObject();
-        store.category = store.category.name;
-        return {
-          ...store,
-          distance: distance.toFixed(2),
-        };
-      });
+      // const storesWithDistance = stores.map((tStore: any) => {
+      //   const distance = calculateDistance(
+      //     parseFloat(latitude as string),
+      //     parseFloat(longitude as string),
+      //     tStore.location.coordinates[0],
+      //     tStore.location.coordinates[1]
+      //   );
+      //   var store = tStore.toObject();
+      //   store.category = store.category.name;
+      //   return {
+      //     ...store,
+      //     distance: distance.toFixed(2),
+      //   };
+      // });
+      const stores = await Store.aggregate([
+        {
+          $geoNear: {
+            near: {
+              type: "Point",
+              coordinates: [
+                parseFloat(longitude as string),
+                parseFloat(latitude as string),
+              ],
+            },
+            distanceField: "distance",
+            spherical: true,
+          },
+        },
+        {
+          $match: {
+            $or: [
+              { storeName: { $regex: trimmedSearchTerm, $options: "i" } },
+              { bio: { $regex: trimmedSearchTerm, $options: "i" } },
+              { category: { $in: categoryIds } },
+              { _id: { $in: productStoreIds } },
+            ],
+          },
+        },
+        {
+          $lookup: {
+            from: "categories", // Collection name for categories
+            localField: "category",
+            foreignField: "_id",
+            as: "categoryDetails",
+          },
+        },
+        {
+          $unwind: "$categoryDetails",
+        },
+        {
+          $project: {
+            storeName: 1,
+            bio: 1,
+            address: 1,
+            openTime: 1,
+            closeTime: 1,
+            isDeliveryAvailable: 1,
+            instagram: 1,
+            facebook: 1,
+            whatsapp: 1,
+            phone: 1,
+            shopImgUrl: 1,
+            service: 1,
+            location: 1,
+            city: 1,
+            distance: {
+              $toString: {
+                $round: ["$distance", 2],
+              },
+            },
+            category: "$categoryDetails.name",
+          },
+        },
+      ]);
+
 
 
       // if (stores.length === 0) {
@@ -828,7 +889,7 @@ export const searchStoresByProductNameV2 = asyncHandler(
       //     .json({ message: "No stores found for the given product" });
       // }
 
-      res.status(200).json(storesWithDistance);
+      res.status(200).json(stores);
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: "Internal server error" });
