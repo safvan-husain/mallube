@@ -210,6 +210,20 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
+export const updateUserFcmToken = asyncHandler(
+  async (req: ICustomRequest<any>, res: Response) => {
+    const userId = req.user?._id;
+    try {
+      if (userId) {
+        await User.findByIdAndUpdate(userId, { fcmToken: req.body.fcmToken });
+      }
+      res.status(200).json({ message: "Token updated successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error", error });
+    }
+  }
+)
+
 export const getStoreDetails = asyncHandler(
   async (req: ICustomRequest<undefined>, res: Response) => {
     try {

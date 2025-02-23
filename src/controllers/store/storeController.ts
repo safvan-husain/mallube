@@ -1491,9 +1491,9 @@ export const updateFcmToken = asyncHandler(
       if (storeId) {
         await Store.findByIdAndUpdate(storeId, { fcmToken: req.body.fcmToken });
       }
-      res.status(200);
+      res.status(200).json({ message: "Token updated successfully" });
     } catch (error) {
-      res.status(500);
+      res.status(500).json({ message: "Internal server error", error });
     }
   }
 )
