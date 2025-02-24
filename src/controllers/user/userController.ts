@@ -767,8 +767,8 @@ export const getBookingsV2 = asyncHandler(
       const bookings = await Booking.aggregate([
         {
           $match: {
-            userId,
-            storeId: { $exists: true}
+            userId: new mongoose.Types.ObjectId(userId),
+            storeId: new mongoose.Types.ObjectId(storeId),
           },
         },
         {
