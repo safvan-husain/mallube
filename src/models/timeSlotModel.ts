@@ -24,7 +24,6 @@ const timeSlotSchema = new Schema<ITimeSlot>(
     },
     date: {
       type: Date,
-      expires: '1d',
       default: Date.now
     },
     startTime: {

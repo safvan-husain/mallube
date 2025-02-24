@@ -817,7 +817,7 @@ export const getBookingsV2 = asyncHandler(
       ]);
 
 
-      const formattedBookings = bookings.map((booking: any) => ({
+      const formattedBookings = bookings.filter((e) => e.timeslot).map((booking: any) => ({
         _id: booking._id,
         isActive: booking.isActive,
         timeslot: booking.timeslot
