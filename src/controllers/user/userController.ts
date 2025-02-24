@@ -815,7 +815,7 @@ export const getBookingsV2 = asyncHandler(
       const formattedBookings = bookings.map((booking: any) => ({
         _id: booking._id,
         isActive: booking.isActive,
-        timeslot: booking.timeSlotId
+        timeslot: booking.timeslot
           ? {
             startTime: booking.timeslot.startTime.getTime(),
             endTime: booking.timeslot.endTime.getTime(),
