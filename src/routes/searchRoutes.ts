@@ -101,20 +101,21 @@ const searchStoresByProductNameV2 = asyncHandler(
 
             // Pagination filter based on distance and _id
             if (lastDistance && lastId && limit) {
-                pipeline.push({
-                    $match: {
-                        $or: [
-                            { distance: { $gt: lastDistance } },
-                            { distance: lastDistance, _id: { $gt: lastId } }
-                        ]
-                    }
-                },
-                    { $sort: { distance: 1, _id: 1 } }, // Sort by nearest first, then by _id
-                    { $limit: limit });
-                // pipeline.push(
-                //     { $sort: { distance: 1, _id: 1 } }, // Sort by nearest first, then by _id
-                //     { $limit: limit }
-                // );
+                pipeline.push(
+                    {
+                        $match: {
+                            $or: [
+                                { distance: { $gt: parseFloat(lastDistance as string) } },
+                                { distance: parseFloat(lastDistance as string), _id: { $gt: lastId } }
+                            ]
+                        }
+                    },
+                    { $sort: { distance: 1, _id: 1 } },
+                );
+            }
+
+            if (limit) {
+                pipeline.push({ $limit: parseInt(limit as string) });
             }
 
 
