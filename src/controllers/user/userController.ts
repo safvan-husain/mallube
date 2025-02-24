@@ -817,8 +817,8 @@ export const getBookingsV2 = asyncHandler(
         isActive: booking.isActive,
         timeslot: booking.timeSlotId
           ? {
-            startTime: booking.timeSlotId.startTime.getTime(),
-            endTime: booking.timeSlotId.endTime.getTime(),
+            startTime: booking.timeslot.startTime.getTime(),
+            endTime: booking.timeslot.endTime.getTime(),
           }
           : null,
       }));
