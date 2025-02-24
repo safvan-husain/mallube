@@ -109,8 +109,7 @@ const updateData = expressAsyncHandler(
       const bookings2 = await Booking.aggregate([
         {
           $match: {
-            userId: "67b6fa594109f234893b22ee",
-            storeId: { $exists: true}
+            userId: new mongoose.Types.ObjectId("67b6fa594109f234893b22ee"),
           },
         },
         // {
