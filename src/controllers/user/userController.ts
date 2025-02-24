@@ -108,7 +108,7 @@ export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
   try {
     const userId = req.user?._id;
     var deleted = await User.findByIdAndDelete(userId);
-    res.status(200).json({ message: "User deleted successfully", deleted }); 
+    res.status(200).json({ message: "User deleted successfully", deleted });
   } catch (error) {
     res.status(500).json({ message: "Internal server error", error });
   }
@@ -235,8 +235,8 @@ export const getStoreDetails = asyncHandler(
         res.status(400).json({ message: "Store id is required" });
         return;
       }
-      if(!latitude || !longitude){
-        res.status(400).json({ message: "Latitude and longitude is required" });  
+      if (!latitude || !longitude) {
+        res.status(400).json({ message: "Latitude and longitude is required" });
       }
       var tStore = await Store.findById(storeId, {
         storeName: true, bio: true, address: true,
@@ -245,18 +245,18 @@ export const getStoreDetails = asyncHandler(
         phone: true, shopImgUrl: true,
         service: true, location: true, city: true
       }).populate('category', "name");
-      
+
       if (!tStore) {
         res.status(401).json({ message: "Store not found" });
         return;
       }
       var store: any = tStore?.toObject();
       const distance = calculateDistance(
-          parseFloat(latitude as string),
-          parseFloat(longitude as string),
-          tStore.location.coordinates[0],
-          tStore.location.coordinates[1]
-        );
+        parseFloat(latitude as string),
+        parseFloat(longitude as string),
+        tStore.location.coordinates[0],
+        tStore.location.coordinates[1]
+      );
       store.category = store.category.name;
       store.distance = distance.toString();
       res.status(200).json(store);
@@ -290,17 +290,22 @@ export const addToCart = asyncHandler(
       });
 
       if (isExists) {
+        var operation = quantity == 1 ? {
+          "$inc": {
+            "cartItems.$.quantity": quantity,
+          }
+        } : {
+          "$set": {
+            "cartItems.$.quantity": quantity,
+          }
+        };
         await Cart.findOneAndUpdate(
           {
             userId,
             storeId,
             "cartItems.productId": productId,
           },
-          {
-            $inc: {
-              "cartItems.$.quantity": quantity,
-            },
-          }
+          operation
         );
       } else {
         await Cart.findOneAndUpdate(
@@ -763,7 +768,7 @@ export const getBookingsV2 = asyncHandler(
         {
           $match: {
             userId,
-            storeId   
+            storeId
           },
         },
         {
