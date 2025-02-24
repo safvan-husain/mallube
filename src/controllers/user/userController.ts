@@ -740,6 +740,11 @@ export const slotBookingV2 = async (req: any, res: Response) => {
       return res.status(401).json({ message: "No available seats on this specific time" });
     }
 
+    const isExist = await Booking.findOne({ timeSlotId: slotId, userId });
+    if(isExist){
+      return res.status(401).json({ message: "You have already booked this slot" });
+    }
+
     const newBooking = new Booking({
       timeSlotId: slotId,
       storeId: timeslot.storeId,
