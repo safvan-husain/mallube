@@ -821,24 +821,24 @@ export const getBookingsV2 = asyncHandler(
         })
         .lean();
 
-      const formattedBookings = bookings.map((booking: any) => ({
-        _id: booking._id,
-        isActive: booking.isActive,
-        store: booking.timeSlotId?.storeId
-          ? {
-            storeName: booking.timeSlotId.storeId.storeName,
-            phone: booking.timeSlotId.storeId.phone,
-          }
-          : null,
-        timeslot: booking.timeSlotId
-          ? {
-            startTime: booking.timeSlotId.startTime,
-            endTime: booking.timeSlotId.endTime,
-          }
-          : null,
-      }));
+      // const formattedBookings = bookings.map((booking: any) => ({
+      //   _id: booking._id,
+      //   isActive: booking.isActive,
+      //   store: booking.timeSlotId?.storeId
+      //     ? {
+      //       storeName: booking.timeSlotId.storeId.storeName,
+      //       phone: booking.timeSlotId.storeId.phone,
+      //     }
+      //     : null,
+      //   timeslot: booking.timeSlotId
+      //     ? {
+      //       startTime: booking.timeSlotId.startTime,
+      //       endTime: booking.timeSlotId.endTime,
+      //     }
+      //     : null,
+      // }));
 
-      res.status(200).json({formattedBookings, userId});
+      res.status(200).json({bookings, userId});
     } catch (error) {
       console.log("get booking error ", error);
       res.status(500).json({ message: "Internal server error", error });
