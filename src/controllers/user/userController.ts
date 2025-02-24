@@ -823,7 +823,7 @@ export const getBookingsV2 = asyncHandler(
           : null,
       }));
 
-      res.status(200).json({bookings, userId});
+      res.status(200).json(formattedBookings);
     } catch (error) {
       console.log("get booking error ", error);
       res.status(500).json({ message: "Internal server error", error });
