@@ -764,62 +764,52 @@ export const getBookingsV2 = asyncHandler(
     try {
       const userId = req.user._id;
       // const bookings = await Booking.find({ userId }, { timeSlotId: true, isActive: true }).populate('timeSlotId');
-      // const bookings = await Booking.aggregate([
-      //   {
-      //     $match: {
-      //       userId,
-      //       storeId
-      //     },
-      //   },
-      //   {
-      //     $lookup: {
-      //       from: "timeslots",
-      //       localField: "timeSlotId",
-      //       foreignField: "_id",
-      //       as: "timeslot",
-      //     },
-      //   },
-      //   {
-      //     $unwind: {
-      //       path: "$timeslot",
-      //       preserveNullAndEmptyArrays: true
-      //     },
-      //   },
-      //   {
-      //     $lookup: {
-      //       from: "stores",
-      //       localField: "timeslot.storeId",
-      //       foreignField: "_id",
-      //       as: "store"
-      //     }
-      //   },
-      //   {
-      //     $unwind: {
-      //       path: "$store",
-      //       preserveNullAndEmptyArrays: true
-      //     },
-      //   },
-      //   {
-      //     $project: {
-      //       _id: 1,
-      //       isActive: 1,
-      //       "store.storeName": 1,
-      //       "store.phone": 1,
-      //       "timeslot.startTime": 1,
-      //       "timeslot.endTime": 1,
-      //     }
-      //   }
-      // ])
-      const bookings: any = await Booking.find({ userId, storeId })
-        .populate({
-          path: 'timeSlotId',
-          model: 'TimeSlot',
-          populate: {
-            path: 'storeId',
-            model: 'Store',
+      const bookings = await Booking.aggregate([
+        {
+          $match: {
+            userId,
+            storeId: { $exists: true}
           },
-        })
-        .lean();
+        },
+        {
+          $lookup: {
+            from: "timeslots",
+            localField: "timeSlotId",
+            foreignField: "_id",
+            as: "timeslot",
+          },
+        },
+        {
+          $unwind: {
+            path: "$timeslot",
+            preserveNullAndEmptyArrays: true
+          },
+        },
+        {
+          $lookup: {
+            from: "stores",
+            localField: "timeslot.storeId",
+            foreignField: "_id",
+            as: "store"
+          }
+        },
+        {
+          $unwind: {
+            path: "$store",
+            preserveNullAndEmptyArrays: true
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            isActive: 1,
+            "store.storeName": 1,
+            "store.phone": 1,
+            "timeslot.startTime": 1,
+            "timeslot.endTime": 1,
+          }
+        }
+      ])
 
       // const formattedBookings = bookings.map((booking: any) => ({
       //   _id: booking._id,
