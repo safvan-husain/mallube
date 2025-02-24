@@ -737,6 +737,7 @@ export const slotBookingV2 = async (req: any, res: Response) => {
 
     const newBooking = new Booking({
       timeSlotId: slotId,
+      storeId: timeslot.storeId,
       userId,
     });
 
