@@ -27,7 +27,7 @@ const twilioServiceId = process.env.TWILIO_SERVICE_ID;
 const EXPIRATION_TIME = 5 * 60 * 1000;
 
 export const register = async (req: Request, res: Response) => {
-  const { fullName, email, password, phone } = req.body;
+  const { fullName, email, password, phone, fcmToken } = req.body;
   const { v2 } = req.query;
   try {
     let exist: any;
@@ -68,6 +68,7 @@ export const register = async (req: Request, res: Response) => {
       phone,
       otp,
       isVerified: true,
+      fcmToken
     });
 
     user = await user.save();
@@ -159,7 +160,7 @@ export const verifyOtp = async (req: Request, res: Response) => {
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
   try {
-    const { username, password } = req.body;
+    const { username, password, fcmToken } = req.body;
     const user: any = await User.findOne({
       $or: [{ email: username }, { phone: username }],
     });
@@ -167,6 +168,8 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
       res.status(404).json({ message: "Invalid email or phone", login: false });
       return;
     }
+
+    await User.findByIdAndUpdate(user._id, { fcmToken });
 
     if (user?.isBlocked) {
       res.status(400).json({ message: "You are blocked. Contact the owner" });
@@ -751,13 +754,15 @@ export const slotBookingV2 = async (req: any, res: Response) => {
 
 export const getBookingsV2 = asyncHandler(
   async (req: any, res: any) => {
+    const { storeId } = req.query;
     try {
       const userId = req.user._id;
       // const bookings = await Booking.find({ userId }, { timeSlotId: true, isActive: true }).populate('timeSlotId');
       const bookings = await Booking.aggregate([
         {
           $match: {
-            userId
+            userId,
+            storeId   
           },
         },
         {

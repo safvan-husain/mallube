@@ -20,7 +20,7 @@ const bookingSchema = new Schema<IBooking>(
         },
         storeId:{
             type:Schema.Types.ObjectId,
-            required: false
+            required: true
         },
         isActive: {
             type: Boolean,
