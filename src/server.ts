@@ -113,44 +113,44 @@ const updateData = expressAsyncHandler(
             storeId: { $exists: true}
           },
         },
-        {
-          $lookup: {
-            from: "timeslots",
-            localField: "timeSlotId",
-            foreignField: "_id",
-            as: "timeslot",
-          },
-        },
-        {
-          $unwind: {
-            path: "$timeslot",
-            preserveNullAndEmptyArrays: true
-          },
-        },
-        {
-          $lookup: {
-            from: "stores",
-            localField: "timeslot.storeId",
-            foreignField: "_id",
-            as: "store"
-          }
-        },
-        {
-          $unwind: {
-            path: "$store",
-            preserveNullAndEmptyArrays: true
-          },
-        },
-        {
-          $project: {
-            _id: 1,
-            isActive: 1,
-            "store.storeName": 1,
-            "store.phone": 1,
-            "timeslot.startTime": 1,
-            "timeslot.endTime": 1,
-          }
-        }
+        // {
+        //   $lookup: {
+        //     from: "timeslots",
+        //     localField: "timeSlotId",
+        //     foreignField: "_id",
+        //     as: "timeslot",
+        //   },
+        // },
+        // {
+        //   $unwind: {
+        //     path: "$timeslot",
+        //     preserveNullAndEmptyArrays: true
+        //   },
+        // },
+        // {
+        //   $lookup: {
+        //     from: "stores",
+        //     localField: "timeslot.storeId",
+        //     foreignField: "_id",
+        //     as: "store"
+        //   }
+        // },
+        // {
+        //   $unwind: {
+        //     path: "$store",
+        //     preserveNullAndEmptyArrays: true
+        //   },
+        // },
+        // {
+        //   $project: {
+        //     _id: 1,
+        //     isActive: 1,
+        //     "store.storeName": 1,
+        //     "store.phone": 1,
+        //     "timeslot.startTime": 1,
+        //     "timeslot.endTime": 1,
+        //   }
+        // }
       ])
 
       res.status(200).json({ message: "Nothing to teansform", timeslot, bookings, bookings2 });
