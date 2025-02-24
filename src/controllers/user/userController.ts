@@ -809,24 +809,19 @@ export const getBookingsV2 = asyncHandler(
             "timeslot.endTime": 1,
           }
         }
-      ])
+      ]);
 
-      // const formattedBookings = bookings.map((booking: any) => ({
-      //   _id: booking._id,
-      //   isActive: booking.isActive,
-      //   store: booking.timeSlotId?.storeId
-      //     ? {
-      //       storeName: booking.timeSlotId.storeId.storeName,
-      //       phone: booking.timeSlotId.storeId.phone,
-      //     }
-      //     : null,
-      //   timeslot: booking.timeSlotId
-      //     ? {
-      //       startTime: booking.timeSlotId.startTime,
-      //       endTime: booking.timeSlotId.endTime,
-      //     }
-      //     : null,
-      // }));
+
+      const formattedBookings = bookings.map((booking: any) => ({
+        _id: booking._id,
+        isActive: booking.isActive,
+        timeslot: booking.timeSlotId
+          ? {
+            startTime: booking.timeSlotId.startTime.getTime(),
+            endTime: booking.timeSlotId.endTime.getTime(),
+          }
+          : null,
+      }));
 
       res.status(200).json({bookings, userId});
     } catch (error) {
