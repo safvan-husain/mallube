@@ -36,6 +36,7 @@ import { CustomerBill } from "./models/customerBillModel";
 import TimeSlot from "./models/timeSlotModel";
 import User from "./models/userModel";
 import { searchRouter } from "./routes/searchRoutes";
+import Booking from "./models/bookingModel";
 
 const app = express();
 
@@ -101,14 +102,11 @@ const updateData = expressAsyncHandler(
       // await collection.dropIndex('email_1');
       // await addLocationFieldToAllProducts()
 
-      var result = await Store.find({}, { location_v2: true, location: true });
-      // await Store.updateMany({ storeProviding: 'serviceBased' }, { service: true });
-      // var result = await Product.updateMany({ isEnquiryAvailable: { $exists: false }}, { isEnquiryAvailable: true });
+      // var result = await Store.find({}, { location_v2: true, location: true });
+      var timeslot = await TimeSlot.find({});
+      var bookings = await Booking.find({});
 
-      // let result = await Store.find({ phone: "8848305163" });
-      // var result = await TimeSlot.inde
-      // await Store.findOneAndUpdate({ phone: "8086527077" }, { service: true });
-      res.status(200).json({ message: "Nothing to teansform", result });
+      res.status(200).json({ message: "Nothing to teansform", timeslot, bookings });
     } catch (error) {
       res.status(400).json({ message: error })
     }
