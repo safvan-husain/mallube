@@ -92,14 +92,7 @@ async function addLocationFieldToAllProducts() {
 const updateData = expressAsyncHandler(
   async (req, res) => {
     try {
-      const stores = await Store.find({});
-      for (const doc of stores) {
-        const [lat, lon] = doc.location.coordinates;
-        await Store.updateOne(
-          { _id: doc._id },
-          { $set: { "location.coordinates": [lon, lat] } }
-        );
-      }
+      
       var s = await Store.find({});
       res.status(200).json(s);
     } catch (error) {
@@ -108,6 +101,17 @@ const updateData = expressAsyncHandler(
   }
 
 )
+
+async function swithcCor() {
+  const stores = await Store.find({});
+      for (const doc of stores) {
+        const [lat, lon] = doc.location.coordinates;
+        await Store.updateOne(
+          { _id: doc._id },
+          { $set: { "location.coordinates": [lon, lat] } }
+        );
+      }
+}
 
 app.use("/api/developer/transform", updateData);
 
