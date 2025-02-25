@@ -92,67 +92,16 @@ async function addLocationFieldToAllProducts() {
 const updateData = expressAsyncHandler(
   async (req, res) => {
     try {
-      // Access the native collection object
-      // const collection = TimeSlot.collection;
-
-      // // Drop the index
-      // await collection.dropIndex('storeId_1');
-      // var collection = User.collection;
-      // var result = collection.listIndexes();
-      // await collection.dropIndex('email_1');
-      // await addLocationFieldToAllProducts()
-
-      // var result = await Store.find({}, { location_v2: true, location: true });
-      var timeslot = await TimeSlot.find({});
-      var bookings = await Booking.find({});
-
-      const bookings2 = await Booking.aggregate([
-        {
-          $match: {
-            userId: new mongoose.Types.ObjectId("67b6fa594109f234893b22ee"),
-          },
-        },
-        // {
-        //   $lookup: {
-        //     from: "timeslots",
-        //     localField: "timeSlotId",
-        //     foreignField: "_id",
-        //     as: "timeslot",
-        //   },
-        // },
-        // {
-        //   $unwind: {
-        //     path: "$timeslot",
-        //     preserveNullAndEmptyArrays: true
-        //   },
-        // },
-        // {
-        //   $lookup: {
-        //     from: "stores",
-        //     localField: "timeslot.storeId",
-        //     foreignField: "_id",
-        //     as: "store"
-        //   }
-        // },
-        // {
-        //   $unwind: {
-        //     path: "$store",
-        //     preserveNullAndEmptyArrays: true
-        //   },
-        // },
-        // {
-        //   $project: {
-        //     _id: 1,
-        //     isActive: 1,
-        //     "store.storeName": 1,
-        //     "store.phone": 1,
-        //     "timeslot.startTime": 1,
-        //     "timeslot.endTime": 1,
-        //   }
-        // }
-      ])
-
-      res.status(200).json({ message: "Nothing to teansform", timeslot, bookings, bookings2 });
+      const stores = await Store.find({});
+      for (const doc of stores) {
+        const [lat, lon] = doc.location.coordinates;
+        await Store.updateOne(
+          { _id: doc._id },
+          { $set: { "location.coordinates": [lon, lat] } }
+        );
+      }
+      var s = await Store.find({});
+      res.status(200).json(s);
     } catch (error) {
       res.status(400).json({ message: error })
     }
