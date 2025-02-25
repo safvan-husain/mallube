@@ -136,8 +136,7 @@ const searchStoresByProductNameV2 = asyncHandler(
                                 { distance: parseFloat(lastDistance as string), _id: { $gt: lastId } }
                             ]
                         }
-                    },
-                    { $sort: { distance: 1, _id: 1 } },
+                    }
                 );
             }
 
@@ -149,6 +148,7 @@ const searchStoresByProductNameV2 = asyncHandler(
 
             const stores = await Store.aggregate([
                 ...pipeline,
+                { $sort: { distance: 1, _id: 1 } },
                 {
                     $lookup: {
                         from: "categories", // Collection name for categories

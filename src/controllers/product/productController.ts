@@ -403,9 +403,17 @@ export const fetchProductsV2 = asyncHandler(async (req: any, res: Response) => {
 export const getNearbyProductsWithOffer = asyncHandler(
   async (req: any, res: any) => {
     try {
-      const { longitude, latitude } = req.query;
+      var { longitude, latitude, limit, skip } = req.query;
       if (!longitude || !latitude) {
         return res.status(400).json({ message: "Longitude and latitude are required" });
+      }
+
+      if(!limit) {
+        limit = '80';
+      }
+
+      if(!skip) {
+        skip = '0';
       }
 
       const products2 = await Product.find({
@@ -420,8 +428,8 @@ export const getNearbyProductsWithOffer = asyncHandler(
             }
           }
         }
-      })
-        .limit(80)
+      }).skip(parseInt(skip))
+        .limit(parseInt(limit))
         .populate('store', 'storeName location')
         .lean();
 
