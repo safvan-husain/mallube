@@ -192,7 +192,8 @@ const searchStoresByProductNameV2 = asyncHandler(
                 },
             ]);
 
-            res.status(200).json(stores.map(e => ({...e, distance: (e.distance as number).toFixed(2)} )));
+            res.status(200).json(stores);
+            // res.status(200).json(stores.map(e => ({...e, distance: (e.distance as number).toFixed(2)} )));
         } catch (error) {
             console.log(error);
             res.status(500).json({ message: "Internal server error", error });
