@@ -94,9 +94,9 @@ const searchStoresByProductNameV2 = asyncHandler(
                             //then checking that distance is less than or equal to radius ( checking whether user is in the area of advertisement)
                             body: (
                                 location: { coordinates: Array<number> } | undefined | null, lat1: number, lon1: number,
-                            ): number => {
+                            ): number | null => {
                                 if (location === null || location === undefined) {
-                                    return -1;
+                                    return null;
                                 }
                                 const [lat2, lon2] = location!.coordinates;
                                 const r = 6371; // Radius of the Earth in kilometers
@@ -199,7 +199,7 @@ const searchStoresByProductNameV2 = asyncHandler(
             res.status(200).json(stores);
         } catch (error) {
             console.log(error);
-            res.status(500).json({ message: "Internal server error" });
+            res.status(500).json({ message: "Internal server error", error });
         }
     }
 );
