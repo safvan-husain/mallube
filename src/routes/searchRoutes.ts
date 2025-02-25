@@ -75,18 +75,17 @@ const searchStoresByProductNameV2 = asyncHandler(
 
             const pipeline: any[] = [];
             pipeline.push({
-                $geoNear: {
-                    near: {
-                        type: "Point",
-                        coordinates: [
-                            parseFloat(latitude as string),
-                            parseFloat(longitude as string),
-                        ],
-                        
-                    },
-                    distanceField: "distance2",
+                $match: {
+                    $or: [
+                        { storeName: { $regex: trimmedSearchTerm, $options: "i" } },
+                        { bio: { $regex: trimmedSearchTerm, $options: "i" } },
+                        { category: { $in: categoryIds } },
+                        { _id: { $in: productStoreIds } },
+                    ],
                 },
-            }, {
+            });
+
+            pipeline.push({
                 $addFields: {
                     distance: {
                         $function: {
@@ -125,16 +124,7 @@ const searchStoresByProductNameV2 = asyncHandler(
                 }
             });
 
-            pipeline.push({
-                $match: {
-                    $or: [
-                        { storeName: { $regex: trimmedSearchTerm, $options: "i" } },
-                        { bio: { $regex: trimmedSearchTerm, $options: "i" } },
-                        { category: { $in: categoryIds } },
-                        { _id: { $in: productStoreIds } },
-                    ],
-                },
-            });
+            
 
             // Pagination filter based on distance and _id
             if (lastDistance && lastId && limit) {
@@ -187,7 +177,6 @@ const searchStoresByProductNameV2 = asyncHandler(
                         location: 1,
                         city: { $ifNull: ["$city", "Unknown City"] },
                         distance: 1,
-                        distance2: 1,
                         category: "$categoryDetails.name",
                     },
                 },
