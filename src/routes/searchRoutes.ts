@@ -84,7 +84,7 @@ const searchStoresByProductNameV2 = asyncHandler(
                         ],
                     },
                     distanceField: "distance",
-                    spherical: true,
+                    // spherical: true,
                 },
             });
 
