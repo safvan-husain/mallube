@@ -187,9 +187,7 @@ const searchStoresByProductNameV2 = asyncHandler(
                         location: 1,
                         city: { $ifNull: ["$city", "Unknown City"] },
                         distance: {
-                            $toString: {
-                                $round: ["$distance", 2],
-                            },
+                            $toString: "$distance",
                         },
                         category: "$categoryDetails.name",
                     },
