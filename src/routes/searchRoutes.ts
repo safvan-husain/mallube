@@ -92,9 +92,9 @@ const searchStoresByProductNameV2 = asyncHandler(
                         $function: {
                             //calculating distance between two points (userLocation, advertisementLocation)
                             //then checking that distance is less than or equal to radius ( checking whether user is in the area of advertisement)
-                            body: (
+                            body: function (
                                 location: { coordinates: Array<number> } | undefined | null, lat1: number, lon1: number,
-                            ): number | null => {
+                            ): number | null {
                                 if (location === null || location === undefined) {
                                     return null;
                                 }
