@@ -79,8 +79,8 @@ const searchStoresByProductNameV2 = asyncHandler(
                     near: {
                         type: "Point",
                         coordinates: [
-                            parseFloat(longitude as string),
                             parseFloat(latitude as string),
+                            parseFloat(longitude as string),
                         ],
                     },
                     distanceField: "distance",
