@@ -82,10 +82,47 @@ const searchStoresByProductNameV2 = asyncHandler(
                             parseFloat(latitude as string),
                             parseFloat(longitude as string),
                         ],
+                        
                     },
-                    distanceField: "distance",
-                    // spherical: true,
+                    distanceField: "distance2",
                 },
+            }, {
+                $addFields: {
+                    distance: {
+                        $function: {
+                            //calculating distance between two points (userLocation, advertisementLocation)
+                            //then checking that distance is less than or equal to radius ( checking whether user is in the area of advertisement)
+                            body: (
+                                location: { coordinates: Array<number> } | undefined | null, lat1: number, lon1: number,
+                            ): number => {
+                                if (location === null || location === undefined) {
+                                    return -1;
+                                }
+                                const [lat2, lon2] = location!.coordinates;
+                                const r = 6371; // Radius of the Earth in kilometers
+                                const p = Math.PI / 180; // Convert degrees to radians
+
+                                const dLat = (lat2 - lat1) * p;
+                                const dLon = (lon2 - lon1) * p;
+                                const lat1Rad = lat1 * p;
+                                const lat2Rad = lat2 * p;
+
+                                const a =
+                                    0.5 - Math.cos(dLat) / 2 +
+                                    Math.cos(lat1Rad) * Math.cos(lat2Rad) *
+                                    (1 - Math.cos(dLon)) / 2;
+
+                                const distance = 2 * r * Math.asin(Math.sqrt(a));
+                                const distanceInMeters = distance; // Convert to meters
+                                const distanceInKM = distanceInMeters * 1.60934
+                                return distanceInKM;
+                            },
+                            args: ["$location", latitude, longitude],
+                            lang: "js"
+
+                        }
+                    }
+                }
             });
 
             pipeline.push({
