@@ -419,11 +419,19 @@ export const fetchAllAdvertisement = async (req: any, res: Response) => {
 
 export const fetchStoresNearByV2 = async (req: Request, res: Response) => {
   try {
-    const { longitude, latitude } = req.params;
+    var { longitude, latitude, limit, skip } = req.query;
     if (!longitude || !latitude) {
       return res
         .status(400)
         .json({ message: "Longitude and latitude are required" });
+    }
+
+    if(!limit) {
+      limit = '50';
+    }
+
+    if(!skip) {
+      skip = '0';
     }
 
     const nearStores = await Store.find({
@@ -431,7 +439,7 @@ export const fetchStoresNearByV2 = async (req: Request, res: Response) => {
         $near: {
           $geometry: {
             type: "Point",
-            coordinates: [parseFloat(latitude), parseFloat(longitude)],
+            coordinates: [parseFloat(latitude as string), parseFloat(longitude as string)],
           },
           // $maxDistance: 10000, // in meters
         },
@@ -446,18 +454,19 @@ export const fetchStoresNearByV2 = async (req: Request, res: Response) => {
       service: true, location: true, city: true
     })
       .populate("category", "name icon")
-      .limit(50);
+      .skip(parseInt(skip as string))
+      .limit(parseInt(limit as string));
 
     // distance geting wrong. need to work on this
     const storeWithDistance = nearStores.map((tStore) => {
       const distance = calculateDistance(
-        parseFloat(latitude),
-        parseFloat(longitude),
+        parseFloat(latitude as string),
+        parseFloat(longitude as string),
         tStore.location.coordinates[0],
         tStore.location.coordinates[1]
       );
       var store: any = tStore.toObject();
-      store.category = store.category.name;
+      store.category = store.category?.name ?? "Unkown";
       return {
         ...store,
         category: store.category,

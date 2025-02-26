@@ -90,7 +90,7 @@ router
   .route("/advertisement/:advertisementId")
   .delete(store, deleteAdvertisement);
 router.route("/near-by-shop/:longitude/:latitude").get(fetchStoresNearBy);
-router.route("/near-by-shop-v2/:longitude/:latitude").get(fetchStoresNearByV2);
+router.route("/near-by-shop-v2").get(fetchStoresNearByV2);
 router.route("/change-password").put(store, changePassword);
 router.route("/otp-send-forgot-password").post(forgotPasswordOtpSendToPhone);
 router.route("/otp-verify-forgot-password").post(OtpVerify);
