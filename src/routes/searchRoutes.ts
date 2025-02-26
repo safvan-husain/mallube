@@ -12,8 +12,16 @@ const searchStoresByProductNameV2 = asyncHandler(
     async (req: Request, res: Response) => {
         try {
             let productName: any = req.query.searchTerm;
-            const { latitude, longitude, lastId, limit, lastDistance } = req.query;
+            var { latitude, longitude, limit, skip } = req.query;
 
+            if(!limit) {
+                limit = '30';
+            }
+
+            if(!skip) {
+                skip = '0';
+            }
+            
             if (!productName) {
                 res.status(400).json({ message: "Product name is required" });
             }
@@ -124,31 +132,11 @@ const searchStoresByProductNameV2 = asyncHandler(
                 }
             });
 
-            
-
-            // Pagination filter based on distance and _id
-            if (lastDistance && lastId && limit) {
-                pipeline.push(
-                    {
-                        $match: {
-                            $or: [
-                                { distance: { $gt: parseFloat(lastDistance as string) } },
-                                { distance: parseFloat(lastDistance as string), _id: { $gt: lastId } }
-                            ]
-                        }
-                    }
-                );
-            }
-
-            if (limit) {
-                pipeline.push({ $limit: parseInt(limit as string) });
-            }
-
-
-
             const stores = await Store.aggregate([
                 ...pipeline,
                 { $sort: { distance: 1, _id: 1 } },
+                { $limit: parseInt(limit as string) },
+                { $skip: parseInt(skip as string) },
                 {
                     $lookup: {
                         from: "categories", // Collection name for categories
