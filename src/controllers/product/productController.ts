@@ -378,8 +378,6 @@ export const fetchProductsV2 = asyncHandler(async (req: any, res: Response) => {
 
     const tProducts = await Product.find(filter).populate("store", "storeName uniqueName location")
       .sort(sortOptions)
-      .skip(skip)
-      .limit(parseInt(limit));
     const products = tProducts.filter((e) => e.store);
 
     // Get the total count of products for pagination calculation
