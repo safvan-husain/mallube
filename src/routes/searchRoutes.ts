@@ -21,7 +21,7 @@ const searchStoresByProductNameV2 = asyncHandler(
             if(!skip) {
                 skip = '0';
             }
-            
+
             if (!productName) {
                 res.status(400).json({ message: "Product name is required" });
             }
@@ -135,8 +135,8 @@ const searchStoresByProductNameV2 = asyncHandler(
             const stores = await Store.aggregate([
                 ...pipeline,
                 { $sort: { distance: 1, _id: 1 } },
-                { $limit: parseInt(limit as string) },
                 { $skip: parseInt(skip as string) },
+                { $limit: parseInt(limit as string) },
                 {
                     $lookup: {
                         from: "categories", // Collection name for categories
