@@ -28,15 +28,9 @@ import { config } from "./config/vars";
 import { periodicallyChangeStatusOfExpiredAdvertisemets } from "./controllers/advertisement/advertisementController";
 import expressAsyncHandler from "express-async-handler";
 import Store from "./models/storeModel";
-import Category from "./models/categoryModel";
 import Product from "./models/productModel";
-import Advertisement from "./models/advertisementModel";
-import AdvertisementPlan from "./models/advertismentPlanModel";
-import { CustomerBill } from "./models/customerBillModel";
-import TimeSlot from "./models/timeSlotModel";
-import User from "./models/userModel";
 import { searchRouter } from "./routes/searchRoutes";
-import Booking from "./models/bookingModel";
+import { serviceRoutes } from "./routes/serviceRoutes";
 
 const app = express();
 
@@ -127,6 +121,7 @@ app.use("/api/subscription", subscriptionRoutes);
 app.use("/api/booking", bookingRoutes);
 app.use("/api/notification", notificationRouter)
 app.use('/api/search', searchRouter);
+app.use('/api/service', serviceRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

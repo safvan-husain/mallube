@@ -49,7 +49,6 @@ router
   );
 
 
-
 router
   .route("/store/:productId")
   .get(getProductById)
