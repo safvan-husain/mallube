@@ -305,7 +305,7 @@ export const getServices = asyncHandler(
             let tServices: any[] = await Service.find(filter, {
                 name: true,
                 location: true,
-                locationName: true,
+                address: true,
                 phone: true,
             })
                 .skip(skip)
