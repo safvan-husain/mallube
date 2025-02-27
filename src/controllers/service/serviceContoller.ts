@@ -307,6 +307,7 @@ export const getServices = asyncHandler(
                 location: true,
                 address: true,
                 phone: true,
+                icon: true,
             })
                 .skip(skip)
                 .limit(limit)
