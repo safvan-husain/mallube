@@ -286,7 +286,7 @@ export const getSpecificServiceProfile = asyncHandler(
                     parseFloat(longitude as string),
                     service.location.coordinates[0],
                     service.location.coordinates[1],);
-                    service.distance = distance.toFixed(2);
+                service.distance = distance.toFixed(2);
             }
             res.status(200).json(service);
         } catch (error) {
@@ -307,14 +307,17 @@ export const getServices = asyncHandler(
             if (categories) {
                 filter = { categories: { $in: [categories] } };
             }
-            filter.location = {
-                $near: {
-                    $geometry: {
-                        type: "Point",
-                        coordinates: [latitude, longitude],
+            if (latitude && longitude) {
+                filter.location = {
+                    $near: {
+                        $geometry: {
+                            type: "Point",
+                            coordinates: [latitude, longitude],
+                        },
                     },
-                },
-            };
+                };
+            }
+
 
             let tServices: any[] = await Service.find(filter, {
                 name: true,
@@ -328,13 +331,14 @@ export const getServices = asyncHandler(
                 .limit(limit)
                 .populate('categories', 'name').lean();
             const services = tServices.map((e) => {
-                const distance = calculateDistance(
+
+                const distance = latitude && longitude ? calculateDistance(
                     latitude,
                     longitude, e.location.coordinates[0],
-                    e.location.coordinates[1],);
+                    e.location.coordinates[1],): 0;
                 e.distance = distance.toFixed(2);
                 e.address = e.city + ", " + e.district;
-                delete e.city;  
+                delete e.city;
                 delete e.district;
                 delete e.location;
                 return e;

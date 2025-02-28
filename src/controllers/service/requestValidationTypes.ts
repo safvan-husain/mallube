@@ -9,11 +9,11 @@ export const getServicesQuerySchema = z.object({
     latitude: z.string()
         .refine(val => !isNaN(parseFloat(val)), {
             message: "Latitude must be a valid number"
-        }).transform(val => parseFloat(val)),
+        }).transform(val => parseFloat(val)).optional(),
     longitude: z.string()
         .refine(val => !isNaN(parseFloat(val)), {
             message: "Longitude must be a valid number"
-        }).transform(val => parseFloat(val)),
+        }).transform(val => parseFloat(val)).optional(),
     skip: z.string()
         .refine(val => !isNaN(parseInt(val)) && parseInt(val) >= 0, {
             message: "Skip must be a non-negative integer"
