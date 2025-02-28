@@ -1,23 +1,26 @@
 import { Router } from "express";
 import {
-    createService,
+    createServiceProfile,
     createServiceCategory,
-    deleteService,
+    deleteServiceProfile,
     deleteServiceCategory,
     getServiceCategory,
     getServices,
-    getSpecificService,
-    updateService,
+    getSpecificServiceProfile,
+    updateServiceProfile,
     updateServiceCategory,
     updateServiceCategoryIndex
 } from "../controllers/service/serviceContoller";
+import { serviceIndivdual } from "../middleware/auth";
 
 const router = Router();
 
 //only sned neccessary data
 router.route('/')
     .get(getServices)
-    .post(createService);
+    .post(createServiceProfile);
+
+router.route('/profile').get(serviceIndivdual ,getSpecificServiceProfile);
 
 router.route('/category')
     .get(getServiceCategory)
@@ -26,9 +29,9 @@ router.route("/category/:id")
     .put(updateServiceCategory)
     .delete(deleteServiceCategory);
 router.route("/:id")
-    .get(getSpecificService)
-    .put(updateService)
-    .delete(deleteService);
+    .get(getSpecificServiceProfile)
+    .put(updateServiceProfile)
+    .delete(deleteServiceProfile);
 router.route("/category/position/:id")
     .put(updateServiceCategoryIndex);
 

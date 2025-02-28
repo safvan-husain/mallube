@@ -1,5 +1,5 @@
-import {z} from 'zod';
-import {Types} from 'mongoose';
+import { z } from 'zod';
+import { Types } from 'mongoose';
 
 export const getServicesQuerySchema = z.object({
     categories: z.string()
@@ -45,8 +45,14 @@ export const createServiceSchema = z.object({
         message: "categoryId must be a valid MongoDB ObjectId"
     })).min(1, "At least one category is required"),
     name: z.string().min(1, "Name is required"),
+    username: z.string().min(1, "username is required"),
+    email: z.string().email().optional(),
     phone: z.string().min(10, "Phone is required with minimum 10 characters"),
+    whatsapp: z.string().min(10, "Phone is required with minimum 10 characters").optional(),
     address: z.string().min(1, "Location name is required"),
+    city: z.string().min(1, "Location name is required"),
+    district: z.string().min(1, "Location name is required"),
+    password: z.string().min(8, "Password should be at least 8 characters long"),
     latitude: z.number(),
     longitude: z.number(),
     icon: z.string().url("Icon must be a valid URL"),
@@ -55,6 +61,7 @@ export const createServiceSchema = z.object({
     startTime: z.number(),
     endTime: z.number(),
     bio: z.string().optional(),
+    workingDays: z.array(z.enum(["mon", "tue", "wed", "thu", "fri", "sat", "sun"])).default([])
 });
 
 export const updateServiceSchema = z.object({
@@ -65,7 +72,9 @@ export const updateServiceSchema = z.object({
         .optional(),
     name: z.string().min(1, "Name must not be empty").optional(),
     phone: z.string().min(10, "Phone must not be empty").optional(),
-    address: z.string().min(1, "Location name must not be empty").optional(),
+    address: z.string().min(1, "Location name is required").optional(),
+    city: z.string().min(1, "Location name is required").optional(),
+    district: z.string().min(1, "Location name is required").optional(),
     latitude: z.number().optional(),
     longitude: z.number().optional(),
     icon: z.string()
@@ -80,6 +89,9 @@ export const updateServiceSchema = z.object({
     startTime: z.number().optional(),
     endTime: z.number().optional(),
     bio: z.string().optional(),
+    workingDays: z.array(z.enum(["mon", "tue", "wed", "thu", "fri", "sat", "sun"])).optional(),
+    email: z.string().email().optional(),
+    whatsapp: z.string().min(10, "Phone is required with minimum 10 characters").optional(),
 }).refine(data => {
     // If either latitude or longitude is provided, both must be provided
     return !((data.latitude !== undefined && data.longitude === undefined) ||

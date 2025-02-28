@@ -1,10 +1,10 @@
 //this service is added by our team
-import {calculateDistance} from "../../utils/interfaces/common";
-import {Request, Response} from "express";
+import { calculateDistance } from "../../utils/interfaces/common";
+import e, { Request, Response } from "express";
 import asyncHandler from "express-async-handler";
-import {ServiceCategory} from "../../models/serviceCategoryModel";
-import {Service} from "../../models/serviceModel";
-import {z} from "zod";
+import { ServiceCategory } from "../../models/serviceCategoryModel";
+import { Service } from "../../models/serviceModel";
+import { z } from "zod";
 import {
     createServiceCategorySchema,
     createServiceSchema,
@@ -13,6 +13,7 @@ import {
     updateServiceSchema
 } from "./requestValidationTypes";
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 
 export const onCatchError = (error: any, res: Response) => {
     if (error instanceof z.ZodError) {
@@ -22,16 +23,16 @@ export const onCatchError = (error: any, res: Response) => {
         });
         return;
     }
-    res.status(500).json({message: "Internal server error", error});
+    res.status(500).json({ message: "Internal server error", error });
 }
 
 export const createServiceCategory = asyncHandler(
     async (req: Request, res: Response) => {
 
         try {
-            const {name, isShowOnHomePage, icon} = createServiceCategorySchema.parse(req.body);
+            const { name, isShowOnHomePage, icon } = createServiceCategorySchema.parse(req.body);
 
-            const largeIndexByFar = await ServiceCategory.findOne().sort({index: -1}).select('index');
+            const largeIndexByFar = await ServiceCategory.findOne().sort({ index: -1 }).select('index');
             const nextIndex = largeIndexByFar ? largeIndexByFar.index + 1 : 1;
             const serviceCategory = await ServiceCategory.create({
                 name,
@@ -49,10 +50,10 @@ export const createServiceCategory = asyncHandler(
 export const getServiceCategory = asyncHandler(
     async (_: Request, res: Response) => {
         try {
-            const serviceCategory = await ServiceCategory.find({}).sort({index: 1});
+            const serviceCategory = await ServiceCategory.find({}).sort({ index: 1 });
             res.status(201).json(serviceCategory);
         } catch (error) {
-            res.status(500).json({message: "Internal server error", error});
+            res.status(500).json({ message: "Internal server error", error });
         }
     }
 );
@@ -60,66 +61,66 @@ export const getServiceCategory = asyncHandler(
 export const updateServiceCategory = asyncHandler(
     async (req: Request, res: Response) => {
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-            res.status(400).json({message: "id must be a valid MongoDB ObjectId"});
+            res.status(400).json({ message: "id must be a valid MongoDB ObjectId" });
             return;
         }
         try {
-            const {name, isShowOnHomePage, icon} = updateServiceCategorySchema.parse(req.body);
+            const { name, isShowOnHomePage, icon } = updateServiceCategorySchema.parse(req.body);
             const serviceCategory = await ServiceCategory.findByIdAndUpdate(req.params.id, {
                 name,
                 isShowOnHomePage,
                 icon,
-            }, {new: true});
+            }, { new: true });
             if (!serviceCategory) {
-                res.status(404).json({message: "Couldn't find the category "})
+                res.status(404).json({ message: "Couldn't find the category " })
                 return;
             }
             res.status(201).json(serviceCategory);
         } catch (error) {
-            res.status(500).json({message: "Internal server error", error});
+            res.status(500).json({ message: "Internal server error", error });
         }
     }
 );
 
 export const deleteServiceCategory = asyncHandler(
     async (req: Request, res: Response) => {
-        const {id} = req.params;
+        const { id } = req.params;
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            res.status(400).json({message: "id must be a valid MongoDB ObjectId"});
+            res.status(400).json({ message: "id must be a valid MongoDB ObjectId" });
             return;
         }
         try {
             let result = await ServiceCategory.findByIdAndDelete(id);
             if (!result) {
-                res.status(404).json({message: "Couldn't find the category "})
+                res.status(404).json({ message: "Couldn't find the category " })
                 return;
             }
-            res.status(201).json({message: "Service category deleted successfully"});
+            res.status(201).json({ message: "Service category deleted successfully" });
         } catch (error) {
-            res.status(500).json({message: "Internal server error", error});
+            res.status(500).json({ message: "Internal server error", error });
         }
     }
 );
 
 export const updateServiceCategoryIndex = asyncHandler(
     async (req: Request, res: Response) => {
-        const {id} = req.body;
-        const {index} = req.body;
+        const { id } = req.body;
+        const { index } = req.body;
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            res.status(400).json({message: "id must be a valid MongoDB ObjectId"});
+            res.status(400).json({ message: "id must be a valid MongoDB ObjectId" });
             return;
         }
         if (!index || isNaN(index)) {
-            res.status(400).json({message: "Index must be a number"});
+            res.status(400).json({ message: "Index must be a number" });
             return;
         }
         try {
-            var cat = await ServiceCategory.findById(id);
+            let cat = await ServiceCategory.findById(id);
             if (!cat) {
-                res.status(400).json({message: "Service category not found"});
+                res.status(400).json({ message: "Service category not found" });
                 return;
             }
-            var tServiceCategory = await ServiceCategory.findOne({index});
+            let tServiceCategory = await ServiceCategory.findOne({ index });
             if (tServiceCategory) {
                 tServiceCategory.index = cat.index;
                 await tServiceCategory.save();
@@ -127,90 +128,90 @@ export const updateServiceCategoryIndex = asyncHandler(
             }
             cat.index = index;
             cat = await cat.save();
-            res.status(201).json({message: "Service category index updated successfully", category: cat});
+            res.status(201).json({ message: "Service category index updated successfully", category: cat });
         } catch (error) {
-            res.status(500).json({message: "Internal server error", error});
+            res.status(500).json({ message: "Internal server error", error });
         }
     }
 );
 
-export const createService = asyncHandler(
+export const createServiceProfile = asyncHandler(
     async (req: Request, res: Response) => {
         try {
             const validatedData = createServiceSchema.parse(req.body);
 
-
-            const isExist = await Service.findOne({phone: validatedData.phone});
+            const isExist = await Service.findOne({ $or: [{ phone: validatedData.phone }, { username: validatedData.username }] });
             if (isExist) {
-                res.status(401).json({message: "A service person with same number exist"});
+                let existingField = "";
+                if (isExist.phone === validatedData.phone) {
+                    existingField = "phone";
+                } else {
+                    existingField = "username";
+                }
+                res.status(401).json({ message: `A service person with same ${existingField} exist` });
                 return;
             }
+            const hashedPassword: string =
+                await bcrypt.hash(validatedData.password, 10);
+            validatedData.password = hashedPassword;
 
-            const updateData: any = {...validatedData};
-
-            // If coordinates are being updated, update the location object
-            if (validatedData.latitude !== undefined && validatedData.longitude !== undefined) {
-                updateData.location = {
-                    type: "Point",
-                    coordinates: [validatedData.latitude, validatedData.longitude]
-                };
-
-                // Remove individual coordinate fields from update object
-                delete updateData.latitude;
-                delete updateData.longitude;
-            }
-
-            if (updateData.categoryId) {
-                updateData.categoryId = new mongoose.Types.ObjectId(updateData.categoryId);
-            }
+            let updateData = getServiceConvertedDataFromRequestData(validatedData);
+            updateData.hashedPassword = hashedPassword;
 
             let service = new Service(updateData);
             service = await service.save();
-            res.status(201).json(service);
+            const authToken = service.generateAuthToken();
+            res.status(201).json({ authToken });
         } catch (error) {
             onCatchError(error, res);
         }
     }
 );
 
-// Update a service
-export const updateService = asyncHandler(
+export const loginServiceProfile = asyncHandler(
     async (req: Request, res: Response) => {
         try {
-            const {id} = req.params;
+            const { username, password } = req.body;
+            const service = await Service.findOne({ $or: [{ phone: username }, { username }] });
+            if (!service) {
+                res.status(401).json({ message: "Invalid username or password" });
+                return;
+            }
+            const isMatch = await bcrypt.compare(password, service.hashedPassword);
+            if (!isMatch) {
+                res.status(401).json({ message: "Invalid username or password" });
+                return;
+            }
+            const authToken = service.generateAuthToken();
+            res.status(200).json({ authToken });
+        } catch (error) {
+            onCatchError(error, res);
+        }
+    });
+
+// Update a service
+export const updateServiceProfile = asyncHandler(
+    async (req: Request, res: Response) => {
+        try {
+            const { id } = req.params;
             if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-                res.status(400).json({message: "id must be a valid MongoDB ObjectId"});
+                res.status(400).json({ message: "id must be a valid MongoDB ObjectId" });
                 return;
             }
             const validatedData = updateServiceSchema.parse(req.body);
 
             // Prepare update object
-            const updateData: any = {...validatedData};
+            const updateData = getServiceConvertedDataFromRequestData(validatedData);
 
-            // If coordinates are being updated, update the location object
-            if (validatedData.latitude !== undefined && validatedData.longitude !== undefined) {
-                updateData.location = {
-                    type: "Point",
-                    coordinates: [validatedData.latitude, validatedData.longitude]
-                };
-
-                // Remove individual coordinate fields from update object
-                delete updateData.latitude;
-                delete updateData.longitude;
-            }
-
-            if (updateData.categoryId) {
-                updateData.categoryId = new mongoose.Types.ObjectId(updateData.categoryId);
-            }
 
             const updatedService = await Service.findByIdAndUpdate(
                 id,
-                {$set: updateData},
-                {new: true, runValidators: true}
+                { $set: updateData },
+                { new: true, runValidators: true }
             );
 
             if (!updatedService) {
-                res.status(404).json({message: "Service not found"});
+                res.status(404).json({ message: "Service not found" });
                 return;
             }
 
@@ -222,42 +223,43 @@ export const updateService = asyncHandler(
 );
 
 // Delete a service
-export const deleteService = asyncHandler(
+export const deleteServiceProfile = asyncHandler(
     async (req: Request, res: Response) => {
         try {
-            const {id} = req.params;
+            const { id } = req.params;
             if (!mongoose.Types.ObjectId.isValid(id)) {
-                res.status(400).json({message: "param (id) must be a valid MongoDB ObjectId"});
+                res.status(400).json({ message: "param (id) must be a valid MongoDB ObjectId" });
                 return;
             }
             const deletedService = await Service.findByIdAndDelete(id);
             if (!deletedService) {
-                res.status(404).json({message: "Service not found"});
+                res.status(404).json({ message: "Service not found" });
                 return;
             }
-            res.status(200).json({message: "Service deleted successfully"});
+            res.status(200).json({ message: "Service deleted successfully" });
         } catch (error) {
-            res.status(500).json({message: "Internal server error", error});
+            res.status(500).json({ message: "Internal server error", error });
         }
     }
 );
 
 
-export const getSpecificService = asyncHandler(
-    async (req: Request, res: Response) => {
-        const {id} = req.params;
-        const {latitude, longitude} = req.query;
-        if (!latitude || !longitude) {
-            res.status(400).json({message: "latitude and longitude required"});
-            return;
+export const getSpecificServiceProfile = asyncHandler(
+    async (req: any, res: Response) => {
+        //using both param and req so it can be used both for staff/admin and individual.
+        let { id } = req.params;
+        if (!id) {
+            id = req.requester._id;;
         }
+
         try {
             if (!mongoose.Types.ObjectId.isValid(id)) {
-                res.status(401).json({message: "id must be a valid MongoDB ObjectId"});
+                res.status(401).json({ message: "id must be a valid MongoDB ObjectId" });
                 return;
             }
             let service: any = await Service.findById(id, {
                 name: true,
+                username: true,
                 location: true,
                 address: true,
                 phone: true,
@@ -266,15 +268,27 @@ export const getSpecificService = asyncHandler(
                 startTime: true,
                 endTime: true,
                 bio: true,
+                city: true,
+                district: true,
+                icon: true,
+                workingDays: true,
+                whatsapp: true,
+                email: true,
             })
                 .populate('categories', 'name').lean();
-            let distance = calculateDistance(
-                parseFloat(latitude as string),
-                parseFloat(longitude as string),
-                service.location.coordinates[0],
-                service.location.coordinates[1],);
-            service.distance = distance.toFixed(2);
-            res.json(service);
+
+            const { latitude, longitude } = req.query;
+
+            //if latitude and longitude are provided, calculate distance (used for users)
+            if (latitude && longitude) {
+                let distance = calculateDistance(
+                    parseFloat(latitude as string),
+                    parseFloat(longitude as string),
+                    service.location.coordinates[0],
+                    service.location.coordinates[1],);
+                    service.distance = distance.toFixed(2);
+            }
+            res.status(200).json(service);
         } catch (error) {
             console.log(error)
             onCatchError(error, res);
@@ -288,10 +302,10 @@ export const getServices = asyncHandler(
 
         try {
             const validatedQuery = getServicesQuerySchema.parse(req.query);
-            const {categories, latitude, longitude, skip, limit} = validatedQuery;
+            const { categories, latitude, longitude, skip, limit } = validatedQuery;
             let filter: any = {};
             if (categories) {
-                filter = {categories: {$in: [categories]}};
+                filter = { categories: { $in: [categories] } };
             }
             filter.location = {
                 $near: {
@@ -327,3 +341,25 @@ export const getServices = asyncHandler(
         }
     }
 );
+
+function getServiceConvertedDataFromRequestData(validatedData: any) {
+    const updateData: any = { ...validatedData };
+    delete updateData.password;
+
+    // If coordinates are being updated, update the location object
+    if (validatedData.latitude !== undefined && validatedData.longitude !== undefined) {
+        updateData.location = {
+            type: "Point",
+            coordinates: [validatedData.latitude, validatedData.longitude]
+        };
+
+        // Remove individual coordinate fields from update object
+        delete updateData.latitude;
+        delete updateData.longitude;
+    }
+
+    if (updateData.categoryId) {
+        updateData.categoryId = new mongoose.Schema.ObjectId(updateData.categoryId);
+    }
+    return updateData;
+}

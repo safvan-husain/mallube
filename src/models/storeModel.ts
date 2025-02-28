@@ -2,7 +2,7 @@ import { Schema, model, Document } from "mongoose";
 import jwt from "jsonwebtoken";
 import { config } from "../config/vars";
 
-type WorkingDay = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+export type WorkingDay = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 //TODO: suggest the feature to dynamiclly showing the available service type in the front-end.
 type ServiceType = 'salon, beauty parlour & spa' | 'other' ;
 
