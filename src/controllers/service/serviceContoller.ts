@@ -319,7 +319,8 @@ export const getServices = asyncHandler(
             let tServices: any[] = await Service.find(filter, {
                 name: true,
                 location: true,
-                address: true,
+                city: true,
+                district: true,
                 phone: true,
                 icon: true,
             })
@@ -332,6 +333,10 @@ export const getServices = asyncHandler(
                     longitude, e.location.coordinates[0],
                     e.location.coordinates[1],);
                 e.distance = distance.toFixed(2);
+                e.address = e.city + ", " + e.district;
+                delete e.city;  
+                delete e.district;
+                delete e.location;
                 return e;
             })
             res.json(services);
