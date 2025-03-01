@@ -101,6 +101,8 @@ const productSchema = new Schema<IProduct>(
 
 // Middleware to set the product's location from its store
 productSchema.pre('save', async function (next) {
+  console.log('on pre save with ', this);
+  
   // Check if the store field is modified or this is a new product
   if (this.store) {
     if (this.isModified('store') || this.isNew) {
@@ -123,6 +125,10 @@ productSchema.pre('save', async function (next) {
 
       // Set the product's location to the store's location
       this.location = individual.location;
+      console.log("this location");
+      
+    } else {
+      throw new Error("Not store or individual");
     }
   }
 

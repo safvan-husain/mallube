@@ -109,18 +109,44 @@ export const addProduct = asyncHandler(
       if (rest.offerPrice == null) {
         rest.offerPrice = 0;
       }
+      let location;
 
-      const product = new Product({
-        isPending,
-        ...rest,
-      });
+      if (rest.store) {
+          const store = await Store.findById(rest.store, { location: 1 });
+          if (!store) {
+            throw new Error('Store not found');
+          }
 
-      var newProduct = await (await product.save()).populate("category");
-      res.status(201).json(newProduct);
-    } catch (error) {
-      onCatchError(error, res);
+          // Set the product's location to the store's location
+          location = store.location;
+        }
+       else if (rest.individual) {
+          // Fetch the associated store
+          const individual = await Service.findById(rest.individual);
+          if (!individual) {
+            throw new Error('Individual not found');
+          }
+
+          // Set the product's location to the store's location
+          location = individual.location;
+          console.log("this location");
+
+        } else {
+          throw new Error("Not store or individual");
+        }
+
+        const product = new Product({
+          isPending,
+          location,
+          ...rest,
+        });
+
+        var newProduct = await (await product.save()).populate("category");
+        res.status(201).json(newProduct);
+      } catch (error) {
+        onCatchError(error, res);
+      }
     }
-  }
 );
 
 // update product

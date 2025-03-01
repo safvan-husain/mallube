@@ -178,14 +178,18 @@ export const loginServiceProfile = asyncHandler(
                 res.status(401).json({ message: "Invalid username or password" });
                 return;
             }
-            const isMatch = await bcrypt.compare(password, service.hashedPassword);
+            const isMatch = await bcrypt.compare(password, service.hashedPassword ?? "");
             if (!isMatch) {
                 res.status(401).json({ message: "Invalid username or password" });
                 return;
             }
+            console.log("recieved");
+            
             const authToken = service.generateAuthToken();
             res.status(200).json({ authToken });
         } catch (error) {
+            console.log(error);
+            
             onCatchError(error, res);
         }
     });
