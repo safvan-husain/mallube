@@ -30,7 +30,7 @@ import expressAsyncHandler from "express-async-handler";
 import Store from "./models/storeModel";
 import Product from "./models/productModel";
 import { searchRouter } from "./routes/searchRoutes";
-import { serviceRoutes } from "./routes/serviceRoutes";
+import { individualBussinessRoutes } from "./routes/individualBussinessRoutes";
 
 const app = express();
 
@@ -121,7 +121,7 @@ app.use("/api/subscription", subscriptionRoutes);
 app.use("/api/booking", bookingRoutes);
 app.use("/api/notification", notificationRouter)
 app.use('/api/search', searchRouter);
-app.use('/api/service', serviceRoutes);
+app.use('/api/service', individualBussinessRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

@@ -6,6 +6,8 @@ export interface ICategory extends Document {
   parentId: Schema.Types.ObjectId;
   isActive: boolean;
   isPending: boolean;
+  isEnabledForStore: boolean;
+  isEnabledForIndividual: boolean;
   isShowOnHomePage: boolean;
   icon: string;
   isDeclined:boolean;
@@ -46,7 +48,15 @@ const categorySchema = new Schema<ICategory>(
     },
     subCategoryType: {
       type: String,
-    }
+    },
+    isEnabledForStore: {
+      type: Boolean,
+      default: false,
+    },
+    isEnabledForIndividual: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

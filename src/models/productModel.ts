@@ -8,7 +8,8 @@ export interface IProduct extends Document {
   price: number;
   offerPrice?: number;
   category: Schema.Types.ObjectId;
-  store: Schema.Types.ObjectId;
+  store?: Schema.Types.ObjectId;
+  individual?: Schema.Types.ObjectId;
   isActive: boolean; // controlled by admin
   isAvailable: boolean; // conrolled by admin/staff
   isPending: boolean;
@@ -49,7 +50,12 @@ const productSchema = new Schema<IProduct>(
     store: {
       type: Schema.Types.ObjectId,
       ref: "stores",
-      required: true,
+      required: false,
+    },
+    individual: {
+      type: Schema.Types.ObjectId,
+      ref: "services",
+      required: false,
     },
     isActive: {
       type: Boolean,

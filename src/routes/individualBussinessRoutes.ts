@@ -9,16 +9,19 @@ import {
     getSpecificServiceProfile,
     updateServiceProfile,
     updateServiceCategory,
-    updateServiceCategoryIndex
+    updateServiceCategoryIndex,
+    loginServiceProfile
 } from "../controllers/service/serviceContoller";
 import { serviceIndivdual } from "../middleware/auth";
+import { addProduct } from "../controllers/product/productController";
 
 const router = Router();
 
 //only sned neccessary data
 router.route('/')
-    .get(getServices)
-    .post(createServiceProfile);
+    .get(getServices);
+router.route('/login').post(loginServiceProfile);
+router.route('/register').post(createServiceProfile);
 
 router.route('/profile').get(serviceIndivdual ,getSpecificServiceProfile);
 
@@ -35,4 +38,6 @@ router.route("/:id")
 router.route("/category/position/:id")
     .put(updateServiceCategoryIndex);
 
-export { router as serviceRoutes };
+router.route('/product').post(serviceIndivdual, addProduct);
+
+export { router as individualBussinessRoutes };

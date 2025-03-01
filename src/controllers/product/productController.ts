@@ -25,6 +25,8 @@ import { s3 } from "../../config/s3";
 import { config } from "../../config/vars";
 import User from "../../models/userModel";
 import { store } from "../../middleware/auth";
+import { addProductSchema } from "./validators";
+import { onCatchError } from "../service/serviceContoller";
 
 // get all products
 export const getAllProducts = asyncHandler(
@@ -57,62 +59,69 @@ export const getAllSubCategories = asyncHandler(
   }
 );
 
-// adding products for a shop
+// adding products for a shop / individual
 export const addProduct = asyncHandler(
   async (
-    req: ICustomRequest<IAddProductSchema>,
+    req: ICustomRequest<any>,
     res: Response
   ): Promise<any> => {
-    var { isPending, ...rest } = req.body;
-    if (rest.store == undefined) {
-      rest.store = req.store?._id ?? req.params.storeId;
-    }
-    //TODO need to remove.
-    if (rest.category == undefined || rest.category == null || rest.category.length == 0) {
-      console.log("category", rest.category);
-      rest.category = "668c25b3deec29b038e1fc25";
-    }
-    if (req.store == undefined && isPending) { // through bussiness app, we would only choose available category, so no need for isPending, authToken passing from mobile side
-      let storeId = req.params.storeId;
-      const storeDetails = await Store.findById(storeId);
-      if (!storeDetails) {
-        return res.status(404).json({ message: "Store not found" });
+    try {
+      var { isPending, ...rest } = addProductSchema.parse(req.body);
+      if (!rest.store) {
+        rest.store = req.store?._id ?? req.params.storeId;
+      }
+      if (!rest.store) {
+        rest.individual = req.individual?._id;
+      }
+      //TODO need to remove.
+      if (rest.category == undefined || rest.category == null || rest.category.length == 0) {
+        console.log("category", rest.category);
+        rest.category = "668c25b3deec29b038e1fc25";
+      }
+      if (req.store == undefined && isPending) { // through bussiness app, we would only choose available category, so no need for isPending, authToken passing from mobile side
+        let storeId = req.params.storeId;
+        const storeDetails = await Store.findById(storeId);
+        if (!storeDetails) {
+          return res.status(404).json({ message: "Store not found" });
+        }
+
+
+        const storeCategory: any = storeDetails.category; /* req.storeId */
+        const isDuplicate = await isDuplicateCategory(
+          rest.category,
+          storeCategory
+        );
+        if (isDuplicate)
+          return res
+            .status(409)
+            .json({ message: "Duplicate Category Requested" });
+        const categoryId = await Category.create({
+          name: rest.category,
+          parentId: storeCategory,
+          isActive: true,
+          isPending: true,
+          isShowOnHomePage: false,
+        });
+        rest.category = categoryId._id;
+      }
+      const store = req.params.storeId;
+      //TODO: correct on the flutter app.
+      if (rest.offerPrice == null) {
+        rest.offerPrice = 0;
       }
 
 
-      const storeCategory: any = storeDetails.category; /* req.storeId */
-      const isDuplicate = await isDuplicateCategory(
-        rest.category,
-        storeCategory
-      );
-      if (isDuplicate)
-        return res
-          .status(409)
-          .json({ message: "Duplicate Category Requested" });
-      const categoryId = await Category.create({
-        name: rest.category,
-        parentId: storeCategory,
-        isActive: true,
-        isPending: true,
-        isShowOnHomePage: false,
+      const product = new Product({
+        isPending,
+        store,
+        ...rest,
       });
-      rest.category = categoryId._id;
+
+      var newProduct = await (await product.save()).populate("category");
+      res.status(201).json(newProduct);
+    } catch (error) {
+      onCatchError(error, res);
     }
-    const store = req.params.storeId;
-    //TODO: correct on the flutter app.
-    if (rest.offerPrice == null) {
-      rest.offerPrice = 0;
-    }
-
-
-    const product = new Product({
-      isPending,
-      store,
-      ...rest,
-    });
-
-    var newProduct = await (await product.save()).populate("category");
-    res.status(201).json(newProduct);
   }
 );
 
@@ -252,6 +261,9 @@ export const fetchProducts = asyncHandler(async (req: any, res: Response) => {
 
     if (storeId) {
       filter["store"] = storeId;
+    } else {
+      //since there might be prodict which don't have store, this api used in search products by category/ storeId.
+      filter["store"] = { $exists: true };
     }
     if (category) {
       filter["category"] = category;
@@ -332,6 +344,8 @@ export const fetchProductsV2 = asyncHandler(async (req: any, res: Response) => {
 
     if (storeId) {
       filter["store"] = storeId;
+    } else {
+      filter["store"] = { $exists: true };
     }
     if (category) {
       filter["category"] = category;
@@ -370,12 +384,6 @@ export const fetchProductsV2 = asyncHandler(async (req: any, res: Response) => {
       sortOptions["price"] = -1;
     }
 
-    // Calculate the skip value for pagination
-    const skip = (page - 1) * limit;
-
-    console.log(await Product.find({ store: storeId }));
-
-
     const tProducts = await Product.find(filter).populate("store", "storeName uniqueName location")
       .sort(sortOptions)
     const products = tProducts.filter((e) => e.store);
@@ -406,16 +414,17 @@ export const getNearbyProductsWithOffer = asyncHandler(
         return res.status(400).json({ message: "Longitude and latitude are required" });
       }
 
-      if(!limit) {
+      if (!limit) {
         limit = '80';
       }
 
-      if(!skip) {
+      if (!skip) {
         skip = '0';
       }
 
       const products2 = await Product.find({
         offerPrice: { $exists: true, $gt: 0 },
+        store: { $exists: true },
         isActive: true,
         isAvailable: true,
         location: {

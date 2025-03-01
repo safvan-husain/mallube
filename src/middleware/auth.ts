@@ -161,6 +161,7 @@ export const serviceIndivdual = asyncHandler(
 
       req.requester = await Service.findById(decoded._id).select("-password");
       if (!req.requester) throw new Error("user is not found");
+      req.individual = req.requester;
 
       next();
     } catch (error) {

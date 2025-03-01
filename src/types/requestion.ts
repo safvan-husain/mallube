@@ -5,4 +5,7 @@ export interface ICustomRequest<T> extends Request {
   store?: {
     _id: string
   };
+  individual?: {
+    _id: string
+  }
 }

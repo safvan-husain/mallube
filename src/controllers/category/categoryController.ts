@@ -17,6 +17,8 @@ import {
 import { Types } from "mongoose";
 import Product from "../../models/productModel";
 import Store from "../../models/storeModel";
+import { addCategorySchema } from "./validations";
+import { onCatchError } from "../service/serviceContoller";
 
 // get all categories for admin category management
 export const getCategories = asyncHandler(
@@ -57,12 +59,9 @@ export const getActiveSubCategories = asyncHandler(
 
 // adding category for admin and staff
 export const addCategory = asyncHandler(
-  async (req: ICustomRequest<IAddCategorySchema>, res: Response) => {
-    console.log("create category");
-
+  async (req: ICustomRequest<any>, res: Response) => {
     try {
-
-      const { name, parentId, isActive, icon, categorySubType: subCategoryType } = req.body;
+      const { name, parentId, isActive, icon, categorySubType: subCategoryType } = addCategorySchema.parse(req.body);
       let isPending = true;
       const { isAdmin } = req.query;
       if (isAdmin) {
@@ -73,12 +72,10 @@ export const addCategory = asyncHandler(
       if (isDuplicate) res.status(409).json("Duplicate Category");
       else {
         await Category.create({ name, parentId, isActive, icon, isPending, subCategoryType });
-
         res.status(201).json({ message: "ok" });
       }
     } catch (error) {
-      console.log(error);
-
+      onCatchError(error, res);
     }
   }
 );
