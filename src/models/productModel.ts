@@ -1,5 +1,6 @@
 import { Schema, model, Document } from "mongoose";
 import Store from "./storeModel";
+import { Service } from "./serviceModel";
 
 export interface IProduct extends Document {
   name: string;
@@ -101,16 +102,31 @@ const productSchema = new Schema<IProduct>(
 // Middleware to set the product's location from its store
 productSchema.pre('save', async function (next) {
   // Check if the store field is modified or this is a new product
-  if (this.isModified('store') || this.isNew) {
-    // Fetch the associated store
-    const store = await Store.findById(this.store);
-    if (!store) {
-      throw new Error('Store not found');
-    }
+  if (this.store) {
+    if (this.isModified('store') || this.isNew) {
+      // Fetch the associated store
+      const store = await Store.findById(this.store);
+      if (!store) {
+        throw new Error('Store not found');
+      }
 
-    // Set the product's location to the store's location
-    this.location = store.location;
+      // Set the product's location to the store's location
+      this.location = store.location;
+    }
+  } else if (this.individual) {
+    if(this.isModified('individual') || this.isNew) {
+      // Fetch the associated store
+      const individual = await Service.findById(this.individual);
+      if (!individual) {
+        throw new Error('Store not found');
+      }
+
+      // Set the product's location to the store's location
+      this.location = individual.location;
+    }
   }
+
+
   next();
 });
 

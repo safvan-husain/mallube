@@ -27,6 +27,7 @@ import User from "../../models/userModel";
 import { store } from "../../middleware/auth";
 import { addProductSchema } from "./validators";
 import { onCatchError } from "../service/serviceContoller";
+import { Service } from "../../models/serviceModel";
 
 // get all products
 export const getAllProducts = asyncHandler(
@@ -104,16 +105,13 @@ export const addProduct = asyncHandler(
         });
         rest.category = categoryId._id;
       }
-      const store = req.params.storeId;
       //TODO: correct on the flutter app.
       if (rest.offerPrice == null) {
         rest.offerPrice = 0;
       }
 
-
       const product = new Product({
         isPending,
-        store,
         ...rest,
       });
 

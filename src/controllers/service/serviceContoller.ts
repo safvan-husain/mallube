@@ -14,6 +14,7 @@ import {
 } from "./requestValidationTypes";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
+import Product from "../../models/productModel";
 
 export const onCatchError = (error: any, res: Response) => {
     if (error instanceof z.ZodError) {
@@ -288,6 +289,8 @@ export const getSpecificServiceProfile = asyncHandler(
                     service.location.coordinates[1],);
                 service.distance = distance.toFixed(2);
             }
+            const products = await Product.find({ individual: service._id })
+            service.products = products;     
             res.status(200).json(service);
         } catch (error) {
             console.log(error)
