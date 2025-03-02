@@ -79,11 +79,11 @@ export const staff = asyncHandler(
 
 export const store = asyncHandler(
   async (req: any | any, res: Response, next: NextFunction) => {
-    req.store = {
-      _id: "679885303439aafbc2626e1b"
-    };
-    next();
-    return;
+    // req.store = {
+    //   _id: "679885303439aafbc2626e1b"
+    // };
+    // next();
+    // return;
     let token = req.headers.authorization;
 
 
