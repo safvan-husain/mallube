@@ -33,8 +33,8 @@ export async function getCategoriesInFormat({ isActive = false }) {
   } = {
     $match: {
       parentId: { $exists: false },
-      isPending:false,
-      isDeclined:false
+      isPending: false,
+      isDeclined: false
     },
   };
 
@@ -58,16 +58,20 @@ export async function getCategoriesInFormat({ isActive = false }) {
         isActive: 1,
         icon: 1,
         isShowOnHomePage: 1,
+        isEnabledForIndividual: 1,
+        isEnabledForStore: 1,
         subcategories: {
           $map: {
             input: {
               $filter: {
                 input: "$subcategories",
                 as: "subcategory",
-                cond: { $and: [
-                  { $eq: ["$$subcategory.isPending", false] },
-                  { $eq: ["$$subcategory.isDeclined", false] }
-                ] },
+                cond: {
+                  $and: [
+                    { $eq: ["$$subcategory.isPending", false] },
+                    { $eq: ["$$subcategory.isDeclined", false] }
+                  ]
+                },
               },
             },
             as: "subcategory",
@@ -77,6 +81,8 @@ export async function getCategoriesInFormat({ isActive = false }) {
               isActive: "$$subcategory.isActive",
               icon: "$$subcategory.icon",
               subType: "$$subcategory.subCategoryType",
+              isEnabledForIndividual: "$$subcategory.isEnabledForIndividual",
+              isEnabledForStore: "$$subcategory.isEnabledForStore",
             },
           },
         },

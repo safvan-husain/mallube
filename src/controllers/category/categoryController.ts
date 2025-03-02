@@ -5,6 +5,7 @@ import Category from "../../models/categoryModel";
 import {
   IAddCategorySchema,
   IUpdateCategorySchema,
+  updateCategorySchema,
 } from "../../schemas/category.schemas";
 import { ICustomRequest } from "../../types/requestion";
 import {
@@ -17,14 +18,12 @@ import {
 import { Types } from "mongoose";
 import Product from "../../models/productModel";
 import Store from "../../models/storeModel";
-import { addCategorySchema } from "./validations";
+import { addCategorySchema, updateCategorySchemaV2 } from "./validations";
 import { onCatchError } from "../service/serviceContoller";
 
 // get all categories for admin category management
 export const getCategories = asyncHandler(
   async (req: Request, res: Response) => {
-    console.log("got call to get categories", req.query);
-
     const categories = await getCategoriesInFormat({
       isActive: Boolean(req.query.isActive),
     });
@@ -61,7 +60,8 @@ export const getActiveSubCategories = asyncHandler(
 export const addCategory = asyncHandler(
   async (req: ICustomRequest<any>, res: Response) => {
     try {
-      const { name, parentId, isActive, icon, categorySubType: subCategoryType } = addCategorySchema.parse(req.body);
+      const { name, parentId, isActive, icon, categorySubType: subCategoryType,
+        isEnabledForIndividual, isEnabledForStore, } = await addCategorySchema.parseAsync(req.body);
       let isPending = true;
       const { isAdmin } = req.query;
       if (isAdmin) {
@@ -71,7 +71,10 @@ export const addCategory = asyncHandler(
 
       if (isDuplicate) res.status(409).json("Duplicate Category");
       else {
-        await Category.create({ name, parentId, isActive, icon, isPending, subCategoryType });
+        await Category.create({
+          name, parentId, isActive, icon, isPending,
+          subCategoryType, isEnabledForIndividual, isEnabledForStore
+        });
         res.status(201).json({ message: "ok" });
       }
     } catch (error) {
@@ -96,38 +99,31 @@ export const getStoreSubCategories = asyncHandler(
 
 // update category
 export const updateCategory = asyncHandler(
-  async (req: ICustomRequest<IUpdateCategorySchema>, res: Response) => {
+  async (req: ICustomRequest<any>, res: Response) => {
     const { id } = req.params;
+    try {
+      const { categorySubType: subCategoryType,  ...rest } = await updateCategorySchemaV2.parseAsync(req.body);
 
-    const { isPending, parentId, ...rest } = req.body;
-    const updatedParentId = new Types.ObjectId(parentId);
+      if (!Types.ObjectId.isValid(id)) {
+        res.status(404).json({ message: "Invalid category id" });
+      } else {
+        const category = await Category.findByIdAndUpdate(id, {
+          subCategoryType,
+          ...rest,
+        });
 
-    if (!Types.ObjectId.isValid(id)) {
-      res.status(404).json({ message: "Invalid category id" });
-    } else {
-      const category = await Category.findByIdAndUpdate(id, {
-        isPending,
-        ...rest,
-      });
-
-      if (!isPending) {
-        if (Types.ObjectId.isValid(updatedParentId)) {
-          const parent = await Category.findById(updatedParentId)
-          if (parent) {
-            let icon = parent.icon
-            await Category.findByIdAndUpdate(id, { isPending, ...rest, parentId: updatedParentId, icon: icon })
-          }
-          await Product.updateMany({ category: id }, { isPending: false });
+        if (category) {
+          res.status(200).json("Product has been updated");
+        } else {
+          res.status(404).json({ message: "Invalid category id" });
         }
       }
-      if (category) {
-        res.status(200).json("Product has been updated");
-      } else {
-        res.status(404).json({ message: "Invalid category id" });
-      }
+    } catch (error) {
+      onCatchError(error, res);
     }
   }
 );
+
 export const deleteCategory = asyncHandler(
   async (req: Request, res: Response) => {
     const { id } = req.params;
@@ -147,8 +143,8 @@ export const deleteCategoryPermenently = asyncHandler(
     const { categoryId } = req.query;
     try {
       await Category.findByIdAndDelete(categoryId);
-      await Category.deleteMany({ parentId: categoryId});
-      res.status(200).json({ message: "Successfully deleted"});
+      await Category.deleteMany({ parentId: categoryId });
+      res.status(200).json({ message: "Successfully deleted" });
     } catch (error) {
       res.status(500)
     }

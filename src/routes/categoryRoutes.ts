@@ -38,7 +38,7 @@ router.route("/main").get(getActiveMainCategories);
 router
   .route("/:id")
   .get(getActiveSubCategories)
-  .put(validateData(updateCategorySchema), updateCategory)
+  .put(updateCategory)
   .delete(deleteCategory);
 // router
 //   .route("/:id")
