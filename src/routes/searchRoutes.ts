@@ -327,7 +327,7 @@ const searchFreelancerByProductNameV2 = asyncHandler(
                 {
                     $project: {
                         name: { $ifNull: ["$name", "Unnamed Store"] },
-                        bio: { $ifNull: ["$bio", ""] },
+                        // bio: { $ifNull: ["$bio", ""] },
                         // address: { $ifNull: ["$address", "No address provided"] },
                         "address": {
                             "$concat": [
@@ -336,16 +336,16 @@ const searchFreelancerByProductNameV2 = asyncHandler(
                                 { "$ifNull": ["$district", "Unknown District"] },
                             ]
                         },
-                        openTime: { $ifNull: ["$openTime", 0] }, // Example default
-                        closeTime: { $ifNull: ["$closeTime", 0] }, // Example default
-                        instagramUrl: { $ifNull: ["$instagramUrl", ""] },
-                        facebookUrl: { $ifNull: ["$facebookUrl", ""] },
-                        whatsapp: { $ifNull: ["$whatsapp", ""] },
+                        // openTime: { $ifNull: ["$openTime", 0] }, // Example default
+                        // closeTime: { $ifNull: ["$closeTime", 0] }, // Example default
+                        // instagramUrl: { $ifNull: ["$instagramUrl", ""] },
+                        // facebookUrl: { $ifNull: ["$facebookUrl", ""] },
+                        // whatsapp: { $ifNull: ["$whatsapp", ""] },
                         phone: { $ifNull: ["$phone", ""] },
                         icon: { $ifNull: ["$icon", ""] },
-                        service: { $ifNull: ["$service", false] },
-                        location: 1,
-                        city: { $ifNull: ["$city", "Unknown City"] },
+                        // service: { $ifNull: ["$service", false] },
+                        // location: 1,
+                        // city: { $ifNull: ["$city", "Unknown City"] },
                         distance: 1,
                         categories: {
                             $map: {
