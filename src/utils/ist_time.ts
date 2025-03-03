@@ -3,6 +3,13 @@ export const getIST = () => {
     return new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
 }
 
+export const createdAtIST = () => {
+  const now = new Date();
+  const istOffset = 5.5 * 60 * 60 * 1000; // Convert 5.5 hours to milliseconds
+  return new Date(now.getTime() + istOffset);
+};
+
+
 
 export function formatLastPurchaseDate(lastPurchaseDate: string): string {
   const now = new Date(); // Current date and time

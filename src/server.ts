@@ -33,6 +33,7 @@ import { searchRouter } from "./routes/searchRoutes";
 import { individualBussinessRoutes } from "./routes/individualBussinessRoutes";
 import Category from "./models/categoryModel";
 import { Service } from "./models/serviceModel";
+import { buyAndSellRouter } from "./routes/buy_and_sell_route";
 
 const app = express();
 
@@ -91,6 +92,8 @@ app.use("/api/booking", bookingRoutes);
 app.use("/api/notification", notificationRouter)
 app.use('/api/search', searchRouter);
 app.use('/api/service', individualBussinessRoutes);
+//buy-and-sell
+app.use('/api/bas', buyAndSellRouter);
 
 app.use(notFound);
 app.use(errorHandler);
