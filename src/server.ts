@@ -31,6 +31,8 @@ import Store from "./models/storeModel";
 import Product from "./models/productModel";
 import { searchRouter } from "./routes/searchRoutes";
 import { individualBussinessRoutes } from "./routes/individualBussinessRoutes";
+import Category from "./models/categoryModel";
+import { Service } from "./models/serviceModel";
 
 const app = express();
 
@@ -55,39 +57,17 @@ app.use("/api/healthcheck", (req, res) => {
   res.status(200).send("Server is healthy");
 });
 
-
-
-async function addLocationFieldToAllProducts() {
-  try {
-    // 1. Fetch all products
-    const products: any[] = await Product.find({}).populate('store');
-
-    // 2. Iterate through each product
-    for (const product of products) {
-      if (product.store && product.store.location_v2) {
-        // 3. Set the product's location to the store's location
-        product.location = product.store.location_v2;
-
-        // 4. Save the updated product
-        await product.save();
-        console.log(`Updated location for product ${product._id}:`, product.location);
-      } else {
-        console.warn(`Store or store location not found for product ${product._id}`);
-      }
-    }
-
-    console.log('All product locations updated successfully.');
-  } catch (error: any) {
-    console.error('Error updating product locations:', error?.message);
-    throw error; // Re-throw the error for handling upstream
-  }
-}
-
 const updateData = expressAsyncHandler(
   async (req, res) => {
     try {
       
-      var s = await Store.find({});
+      var s = await Category.findOne({ isEnabledForIndividual: true, parentId: { $exists: false }});
+      if(s) {
+        var m = await Service.updateMany({}, { categories: [s._id]}, { new: true})
+        res.status(200).json(m);
+        return;
+      }
+
       res.status(200).json(s);
     } catch (error) {
       res.status(400).json({ message: error })
@@ -95,17 +75,6 @@ const updateData = expressAsyncHandler(
   }
 
 )
-
-async function swithcCor() {
-  const stores = await Store.find({});
-      for (const doc of stores) {
-        const [lat, lon] = doc.location.coordinates;
-        await Store.updateOne(
-          { _id: doc._id },
-          { $set: { "location.coordinates": [lon, lat] } }
-        );
-      }
-}
 
 app.use("/api/developer/transform", updateData);
 

@@ -2,6 +2,7 @@ import {Schema, model, Document} from "mongoose";
 import jwt from "jsonwebtoken";
 import { config } from "../config/vars";
 import { WorkingDay } from "./storeModel";
+
 export interface IService extends Document {
     _id: Schema.Types.ObjectId;
     name: string;
@@ -33,7 +34,7 @@ const serviceSchema = new Schema<IService>({
     name: {type: String, required: true},
     username: {type: String, required: true, unique: true},
     hashedPassword: {type: String, required: true},
-    categories: {type: [Schema.Types.ObjectId], ref: "serviceCategories", required: true},
+    categories: {type: [Schema.Types.ObjectId], ref: "categories", required: true},
     phone: {type: String, required: true, unique: true},
     whatsapp: {type: String, default: ""},
     email: {type: String, default: ""},

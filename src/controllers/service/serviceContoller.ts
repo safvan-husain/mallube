@@ -2,7 +2,6 @@
 import { calculateDistance } from "../../utils/interfaces/common";
 import e, { Request, Response } from "express";
 import asyncHandler from "express-async-handler";
-import { ServiceCategory } from "../../models/serviceCategoryModel";
 import { Service } from "../../models/serviceModel";
 import { z } from "zod";
 import {
@@ -15,6 +14,7 @@ import {
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import Product from "../../models/productModel";
+import Category from "../../models/categoryModel";
 
 export const onCatchError = (error: any, res: Response) => {
     if (error instanceof z.ZodError) {
@@ -27,31 +27,10 @@ export const onCatchError = (error: any, res: Response) => {
     res.status(500).json({ message: "Internal server error", error });
 }
 
-export const createServiceCategory = asyncHandler(
-    async (req: Request, res: Response) => {
-
-        try {
-            const { name, isShowOnHomePage, icon } = createServiceCategorySchema.parse(req.body);
-
-            const largeIndexByFar = await ServiceCategory.findOne().sort({ index: -1 }).select('index');
-            const nextIndex = largeIndexByFar ? largeIndexByFar.index + 1 : 1;
-            const serviceCategory = await ServiceCategory.create({
-                name,
-                isShowOnHomePage,
-                icon,
-                index: nextIndex,
-            });
-            res.status(201).json(serviceCategory);
-        } catch (error) {
-            onCatchError(error, res);
-        }
-    }
-);
-
 export const getServiceCategory = asyncHandler(
     async (_: Request, res: Response) => {
         try {
-            const serviceCategory = await ServiceCategory.find({}).sort({ index: 1 });
+            const serviceCategory = await Category.find({ isEnabledForIndividual: true , parentId: { $exists: false}}, { name: true});
             res.status(201).json(serviceCategory);
         } catch (error) {
             res.status(500).json({ message: "Internal server error", error });
@@ -59,82 +38,38 @@ export const getServiceCategory = asyncHandler(
     }
 );
 
-export const updateServiceCategory = asyncHandler(
-    async (req: Request, res: Response) => {
-        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-            res.status(400).json({ message: "id must be a valid MongoDB ObjectId" });
-            return;
-        }
-        try {
-            const { name, isShowOnHomePage, icon } = updateServiceCategorySchema.parse(req.body);
-            const serviceCategory = await ServiceCategory.findByIdAndUpdate(req.params.id, {
-                name,
-                isShowOnHomePage,
-                icon,
-            }, { new: true });
-            if (!serviceCategory) {
-                res.status(404).json({ message: "Couldn't find the category " })
-                return;
-            }
-            res.status(201).json(serviceCategory);
-        } catch (error) {
-            res.status(500).json({ message: "Internal server error", error });
-        }
-    }
-);
-
-export const deleteServiceCategory = asyncHandler(
-    async (req: Request, res: Response) => {
-        const { id } = req.params;
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            res.status(400).json({ message: "id must be a valid MongoDB ObjectId" });
-            return;
-        }
-        try {
-            let result = await ServiceCategory.findByIdAndDelete(id);
-            if (!result) {
-                res.status(404).json({ message: "Couldn't find the category " })
-                return;
-            }
-            res.status(201).json({ message: "Service category deleted successfully" });
-        } catch (error) {
-            res.status(500).json({ message: "Internal server error", error });
-        }
-    }
-);
-
-export const updateServiceCategoryIndex = asyncHandler(
-    async (req: Request, res: Response) => {
-        const { id } = req.body;
-        const { index } = req.body;
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            res.status(400).json({ message: "id must be a valid MongoDB ObjectId" });
-            return;
-        }
-        if (!index || isNaN(index)) {
-            res.status(400).json({ message: "Index must be a number" });
-            return;
-        }
-        try {
-            let cat = await ServiceCategory.findById(id);
-            if (!cat) {
-                res.status(400).json({ message: "Service category not found" });
-                return;
-            }
-            let tServiceCategory = await ServiceCategory.findOne({ index });
-            if (tServiceCategory) {
-                tServiceCategory.index = cat.index;
-                await tServiceCategory.save();
-                return;
-            }
-            cat.index = index;
-            cat = await cat.save();
-            res.status(201).json({ message: "Service category index updated successfully", category: cat });
-        } catch (error) {
-            res.status(500).json({ message: "Internal server error", error });
-        }
-    }
-);
+// export const updateServiceCategoryIndex = asyncHandler(
+//     async (req: Request, res: Response) => {
+//         const { id } = req.body;
+//         const { index } = req.body;
+//         if (!mongoose.Types.ObjectId.isValid(id)) {
+//             res.status(400).json({ message: "id must be a valid MongoDB ObjectId" });
+//             return;
+//         }
+//         if (!index || isNaN(index)) {
+//             res.status(400).json({ message: "Index must be a number" });
+//             return;
+//         }
+//         try {
+//             let cat = await ServiceCategory.findById(id);
+//             if (!cat) {
+//                 res.status(400).json({ message: "Service category not found" });
+//                 return;
+//             }
+//             let tServiceCategory = await ServiceCategory.findOne({ index });
+//             if (tServiceCategory) {
+//                 tServiceCategory.index = cat.index;
+//                 await tServiceCategory.save();
+//                 return;
+//             }
+//             cat.index = index;
+//             cat = await cat.save();
+//             res.status(201).json({ message: "Service category index updated successfully", category: cat });
+//         } catch (error) {
+//             res.status(500).json({ message: "Internal server error", error });
+//         }
+//     }
+// );
 
 export const createServiceProfile = asyncHandler(
     async (req: Request, res: Response) => {
