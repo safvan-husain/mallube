@@ -8,8 +8,9 @@ export interface IUserProduct extends Document {
   price: number;
   category: Schema.Types.ObjectId;
   owner: Schema.Types.ObjectId;
-  keyWords: string[];
+  keyWords: string;
   isShowPhone: boolean;
+  locationName: string;
   location: {
     type: string;
     coordinates: [number, number];
@@ -40,8 +41,8 @@ const productSchema = new Schema<IUserProduct>(
       required: true,
     },
     keyWords: {
-        type: [String],
-        default: [],
+        type: String,
+        default: "",
     },
     owner: {
       type: Schema.Types.ObjectId,
@@ -51,6 +52,10 @@ const productSchema = new Schema<IUserProduct>(
     isShowPhone: {
       type: Boolean,
       default: false,
+    },
+    locationName: {
+      type: String,
+      required: true,
     },
     location: {
       type: {

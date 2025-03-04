@@ -5,14 +5,15 @@ import { createdAtIST, getIST } from "../../utils/ist_time";
 const UserProductSchema = z.object({
     name: z.string(),
     images: z.array(z.string()),
-    description: z.string().optional(),
+    description: z.string(),
     price: z.number(),
     category: z.string().refine((v) => Types.ObjectId.isValid(v), {
         message: "Invalid ObjectId",
     }),
     owner: z.instanceof(Types.ObjectId),
-    keyWords: z.array(z.string()),
+    keyWords: z.string().optional(),
     isShowPhone: z.boolean(),
+    locationName: z.string(),
     location: z.object({
         type: z.string().default("Point"),
         coordinates: z.tuple([z.number(), z.number()]),

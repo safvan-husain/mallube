@@ -16,7 +16,7 @@ export const createUserPoduct = asyncHandler(
             res.status(400).json({ message: "Invalid id" })
             return;
         }
-        
+
 
         let location = (req.body.latitude != undefined && req.body.longitude != undefined) ? {
             type: "Point",
@@ -122,7 +122,7 @@ export const getUserProducts = asyncHandler(
             const { searchTerm, latitude, longitude, categoryId, skip, limit } = await querySchema.parseAsync(req.query);
 
             console.log('lat long', latitude, longitude, req.query);
-            
+
 
             var pipeline = [];
 
@@ -134,7 +134,7 @@ export const getUserProducts = asyncHandler(
                         $or: [
                             { name: { $regex: searchTerm, $options: 'i' } },
                             { description: { $regex: searchTerm, $options: 'i' } },
-                            { keywords: { $in: { $regex: searchTerm, $options: 'i' } } },
+                            { keywords: { $regex: searchTerm, $options: 'i' } },
                             { category: { $in: categoryIds } },
                         ]
                     }
@@ -194,15 +194,77 @@ export const getUserProducts = asyncHandler(
                 { $sort: { distance: 1, _id: 1 } },
                 { $skip: skip },
                 { $limit: limit },
+                {
+                    $project: {
+                        // "_id": "67c596a2cb3fd0db97fc153e",
+                        "name": 1,
+                        "images": 1,
+                        "price": 1,
+                        "category": 1,
+                        "keyWords": 1,
+                        "owner": 1,
+                        "isShowPhone": 1,
+                        "createdAt": 1,
+                        "distance": 1
+                    }
+                }
+
             ]);
 
             console.log(products);
-            
-            if(latitude != undefined && longitude != undefined) {
-                res.status(200).json(products.map(e => ({ ...e, distance: (e.distance as number).toFixed(2) })));
+            //for mobile users
+            if (latitude != undefined && longitude != undefined) {
+                res.status(200).json(products.map(e => ({
+                    ...e,
+                    distance: (e.distance as number).toFixed(2),
+                    createdAt: e.createdAt.getTime(),
+                })));
             } else {
+                //maybe for admin
                 res.status(200).json(products);
             }
+        } catch (error) {
+            console.log(error);
+            onCatchError(error, res);
+        }
+    }
+)
+
+//TODO: change isEnabled/
+export const getUserProductsCategories = asyncHandler(
+    async (req: Request, res: Response) => {
+        try {
+            const categories = await Category.find({ isEnabledForIndividual: true }, { name: 1 });
+            res.status(200).json(categories);
+        } catch (error) {
+            console.log(error);
+            onCatchError(error, res);
+        }
+    }
+)
+
+export const getUserMyAds = asyncHandler(
+    async (req: Request, res: Response) => {
+        try {
+            const id = req.user?._id;
+            if (!Types.ObjectId.isValid(id as string)) {
+                res.status(400).json({ message: "Invalid id" })
+                return;
+            }
+            const products = await UserProduct.find({ owner: id }, {
+                name: true,
+                images: true, description: true,
+                price: true, category: true,
+                keyWords: true, isShowPhone: true,
+                createdAt: true, distance: true,
+                owner: true,
+            }).lean();
+            
+            res.status(200).json(products.map(e => ({
+                ...e,
+                distance: '0',
+                createdAt: e.createdAt.getTime(),
+            })));
         } catch (error) {
             console.log(error);
             onCatchError(error, res);

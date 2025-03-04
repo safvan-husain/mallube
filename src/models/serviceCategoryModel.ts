@@ -43,4 +43,4 @@ const serviceCategorySchema = new Schema<IServiceCategory>(
 
 const ServiceCategory = model<IServiceCategory>("serviceCategories", serviceCategorySchema);
 
-export { ServiceCategory };
+// export { ServiceCategory };
