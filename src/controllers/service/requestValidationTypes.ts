@@ -28,17 +28,6 @@ export const getServicesQuerySchema = z.object({
         .default('30').transform(val => parseInt(val))
 });
 
-export const createServiceCategorySchema = z.object({
-    name: z.string().min(1, "Name is required"),
-    icon: z.string().url("Icon must be a valid URL"),
-    isShowOnHomePage: z.boolean().optional().default(true)
-});
-
-export const updateServiceCategorySchema = z.object({
-    name: z.string().min(1, "Name is required").optional(),
-    icon: z.string().url("Icon must be a valid URL").optional(),
-    isShowOnHomePage: z.boolean().optional().default(true).optional()
-});
 
 export const createServiceSchema = z.object({
     categories: z.array(z.string().refine(val => Types.ObjectId.isValid(val), {

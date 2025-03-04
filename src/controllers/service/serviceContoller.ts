@@ -5,10 +5,8 @@ import asyncHandler from "express-async-handler";
 import { Service } from "../../models/serviceModel";
 import { z } from "zod";
 import {
-    createServiceCategorySchema,
     createServiceSchema,
     getServicesQuerySchema,
-    updateServiceCategorySchema,
     updateServiceSchema
 } from "./requestValidationTypes";
 import mongoose from "mongoose";

@@ -34,8 +34,13 @@ import { individualBussinessRoutes } from "./routes/individualBussinessRoutes";
 import Category from "./models/categoryModel";
 import { Service } from "./models/serviceModel";
 import { buyAndSellRouter } from "./routes/buy_and_sell_route";
+import { Server } from 'socket.io';
+import { socketHandler } from "./controllers/web-socket/webSocketController";
+import { chatRoutes } from "./routes/messageRoutes";
+
 
 const app = express();
+
 
 connectDb();
 initializeApp({ credential: credential.cert(serviceAccount) });
@@ -61,20 +66,17 @@ app.use("/api/healthcheck", (req, res) => {
 const updateData = expressAsyncHandler(
   async (req, res) => {
     try {
-      
-      var s = await Category.findOne({ isEnabledForIndividual: true, parentId: { $exists: false }});
-      if(s) {
-        var m = await Service.updateMany({}, { categories: [s._id]}, { new: true})
+      var s = await Category.findOne({ isEnabledForIndividual: true, parentId: { $exists: false } });
+      if (s) {
+        var m = await Service.updateMany({}, { categories: [s._id] }, { new: true })
         res.status(200).json(m);
         return;
       }
-
       res.status(200).json(s);
     } catch (error) {
       res.status(400).json({ message: error })
     }
   }
-
 )
 
 app.use("/api/developer/transform", updateData);
@@ -94,6 +96,7 @@ app.use('/api/search', searchRouter);
 app.use('/api/service', individualBussinessRoutes);
 //buy-and-sell
 app.use('/api/bas', buyAndSellRouter);
+app.use('/api/chats', chatRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
@@ -102,4 +105,8 @@ periodicallyChangeStatusOfExpiredAdvertisemets();
 
 const PORT = config.port || 4000;
 
-app.listen(PORT, () => console.log(`API server listening at ${PORT}`));
+let server = app.listen(PORT, () => console.log(`API server listening at ${PORT}`));
+
+const io = new Server(server);
+socketHandler(io);
+
