@@ -121,9 +121,6 @@ export const getUserProducts = asyncHandler(
         try {
             const { searchTerm, latitude, longitude, categoryId, skip, limit } = await querySchema.parseAsync(req.query);
 
-            console.log('lat long', latitude, longitude, req.query);
-
-
             var pipeline = [];
 
             if (searchTerm) {
@@ -205,13 +202,13 @@ export const getUserProducts = asyncHandler(
                         "owner": 1,
                         "isShowPhone": 1,
                         "createdAt": 1,
-                        "distance": 1
+                        "distance": 1,
+                        locationName: 1,
                     }
                 }
 
             ]);
 
-            console.log(products);
             //for mobile users
             if (latitude != undefined && longitude != undefined) {
                 res.status(200).json(products.map(e => ({
@@ -224,7 +221,6 @@ export const getUserProducts = asyncHandler(
                 res.status(200).json(products);
             }
         } catch (error) {
-            console.log(error);
             onCatchError(error, res);
         }
     }
@@ -257,9 +253,9 @@ export const getUserMyAds = asyncHandler(
                 price: true, category: true,
                 keyWords: true, isShowPhone: true,
                 createdAt: true, distance: true,
-                owner: true,
+                owner: true, locationName: true,
             }).lean();
-            
+
             res.status(200).json(products.map(e => ({
                 ...e,
                 distance: '0',
