@@ -37,6 +37,7 @@ import { buyAndSellRouter } from "./routes/buy_and_sell_route";
 import { Server } from 'socket.io';
 import { socketHandler } from "./controllers/web-socket/webSocketController";
 import { chatRoutes } from "./routes/messageRoutes";
+import { removeExpiredAds } from "./controllers/buy_and_sell/buy_and_sellController";
 
 
 const app = express();
@@ -66,12 +67,7 @@ app.use("/api/healthcheck", (req, res) => {
 const updateData = expressAsyncHandler(
   async (req, res) => {
     try {
-      var s = await Category.findOne({ isEnabledForIndividual: true, parentId: { $exists: false } });
-      if (s) {
-        var m = await Service.updateMany({}, { categories: [s._id] }, { new: true })
-        res.status(200).json(m);
-        return;
-      }
+      let s = await removeExpiredAds();
       res.status(200).json(s);
     } catch (error) {
       res.status(400).json({ message: error })
@@ -109,4 +105,13 @@ let server = app.listen(PORT, () => console.log(`API server listening at ${PORT}
 
 const io = new Server(server);
 socketHandler(io);
+
+//to delelte expired ads (buy and sell), and it related images.
+setInterval(() => {
+  try {
+  removeExpiredAds();
+  } catch (error) {
+   console.error(error) 
+  }
+}, 24 * 60 * 60 * 1000);
 

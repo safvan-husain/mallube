@@ -80,6 +80,7 @@ const productSchema = new Schema<IUserProduct>(
     expireAt: {
         type: Date,
         required: true,
+        index: true,
     }
   },
 );

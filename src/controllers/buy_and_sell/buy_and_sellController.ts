@@ -8,6 +8,8 @@ import UserProduct from "../../models/user_product";
 import { calculateDistance } from "../../utils/interfaces/common";
 import Category from "../../models/categoryModel";
 import { ICustomRequest } from "../../types/requestion";
+import { createdAtIST } from "../../utils/ist_time";
+import { deleteFile } from "../upload/fileUploadController";
 
 export const createUserPoduct = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {
@@ -269,3 +271,15 @@ export const getUserMyAds = asyncHandler(
         }
     }
 )
+
+export const removeExpiredAds = async (): Promise<void> => {
+    try {
+        const expiredAds = await UserProduct.find({ expireAt: { $lt: createdAtIST() } }).lean();
+        if (expiredAds.length === 0) return;
+        const expiredAdsIds = expiredAds.map((e) => e._id);
+        await Promise.all(expiredAds.map(e => e.deleteImagesFromBucket()));
+        await UserProduct.deleteMany({ _id: { $in: expiredAdsIds } });
+    } catch (error) {
+        console.log(error);
+    }
+}
