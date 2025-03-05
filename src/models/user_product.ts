@@ -1,4 +1,6 @@
 import { Schema, model, Document } from "mongoose";
+import { createdAtIST, getIST } from "../utils/ist_time";
+import { deleteFile } from "../controllers/upload/fileUploadController";
 
 //generate zod schema
 export interface IUserProduct extends Document {
@@ -16,6 +18,9 @@ export interface IUserProduct extends Document {
     coordinates: [number, number];
   };
   createdAt: Date;
+  expireAt: Date;
+  isExpired: () => boolean;
+  deleteImagesFromBucket: () => Promise<boolean[]>;
 }
 
 const productSchema = new Schema<IUserProduct>(
@@ -70,12 +75,32 @@ const productSchema = new Schema<IUserProduct>(
     },
     createdAt: {
         type: Date,
-        default: Date.now,
+        required: true,
+    },
+    expireAt: {
+        type: Date,
+        required: true,
     }
   },
 );
 
 productSchema.index({ location: "2dsphere" });
+
+productSchema.methods.isExpired = function () {
+    return createdAtIST() > this.expireAt;
+};
+
+productSchema.methods.deleteImagesFromBucket = async function () {
+    if (!this.images || !Array.isArray(this.images)) return;
+
+    const deletePromises = this.images.map(image => {
+        const filename = image.split("/").pop();
+        return deleteFile(filename);
+    });
+
+    await Promise.all(deletePromises);
+};
+
 
 const UserProduct = model<IUserProduct>("userproducts", productSchema);
 

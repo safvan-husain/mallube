@@ -203,6 +203,7 @@ export const getUserProducts = asyncHandler(
                         "isShowPhone": 1,
                         "createdAt": 1,
                         "distance": 1,
+                        description: 1,
                         locationName: 1,
                     }
                 }
@@ -253,13 +254,14 @@ export const getUserMyAds = asyncHandler(
                 price: true, category: true,
                 keyWords: true, isShowPhone: true,
                 createdAt: true, distance: true,
-                owner: true, locationName: true,
+                owner: true, locationName: true, expireAt: true
             }).lean();
 
             res.status(200).json(products.map(e => ({
                 ...e,
                 distance: '0',
                 createdAt: e.createdAt.getTime(),
+                expireAt: e.expireAt?.getTime() ?? 0,
             })));
         } catch (error) {
             console.log(error);
