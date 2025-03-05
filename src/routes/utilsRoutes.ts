@@ -12,6 +12,7 @@ router.route("/upload").post(function (request, response) {
   if (!file) return response.sendStatus(400);
 
   // Destructure the content of the file object
+  if (Array.isArray(file)) return response.status(400).json({ error: "Multiple files are not allowed" })
   const { name, mimetype, size, data } = file;
   // If `data` is a string, specify the correct encoding (e.g., 'utf8')
   const fileContent = Buffer.isBuffer(data) ? data : Buffer.from(data, "utf8");
@@ -36,7 +37,7 @@ const uniqueFileName = `${Date.now()}_${Math.floor(
       if (err) {
         response.status(500);
       } else {
-        response.status(200).json({ filename: uniqueFileName });
+        response.status(200).json({ filename: uniqueFileName, url: `https://sin1.contabostorage.com/eb23de04d375490f89955c112d0422fd:mallumart/${uniqueFileName}` });
       }
     }
   );

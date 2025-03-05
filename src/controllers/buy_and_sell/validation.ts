@@ -10,7 +10,6 @@ const UserProductSchema = z.object({
     category: z.string().refine((v) => Types.ObjectId.isValid(v), {
         message: "Invalid ObjectId",
     }),
-    owner: z.instanceof(Types.ObjectId),
     keyWords: z.string().optional(),
     isShowPhone: z.boolean(),
     locationName: z.string(),
@@ -21,18 +20,27 @@ const UserProductSchema = z.object({
         (data) => data?.coordinates?.length === 2,
         "should pass latitude, longitude",
     ),
-    createdAt: z.date().optional().default(createdAtIST),
 });
 
 const querySchema = z.object({
-  searchTerm: z.string().optional(),
-  latitude: z.string().optional().transform((val) => val ? parseFloat(val) : undefined),
-  longitude: z.string().optional().transform((val) => val ? parseFloat(val) : undefined),
-  categoryId: z.string().optional(),
-  skip: z.string().default('0').transform((val) => parseInt(val, 10)),
-  limit: z.string().default('10').transform((val) => parseInt(val, 10))
+    searchTerm: z.string().optional(),
+    latitude: z.string().optional().transform((val) => val ? parseFloat(val) : undefined),
+    longitude: z.string().optional().transform((val) => val ? parseFloat(val) : undefined),
+    categoryId: z.string().optional(),
+    skip: z.string().default('0').transform((val) => parseInt(val, 10)),
+    limit: z.string().default('10').transform((val) => parseInt(val, 10))
 });
 
 const UpdateUserProductSchema = UserProductSchema.partial();
 
-export { UserProductSchema, UpdateUserProductSchema, querySchema };
+const CreateUserProductSchema = UserProductSchema.extend({
+    createdAt: z.date().optional().default(createdAtIST),
+    expireAt: z.date().optional().default(() => {
+        let expireAt = createdAtIST();
+        expireAt.setDate(expireAt.getDate() + 30);
+        return expireAt;
+    }),
+    owner: z.instanceof(Types.ObjectId),
+});
+
+export { CreateUserProductSchema, UpdateUserProductSchema, querySchema };

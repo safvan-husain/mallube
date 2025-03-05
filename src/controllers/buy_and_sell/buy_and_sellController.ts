@@ -3,7 +3,7 @@ import { Request, Response, Router } from "express";
 import asyncHandler from "express-async-handler";
 import mongoose, { Types, Schema } from "mongoose";
 import { onCatchError } from "../service/serviceContoller";
-import { querySchema, UpdateUserProductSchema, UserProductSchema } from "./validation";
+import { querySchema, UpdateUserProductSchema, CreateUserProductSchema } from "./validation";
 import UserProduct from "../../models/user_product";
 import { calculateDistance } from "../../utils/interfaces/common";
 import Category from "../../models/categoryModel";
@@ -17,16 +17,13 @@ export const createUserPoduct = asyncHandler(
             return;
         }
 
-
         let location = (req.body.latitude != undefined && req.body.longitude != undefined) ? {
             type: "Point",
             coordinates: [req.body.latitude, req.body.longitude]
         } : undefined;
 
-        console.log("req wiht ", req.body, location);
-
         try {
-            const data = UserProductSchema.parse({
+            const data = CreateUserProductSchema.parse({
                 ...req.body,
                 location,
                 owner: id
@@ -70,9 +67,12 @@ export const deleteUserProduct = asyncHandler(
             if (!Types.ObjectId.isValid(id)) {
                 res.status(400).json({ message: "Invalid id" })
             }
-            const product = await UserProduct.findByIdAndDelete(id);
+            const product = await UserProduct.findById(id);
+
             if (product) {
-                res.status(200).json({ message: "Product deleted" })
+                let r = await product?.deleteImagesFromBucket()
+                await UserProduct.findByIdAndDelete(id);
+                res.status(200).json({ message: "Product deleted", r })
             } else {
                 res.status(404).json({ message: "Product not found" })
             }
