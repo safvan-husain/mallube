@@ -35,10 +35,19 @@ export async function getCategoriesInFormat({ isActive = false, isStoreOnly = fa
       parentId: { $exists: false },
       isPending: false,
       isDeclined: false,
-      ...(isStoreOnly ? { isEnabledForStore: true, subCategoryType: 'store' } : {}),
-      ...(isFreelancerOnly ? { isEnabledForIndividual: true, subCategoryType: 'store' } : {}),
+      ...(isStoreOnly ? { isEnabledForStore: true } : {}),
+      ...(isFreelancerOnly ? { isEnabledForIndividual: true } : {}),
     },
   };
+
+  let conditions = [
+  { $eq: ["$$subcategory.isPending", false] },
+  { $eq: ["$$subcategory.isDeclined", false] }
+];
+
+if (isStoreOnly || isFreelancerOnly) {
+  conditions.push({ $eq: ["$$subcategory.subCategoryType", "store"] });
+}
 
   if (isActive) {
     matchStage.$match.isActive = true;
@@ -69,10 +78,7 @@ export async function getCategoriesInFormat({ isActive = false, isStoreOnly = fa
                 input: "$subcategories",
                 as: "subcategory",
                 cond: {
-                  $and: [
-                    { $eq: ["$$subcategory.isPending", false] },
-                    { $eq: ["$$subcategory.isDeclined", false] }
-                  ]
+                  $and: conditions
                 },
               },
             },
