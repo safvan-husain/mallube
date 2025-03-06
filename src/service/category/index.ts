@@ -27,14 +27,16 @@ export async function isDuplicateCategory(
   return Boolean(category);
 }
 
-export async function getCategoriesInFormat({ isActive = false }) {
+export async function getCategoriesInFormat({ isActive = false, isStoreOnly = false, isFreelancerOnly = false }) {
   const matchStage: {
     $match: any;
   } = {
     $match: {
       parentId: { $exists: false },
       isPending: false,
-      isDeclined: false
+      isDeclined: false,
+      ...(isStoreOnly ? { isEnabledForStore: true} : {}),
+      ...(isFreelancerOnly ? { isEnabledForIndividual: true} : {}),
     },
   };
 

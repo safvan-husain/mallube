@@ -24,8 +24,11 @@ import { onCatchError } from "../service/serviceContoller";
 // get all categories for admin category management
 export const getCategories = asyncHandler(
   async (req: Request, res: Response) => {
+    const { isStoreOnly } = req.query;
     const categories = await getCategoriesInFormat({
       isActive: Boolean(req.query.isActive),
+      isStoreOnly: Boolean(isStoreOnly),
+      isFreelancerOnly: Boolean(req.query.isFreelancerOnly),
     });
     res.status(200).json(categories);
   }
