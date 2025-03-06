@@ -1,5 +1,5 @@
 import { z } from "zod";
-
+import { Types } from 'mongoose';
 export const addProductSchema = z
   .object({
     name: z.string().trim().min(1, "product name cannot be empty"),
@@ -7,7 +7,7 @@ export const addProductSchema = z
     description: z.string().trim().optional(),
     price: z.number().gte(0, { message: "price cannot be a negative value" }),
     offerPrice: z.optional(z.number()),
-    category: z.string(),
+    category: z.string().refine((v) => Types.ObjectId.isValid(v), { message: "Invalid category ObjectId"}),
     isActive: z.boolean().default(true),
     isPending: z.boolean().default(false).optional(),
     addToCartActive: z.boolean().default(false).optional(),
