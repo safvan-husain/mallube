@@ -220,7 +220,6 @@ export const getUserProducts = asyncHandler(
                         }
                     }
                 }
-
             ]);
 
             //for mobile users

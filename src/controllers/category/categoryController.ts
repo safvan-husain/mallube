@@ -20,6 +20,7 @@ import Product from "../../models/productModel";
 import Store from "../../models/storeModel";
 import { addCategorySchema, updateCategorySchemaV2 } from "./validations";
 import { onCatchError } from "../service/serviceContoller";
+import { Freelancer } from "../../models/freelancerModel";
 
 // get all categories for admin category management
 export const getCategories = asyncHandler(
@@ -100,12 +101,37 @@ export const getStoreSubCategories = asyncHandler(
   }
 )
 
+export const getProductCategories = asyncHandler(
+  async (req: ICustomRequest<undefined>, res: any) => {
+    const id = req.store?._id ?? req.individual?._id;
+    const { bussinessType } = req.query;
+    if (!Types.ObjectId.isValid(id ?? "")) {
+      res.status(404).json({ message: "Invalid Object Id" });
+      return;
+    }
+    try {
+      let parentCategories: any[] = [];
+      if (bussinessType === 'freelance') {
+        const storeData = await Store.findById(id, 'category').lean();
+        parentCategories.push(storeData?.category);
+      } else {
+        const individualData = await Freelancer.findById(id, { categories: 1 }).lean();
+        parentCategories = individualData?.categories ?? [];
+      }
+      const categories = await Category.find({ parentId: { $in: parentCategories }, subCategoryType: 'product' }, { icon: true, isActive: true, name: true });
+      res.status(200).json(categories);
+    } catch (error) {
+      res.status(500).json({ message: `Internal server error ${error}` });
+    }
+  }
+)
+
 // update category
 export const updateCategory = asyncHandler(
   async (req: ICustomRequest<any>, res: Response) => {
     const { id } = req.params;
     try {
-      const { categorySubType: subCategoryType,  ...rest } = await updateCategorySchemaV2.parseAsync(req.body);
+      const { categorySubType: subCategoryType, ...rest } = await updateCategorySchemaV2.parseAsync(req.body);
 
       if (!Types.ObjectId.isValid(id)) {
         res.status(404).json({ message: "Invalid category id" });

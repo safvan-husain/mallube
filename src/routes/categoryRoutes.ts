@@ -9,7 +9,8 @@ import {
   updateCategory,
   deleteCategory,
   getStoreSubCategories,
-  deleteCategoryPermenently
+  deleteCategoryPermenently,
+  getProductCategories
   //   getCategoryById,
   //   updateCategory,
 } from "../controllers/category/categoryController";
@@ -31,6 +32,7 @@ router
 
 //TODO: remove later.
 router.route("/sub").get(store, getStoreSubCategories);
+router.route("/product").get(store, getProductCategories);
 
 router.route("/pending").get(getPendingSubCategories);
 
