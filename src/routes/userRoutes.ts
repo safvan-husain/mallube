@@ -5,6 +5,7 @@ import { validateData } from "../middleware/zod.validation";
 import { addCartSchema } from "../schemas/cart.schema";
 import { drBooking } from "../controllers/booking/bookingController";
 import { pushNotifcationStatusSchema } from "../schemas/user.schema";
+import { getFavoriteFreelancers, getFavoriteShops, toggleFavorite } from "../controllers/user/favourites/favouritesController";
 const router = express.Router();
 
 router.route("/register").post(register)
@@ -12,6 +13,10 @@ router.route("/verify-otp").post(verifyOtp)
 router.route("/login").post(login)
 router.route('/').delete(user, deleteUser);
 router.route("/fcm-token").put(user, updateUserFcmToken);
+
+router.route('/fav').post(user, toggleFavorite)
+router.route('/fav/shops').get(user, getFavoriteShops);
+router.route('/fav/freelancers').get(user, getFavoriteFreelancers);
 
 router.route("/store-details").get(user, getStoreDetails);
 router.route("/cart").post(user, validateData(addCartSchema), addToCart).put(user, removeProductFromCart);

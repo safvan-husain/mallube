@@ -27,7 +27,7 @@ import User from "../../models/userModel";
 import { store } from "../../middleware/auth";
 import { addProductSchema } from "./validators";
 import { onCatchError } from "../service/serviceContoller";
-import { Service } from "../../models/serviceModel";
+import { Freelancer } from "../../models/freelancerModel";
 
 // get all products
 export const getAllProducts = asyncHandler(
@@ -122,7 +122,7 @@ export const addProduct = asyncHandler(
         }
        else if (rest.individual) {
           // Fetch the associated store
-          const individual = await Service.findById(rest.individual);
+          const individual = await Freelancer.findById(rest.individual);
           if (!individual) {
             throw new Error('Individual not found');
           }

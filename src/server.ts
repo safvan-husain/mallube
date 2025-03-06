@@ -32,12 +32,12 @@ import Product from "./models/productModel";
 import { searchRouter } from "./routes/searchRoutes";
 import { individualBussinessRoutes } from "./routes/individualBussinessRoutes";
 import Category from "./models/categoryModel";
-import { Service } from "./models/serviceModel";
+import { Freelancer } from "./models/freelancerModel";
 import { buyAndSellRouter } from "./routes/buy_and_sell_route";
 import { Server } from 'socket.io';
 import { socketHandler } from "./controllers/web-socket/webSocketController";
 import { chatRoutes } from "./routes/messageRoutes";
-import { removeExpiredAds } from "./controllers/buy_and_sell/buy_and_sellController";
+import { removeExpiredAds } from "./controllers/user/buy_and_sell/buy_and_sellController";
 
 
 const app = express();

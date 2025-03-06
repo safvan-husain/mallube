@@ -7,7 +7,7 @@ import {
 } from "../utils/interfaces/interfaces";
 import User from "../models/userModel";
 import { config } from "../config/vars";
-import { Service } from "../models/serviceModel";
+import { Freelancer } from "../models/freelancerModel";
 
 declare global {
   namespace Express {
@@ -159,7 +159,7 @@ export const serviceIndivdual = asyncHandler(
         _id: string;
       };
 
-      req.requester = await Service.findById(decoded._id).select("-password");
+      req.requester = await Freelancer.findById(decoded._id).select("-password");
       if (!req.requester) throw new Error("user is not found");
       req.individual = req.requester;
 

@@ -4,7 +4,7 @@ import ProductSearch from "../models/productSearch";
 import Product from "../models/productModel";
 import Category from "../models/categoryModel";
 import Store from "../models/storeModel";
-import { Service } from "../models/serviceModel";
+import { Freelancer } from "../models/freelancerModel";
 // import { searchStoresByProductNameV2 } from "../controllers/store/storeController";
 
 const router = Router();
@@ -311,7 +311,7 @@ const searchFreelancerByProductNameV2 = asyncHandler(
                 }
             });
 
-            const stores = await Service.aggregate([
+            const stores = await Freelancer.aggregate([
                 ...pipeline,
                 { $sort: { distance: 1, _id: 1 } },
                 { $skip: parseInt(skip as string) },

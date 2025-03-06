@@ -2,14 +2,14 @@
 import { Request, Response, Router } from "express";
 import asyncHandler from "express-async-handler";
 import mongoose, { Types, Schema } from "mongoose";
-import { onCatchError } from "../service/serviceContoller";
+import { onCatchError } from "../../service/serviceContoller";
 import { querySchema, UpdateUserProductSchema, CreateUserProductSchema } from "./validation";
-import UserProduct from "../../models/user_product";
-import { calculateDistance } from "../../utils/interfaces/common";
-import Category from "../../models/categoryModel";
-import { ICustomRequest } from "../../types/requestion";
-import { createdAtIST } from "../../utils/ist_time";
-import { deleteFile } from "../upload/fileUploadController";
+import UserProduct from "../../../models/user_product";
+import { calculateDistance } from "../../../utils/interfaces/common";
+import Category from "../../../models/categoryModel";
+import { ICustomRequest } from "../../../types/requestion";
+import { createdAtIST } from "../../../utils/ist_time";
+import { deleteFile } from "../../upload/fileUploadController";
 
 export const createUserPoduct = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {
@@ -194,6 +194,14 @@ export const getUserProducts = asyncHandler(
                 { $skip: skip },
                 { $limit: limit },
                 {
+                    $lookup: {
+                        from: "users", // Collection name for categories
+                        localField: "owner",
+                        foreignField: "_id",
+                        as: "owner_details",
+                    }
+                },
+                {
                     $project: {
                         // "_id": "67c596a2cb3fd0db97fc153e",
                         "name": 1,
@@ -207,6 +215,9 @@ export const getUserProducts = asyncHandler(
                         "distance": 1,
                         description: 1,
                         locationName: 1,
+                        "phone": {
+                            "$ifNull": [{ "$arrayElemAt": ["$owner_details.phone", 0] }, "N/A"]
+                        }
                     }
                 }
 

@@ -2,7 +2,7 @@
 import { calculateDistance } from "../../utils/interfaces/common";
 import e, { Request, Response } from "express";
 import asyncHandler from "express-async-handler";
-import { Service } from "../../models/serviceModel";
+import { Freelancer } from "../../models/freelancerModel";
 import { z } from "zod";
 import {
     createServiceSchema,
@@ -74,7 +74,7 @@ export const createServiceProfile = asyncHandler(
         try {
             const validatedData = createServiceSchema.parse(req.body);
 
-            const isExist = await Service.findOne({ $or: [{ phone: validatedData.phone }, { username: validatedData.username }] });
+            const isExist = await Freelancer.findOne({ $or: [{ phone: validatedData.phone }, { username: validatedData.username }] });
             if (isExist) {
                 let existingField = "";
                 if (isExist.phone === validatedData.phone) {
@@ -92,7 +92,7 @@ export const createServiceProfile = asyncHandler(
             let updateData = getServiceConvertedDataFromRequestData(validatedData);
             updateData.hashedPassword = hashedPassword;
 
-            let service = new Service(updateData);
+            let service = new Freelancer(updateData);
             service = await service.save();
             const authToken = service.generateAuthToken();
             res.status(201).json({ authToken });
@@ -106,7 +106,7 @@ export const loginServiceProfile = asyncHandler(
     async (req: Request, res: Response) => {
         try {
             const { username, password } = req.body;
-            const service = await Service.findOne({ $or: [{ phone: username }, { username }] });
+            const service = await Freelancer.findOne({ $or: [{ phone: username }, { username }] });
             if (!service) {
                 res.status(401).json({ message: "Invalid username or password" });
                 return;
@@ -142,7 +142,7 @@ export const updateServiceProfile = asyncHandler(
             const updateData = getServiceConvertedDataFromRequestData(validatedData);
 
 
-            const updatedService = await Service.findByIdAndUpdate(
+            const updatedService = await Freelancer.findByIdAndUpdate(
                 id,
                 { $set: updateData },
                 { new: true, runValidators: true }
@@ -169,7 +169,7 @@ export const deleteServiceProfile = asyncHandler(
                 res.status(400).json({ message: "param (id) must be a valid MongoDB ObjectId" });
                 return;
             }
-            const deletedService = await Service.findByIdAndDelete(id);
+            const deletedService = await Freelancer.findByIdAndDelete(id);
             if (!deletedService) {
                 res.status(404).json({ message: "Service not found" });
                 return;
@@ -195,7 +195,7 @@ export const getSpecificServiceProfile = asyncHandler(
                 res.status(401).json({ message: "id must be a valid MongoDB ObjectId" });
                 return;
             }
-            let service: any = await Service.findById(id, {
+            let service: any = await Freelancer.findById(id, {
                 name: true,
                 username: true,
                 location: true,
@@ -259,7 +259,7 @@ export const getServices = asyncHandler(
             }
 
 
-            let tServices: any[] = await Service.find(filter, {
+            let tServices: any[] = await Freelancer.find(filter, {
                 name: true,
                 location: true,
                 city: true,

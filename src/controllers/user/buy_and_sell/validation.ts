@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { Types } from "mongoose";
-import { createdAtIST, getIST } from "../../utils/ist_time";
+import { createdAtIST, getIST } from "../../../utils/ist_time";
 
 const UserProductSchema = z.object({
     name: z.string(),

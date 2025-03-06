@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Schema, model, Types } from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { config } from "../config/vars";
@@ -16,6 +16,8 @@ export interface IUser {
   isVerified: boolean;
   isBlocked: boolean;
   isPushNotificationEnabled: boolean;
+  favouriteFreelancers: Types.ObjectId[];
+  favouriteShops: Types.ObjectId[];
 }
 
 const userSchema = new Schema<IUser>(
@@ -58,7 +60,19 @@ const userSchema = new Schema<IUser>(
     isPushNotificationEnabled: {
       type: Boolean,
       default: true,
-    }
+    },
+    favouriteFreelancers: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Service",
+      },
+    ],
+    favouriteShops: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "stores",
+      },
+    ],
 
   },
   {

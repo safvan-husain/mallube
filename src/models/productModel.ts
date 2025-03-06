@@ -1,6 +1,6 @@
 import { Schema, model, Document } from "mongoose";
 import Store from "./storeModel";
-import { Service } from "./serviceModel";
+import { Freelancer } from "./freelancerModel";
 
 export interface IProduct extends Document {
   name: string;
@@ -118,7 +118,7 @@ productSchema.pre('save', async function (next) {
   } else if (this.individual) {
     if(this.isModified('individual') || this.isNew) {
       // Fetch the associated store
-      const individual = await Service.findById(this.individual);
+      const individual = await Freelancer.findById(this.individual);
       if (!individual) {
         throw new Error('Store not found');
       }

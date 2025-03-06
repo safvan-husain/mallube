@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { config } from "../config/vars";
 import { WorkingDay } from "./storeModel";
 
-export interface IService extends Document {
+export interface IFreelancer extends Document {
     _id: Schema.Types.ObjectId;
     name: string;
     username: string;
@@ -30,7 +30,7 @@ export interface IService extends Document {
     workingDays: WorkingDay[];
 }
 
-const serviceSchema = new Schema<IService>({
+const freelancerSchema = new Schema<IFreelancer>({
     name: {type: String, required: true},
     username: {type: String, required: true, unique: true},
     hashedPassword: {type: String, required: true},
@@ -58,11 +58,11 @@ const serviceSchema = new Schema<IService>({
     },
 });
 
-serviceSchema.methods.generateAuthToken = function (): string {
+freelancerSchema.methods.generateAuthToken = function (): string {
     const jwt_secret = config.jwtSecret
     return jwt.sign({ _id: this._id }, jwt_secret, { expiresIn: "400d" });
 };
 
-serviceSchema.index({location: "2dsphere"});
+freelancerSchema.index({location: "2dsphere"});
 
-export const Service = model<IService>("Service", serviceSchema);
+export const Freelancer = model<IFreelancer>("Service", freelancerSchema);
