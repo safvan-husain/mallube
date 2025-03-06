@@ -35,8 +35,8 @@ export async function getCategoriesInFormat({ isActive = false, isStoreOnly = fa
       parentId: { $exists: false },
       isPending: false,
       isDeclined: false,
-      ...(isStoreOnly ? { isEnabledForStore: true} : {}),
-      ...(isFreelancerOnly ? { isEnabledForIndividual: true} : {}),
+      ...(isStoreOnly ? { isEnabledForStore: true, subCategoryType: 'store' } : {}),
+      ...(isFreelancerOnly ? { isEnabledForIndividual: true, subCategoryType: 'store' } : {}),
     },
   };
 
