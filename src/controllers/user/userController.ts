@@ -107,6 +107,10 @@ export const register = async (req: Request, res: Response) => {
 export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
   try {
     const userId = req.user?._id;
+    if (userId === "67c9a1c7a987140c59f6e820") {
+      res.status(200).json({ message: "Can't delelte this is a testing account"});
+      return;
+    }
     var deleted = await User.findByIdAndDelete(userId);
     res.status(200).json({ message: "User deleted successfully", deleted });
   } catch (error) {
