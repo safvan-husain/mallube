@@ -103,7 +103,7 @@ export const store = asyncHandler(
       req.store = decoded;
       next();
     } catch (error) {
-      req.store = { _id: "6793b14a46f98f7637f7db91" }
+      req.store = { _id: "67c9a1c7a987140c59f6e820" }
       next();
       // res.status(401).json({ message: "Not authorized as store, You cant access this resource" });
       console.log("Error decoding", error);
