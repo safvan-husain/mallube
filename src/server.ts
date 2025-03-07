@@ -67,7 +67,8 @@ app.use("/api/healthcheck", (req, res) => {
 const updateData = expressAsyncHandler(
   async (req, res) => {
     try {
-      let s = await removeExpiredAds();
+      // let s = await removeExpiredAds();
+      let s = await Store.findOne( { phone: "9876543210"});
       res.status(200).json(s);
     } catch (error) {
       res.status(400).json({ message: error })
