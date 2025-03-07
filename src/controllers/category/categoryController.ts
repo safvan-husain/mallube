@@ -119,7 +119,8 @@ export const getProductCategories = asyncHandler(
         parentCategories = individualData?.categories ?? [];
       }
       const categories = await Category.find({ parentId: { $in: parentCategories }, subCategoryType: 'product' }, { icon: true, isActive: true, name: true });
-      res.status(200).json(categories);
+      const categories2 = await Category.find({ parentId: { $in: parentCategories } }, { icon: true, isActive: true, name: true });
+      res.status(200).json({ categories, categories2, parentCategories });
     } catch (error) {
       res.status(500).json({ message: `Internal server error ${error}` });
     }
