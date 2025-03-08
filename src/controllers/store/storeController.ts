@@ -144,7 +144,10 @@ export const getProfile = async (req: any, res: Response) => {
     if (store.length === 0) {
       return res.status(404).json({ message: "Store not found" });
     }
-    res.status(200).json(store[0]);
+    res.status(200).json({
+      ...store[0],
+      isDeliveryAvailable: store[0]?.isDeliveryAvailable ?? false,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Internal server error" });
