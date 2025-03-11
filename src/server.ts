@@ -68,7 +68,7 @@ const updateData = expressAsyncHandler(
   async (req, res) => {
     try {
       // let s = await removeExpiredAds();
-      let s = await Store.findOne( { phone: "9876543210"});
+      let s = await Store.findOne({ phone: "9876543210" });
       res.status(200).json(s);
     } catch (error) {
       res.status(400).json({ message: error })
@@ -105,14 +105,21 @@ const PORT = config.port || 4000;
 let server = app.listen(PORT, () => console.log(`API server listening at ${PORT}`));
 
 const io = new Server(server);
-socketHandler(io);
+try {
+  socketHandler(io);
+} catch (error) {
+  console.log('socket error');
+  
+  console.log(error);
+}
+
 
 //to delelte expired ads (buy and sell), and it related images.
 setInterval(() => {
   try {
-  removeExpiredAds();
+    removeExpiredAds();
   } catch (error) {
-   console.error(error) 
+    console.error(error)
   }
 }, 24 * 60 * 60 * 1000);
 
