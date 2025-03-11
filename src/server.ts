@@ -42,6 +42,8 @@ import { removeExpiredAds } from "./controllers/user/buy_and_sell/buy_and_sellCo
 
 const app = express();
 
+let errorMessage = "nothing";
+
 
 connectDb();
 initializeApp({ credential: credential.cert(serviceAccount) });
@@ -61,7 +63,7 @@ app.use(
 );
 
 app.use("/api/healthcheck", (req, res) => {
-  res.status(200).send("Server is healthy");
+  res.status(200).send(`Server is healthy but ${errorMessage}`);
 });
 
 const updateData = expressAsyncHandler(
@@ -107,9 +109,9 @@ let server = app.listen(PORT, () => console.log(`API server listening at ${PORT}
 const io = new Server(server);
 try {
   socketHandler(io);
-} catch (error) {
+} catch (error: any) {
   console.log('socket error');
-  
+  errorMessage = error.toString();
   console.log(error);
 }
 
