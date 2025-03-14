@@ -31,7 +31,7 @@ export const socketHandler = (io: Server) => {
                 return;
             }
             try {
-                await saveMessage(data);
+                await saveMessage(data); 
             } catch (e) {
                 socket.emit('message', { error: e });
             }
