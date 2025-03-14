@@ -1070,7 +1070,12 @@ export const getTimeSlotV2 = asyncHandler(
   async (req: ICustomRequest<any>, res: Response) => {
     try {
       const storeId = req.store?._id;
-      const tempTimeSlots = await TimeSlot.find({ storeId });
+
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+
+      const tempTimeSlots = await TimeSlot.find({ storeId, createdAt: { $gte: startOfDay } });
+
       var timeSlots = [];
       for (var slot of tempTimeSlots) {
         try {
@@ -1146,8 +1151,6 @@ export const getBookingsV2 = asyncHandler(
   async (req: ICustomRequest<any>, res: Response) => {
     try {
       const storeId = req.store?._id;
-      console.log("recieved calls");
-
       //TODO
       const slots = await TimeSlot.find({ storeId }, { _id: 1 });
       const tempBookings = await Booking.aggregate([

@@ -46,11 +46,6 @@ const bookingSchema = new Schema<IBooking>(
         endTime:{
             type:String,
         },
-        date:{
-            type:Date,
-            expires:"1d",
-            default: Date.now
-        },
         doctor:{
             type:Schema.Types.ObjectId
         }

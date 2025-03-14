@@ -3,6 +3,7 @@ import { Schema, model, Document } from "mongoose";
 export interface ICart extends Document {
   userId: Schema.Types.ObjectId;
   storeId: Schema.Types.ObjectId;
+  individualId: Schema.Types.ObjectId;
   cartItems: {
     productId: Schema.Types.ObjectId;
     quantity: Number;
@@ -17,6 +18,10 @@ const cartSchema = new Schema({
   storeId: {
     type: Schema.Types.ObjectId,
     ref: "stores",
+  },
+  individualId: {
+    type: Schema.Types.ObjectId,
+    ref: "Service",
   },
   cartItems: [
     {
