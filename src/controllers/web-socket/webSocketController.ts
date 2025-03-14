@@ -19,7 +19,7 @@ export const socketHandler = (io: Server) => {
 
         userSocketsMap.set(userId, socket);
 
-        socket.on('message', (data: Message) => {
+        socket.on('message', async (data: Message) => {
             data.timestamp = createdAtIST().getTime();
             data.senderId = userId;
             if (!Types.ObjectId.isValid(data.receiverId)) {
@@ -30,7 +30,11 @@ export const socketHandler = (io: Server) => {
                 socket.emit('message', { error:  'message cannot be empty'});
                 return;
             }
-            saveMessage(data);
+            try {
+                await saveMessage(data);
+            } catch (e) {
+                socket.emit('message', { error: e });
+            }
             if (userSocketsMap.has(data.receiverId)) {
                 const receiverSocket = userSocketsMap.get(data.receiverId);
                 if (receiverSocket) {
