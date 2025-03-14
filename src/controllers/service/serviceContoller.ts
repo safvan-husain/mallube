@@ -286,7 +286,7 @@ export const getServices = asyncHandler(
                 delete e.city;
                 delete e.district;
                 delete e.location;
-                return e;
+                return e; 
             })
 
             let tStores = await Store.find(filter, {})
