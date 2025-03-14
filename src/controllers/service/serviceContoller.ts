@@ -289,7 +289,7 @@ export const getServices = asyncHandler(
                 return e;
             })
 
-            let tStores = await Store.find(filter, {}) 
+            let tStores = await Store.find(filter, {})
                 .skip(skip)
                 .limit(limit)
                 .lean();
