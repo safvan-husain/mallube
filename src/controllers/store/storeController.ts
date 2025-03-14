@@ -254,7 +254,6 @@ export const editStore = async (req: any, res: Response) => {
     console.log("error while edit store", error);
     res.status(500).json({ message: "Internal server error" });
   }
-
 };
 
 export const fetchStore = asyncHandler(
@@ -422,7 +421,9 @@ export const fetchAllAdvertisement = async (req: any, res: Response) => {
 
 export const fetchStoresNearByV2 = async (req: Request, res: Response) => {
   try {
-    var { longitude, latitude, limit, skip } = req.query;
+    var { longitude, latitude, limit, skip, type } = req.query;
+    let query: any = {};
+    if(type === 'freelancer') query.type = 'freelancer';
     if (!longitude || !latitude) {
       return res
         .status(400)
@@ -438,6 +439,7 @@ export const fetchStoresNearByV2 = async (req: Request, res: Response) => {
     }
 
     const nearStores = await Store.find({
+      ...query,
       location: {
         $near: {
           $geometry: {
