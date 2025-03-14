@@ -1,9 +1,9 @@
 //this service is added by our team
-import { calculateDistance } from "../../utils/interfaces/common";
-import e, { Request, Response } from "express";
+import {calculateDistance} from "../../utils/interfaces/common";
+import e, {Request, Response} from "express";
 import asyncHandler from "express-async-handler";
-import { Freelancer } from "../../models/freelancerModel";
-import { z } from "zod";
+import {Freelancer} from "../../models/freelancerModel";
+import {z} from "zod";
 import {
     createServiceSchema,
     getServicesQuerySchema,
@@ -13,6 +13,7 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import Product from "../../models/productModel";
 import Category from "../../models/categoryModel";
+import Store from "../../models/storeModel";
 
 export const onCatchError = (error: any, res: Response) => {
     if (error instanceof z.ZodError) {
@@ -22,16 +23,19 @@ export const onCatchError = (error: any, res: Response) => {
         });
         return;
     }
-    res.status(500).json({ message: "Internal server error", error });
+    res.status(500).json({message: "Internal server error", error});
 }
 
 export const getServiceCategory = asyncHandler(
     async (_: Request, res: Response) => {
         try {
-            const serviceCategory = await Category.find({ isEnabledForIndividual: true , parentId: { $exists: false}}, { name: true});
+            const serviceCategory = await Category.find({
+                isEnabledForIndividual: true,
+                parentId: {$exists: false}
+            }, {name: true});
             res.status(201).json(serviceCategory);
         } catch (error) {
-            res.status(500).json({ message: "Internal server error", error });
+            res.status(500).json({message: "Internal server error", error});
         }
     }
 );
@@ -74,7 +78,7 @@ export const createServiceProfile = asyncHandler(
         try {
             const validatedData = createServiceSchema.parse(req.body);
 
-            const isExist = await Freelancer.findOne({ $or: [{ phone: validatedData.phone }, { username: validatedData.username }] });
+            const isExist = await Freelancer.findOne({$or: [{phone: validatedData.phone}, {username: validatedData.username}]});
             if (isExist) {
                 let existingField = "";
                 if (isExist.phone === validatedData.phone) {
@@ -82,7 +86,7 @@ export const createServiceProfile = asyncHandler(
                 } else {
                     existingField = "username";
                 }
-                res.status(401).json({ message: `A service person with same ${existingField} exist` });
+                res.status(401).json({message: `A service person with same ${existingField} exist`});
                 return;
             }
             const hashedPassword: string =
@@ -95,7 +99,7 @@ export const createServiceProfile = asyncHandler(
             let service = new Freelancer(updateData);
             service = await service.save();
             const authToken = service.generateAuthToken();
-            res.status(201).json({ authToken });
+            res.status(201).json({authToken});
         } catch (error) {
             onCatchError(error, res);
         }
@@ -105,24 +109,24 @@ export const createServiceProfile = asyncHandler(
 export const loginServiceProfile = asyncHandler(
     async (req: Request, res: Response) => {
         try {
-            const { username, password } = req.body;
-            const service = await Freelancer.findOne({ $or: [{ phone: username }, { username }] });
+            const {username, password} = req.body;
+            const service = await Freelancer.findOne({$or: [{phone: username}, {username}]});
             if (!service) {
-                res.status(401).json({ message: "Invalid username or password" });
+                res.status(401).json({message: "Invalid username or password"});
                 return;
             }
             const isMatch = await bcrypt.compare(password, service.hashedPassword ?? "");
             if (!isMatch) {
-                res.status(401).json({ message: "Invalid username or password" });
+                res.status(401).json({message: "Invalid username or password"});
                 return;
             }
             console.log("recieved");
-            
+
             const authToken = service.generateAuthToken();
-            res.status(200).json({ authToken });
+            res.status(200).json({authToken});
         } catch (error) {
             console.log(error);
-            
+
             onCatchError(error, res);
         }
     });
@@ -131,9 +135,9 @@ export const loginServiceProfile = asyncHandler(
 export const updateServiceProfile = asyncHandler(
     async (req: Request, res: Response) => {
         try {
-            const { id } = req.params;
+            const {id} = req.params;
             if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-                res.status(400).json({ message: "id must be a valid MongoDB ObjectId" });
+                res.status(400).json({message: "id must be a valid MongoDB ObjectId"});
                 return;
             }
             const validatedData = updateServiceSchema.parse(req.body);
@@ -144,12 +148,12 @@ export const updateServiceProfile = asyncHandler(
 
             const updatedService = await Freelancer.findByIdAndUpdate(
                 id,
-                { $set: updateData },
-                { new: true, runValidators: true }
+                {$set: updateData},
+                {new: true, runValidators: true}
             );
 
             if (!updatedService) {
-                res.status(404).json({ message: "Service not found" });
+                res.status(404).json({message: "Service not found"});
                 return;
             }
 
@@ -164,19 +168,19 @@ export const updateServiceProfile = asyncHandler(
 export const deleteServiceProfile = asyncHandler(
     async (req: Request, res: Response) => {
         try {
-            const { id } = req.params;
+            const {id} = req.params;
             if (!mongoose.Types.ObjectId.isValid(id)) {
-                res.status(400).json({ message: "param (id) must be a valid MongoDB ObjectId" });
+                res.status(400).json({message: "param (id) must be a valid MongoDB ObjectId"});
                 return;
             }
             const deletedService = await Freelancer.findByIdAndDelete(id);
             if (!deletedService) {
-                res.status(404).json({ message: "Service not found" });
+                res.status(404).json({message: "Service not found"});
                 return;
             }
-            res.status(200).json({ message: "Service deleted successfully" });
+            res.status(200).json({message: "Service deleted successfully"});
         } catch (error) {
-            res.status(500).json({ message: "Internal server error", error });
+            res.status(500).json({message: "Internal server error", error});
         }
     }
 );
@@ -185,14 +189,15 @@ export const deleteServiceProfile = asyncHandler(
 export const getSpecificServiceProfile = asyncHandler(
     async (req: any, res: Response) => {
         //using both param and req so it can be used both for staff/admin and individual.
-        let { id } = req.params;
+        let {id} = req.params;
         if (!id) {
-            id = req.requester._id;;
+            id = req.requester._id;
+            ;
         }
 
         try {
             if (!mongoose.Types.ObjectId.isValid(id)) {
-                res.status(401).json({ message: "id must be a valid MongoDB ObjectId" });
+                res.status(401).json({message: "id must be a valid MongoDB ObjectId"});
                 return;
             }
             let service: any = await Freelancer.findById(id, {
@@ -215,7 +220,7 @@ export const getSpecificServiceProfile = asyncHandler(
             })
                 .populate('categories', 'name').lean();
 
-            const { latitude, longitude } = req.query;
+            const {latitude, longitude} = req.query;
 
             //if latitude and longitude are provided, calculate distance (used for users)
             if (latitude && longitude) {
@@ -226,8 +231,8 @@ export const getSpecificServiceProfile = asyncHandler(
                     service.location.coordinates[1],);
                 service.distance = distance.toFixed(2);
             }
-            const products = await Product.find({ individual: service._id })
-            service.products = products;     
+            const products = await Product.find({individual: service._id})
+            service.products = products;
             res.status(200).json(service);
         } catch (error) {
             console.log(error)
@@ -242,10 +247,10 @@ export const getServices = asyncHandler(
 
         try {
             const validatedQuery = getServicesQuerySchema.parse(req.query);
-            const { categories, latitude, longitude, skip, limit } = validatedQuery;
+            const {categories, latitude, longitude, skip, limit} = validatedQuery;
             let filter: any = {};
             if (categories) {
-                filter = { categories: { $in: [categories] } };
+                filter = {categories: {$in: [categories]}};
             }
             if (latitude && longitude) {
                 filter.location = {
@@ -275,7 +280,7 @@ export const getServices = asyncHandler(
                 const distance = latitude && longitude ? calculateDistance(
                     latitude,
                     longitude, e.location.coordinates[0],
-                    e.location.coordinates[1],): 0;
+                    e.location.coordinates[1],) : 0;
                 e.distance = distance.toFixed(2);
                 e.address = e.city + ", " + e.district;
                 delete e.city;
@@ -283,7 +288,12 @@ export const getServices = asyncHandler(
                 delete e.location;
                 return e;
             })
-            res.json(services);
+
+            let tStores = await Store.find(filter, {})
+                .skip(skip)
+                .limit(limit)
+                .lean();
+            res.json({services, tStores})
         } catch (error) {
             console.log(error)
             onCatchError(error, res);
@@ -292,7 +302,7 @@ export const getServices = asyncHandler(
 );
 
 function getServiceConvertedDataFromRequestData(validatedData: any) {
-    const updateData: any = { ...validatedData };
+    const updateData: any = {...validatedData};
     delete updateData.password;
 
     // If coordinates are being updated, update the location object
