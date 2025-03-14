@@ -20,6 +20,10 @@ export const socketHandler = (io: Server) => {
         userSocketsMap.set(userId, socket);
 
         socket.on('message', async (data: Message) => {
+            if(!checkObjectAndFields(data)) {
+                socket.emit('message', { error: "Not valid data"});
+                return;
+            }
             data.timestamp = createdAtIST().getTime();
             data.senderId = userId;
             if (!Types.ObjectId.isValid(data.receiverId)) {
@@ -61,4 +65,17 @@ export interface Message {
     message: string;
     senderId: string;
     timestamp: number;
+}
+
+function checkObjectAndFields(obj: any): boolean {
+    const fieldNames = ['receiverId', 'message', 'senderId']
+    if (typeof obj === "object" && obj !== null) {
+        for (const fieldName of fieldNames) {
+            if (!(fieldName in obj) || !obj.hasOwnProperty(fieldName)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    return false;
 }
