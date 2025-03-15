@@ -3,7 +3,7 @@ import {
     createServiceProfile,
     deleteServiceProfile,
     getServiceCategory,
-    getServices,
+    getFreelancers,
     getSpecificServiceProfile,
     updateServiceProfile,
     loginServiceProfile
@@ -15,7 +15,7 @@ const router = Router();
 
 //only sned neccessary data
 router.route('/')
-    .get(getServices);
+    .get(getFreelancers);
 router.route('/login').post(loginServiceProfile);
 router.route('/register').post(createServiceProfile);
 

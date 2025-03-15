@@ -155,6 +155,7 @@ const storeSchema = new Schema<IStore>(
         },
         shopImgUrl: {
             type: String,
+            default: "",
         },
         subscription: {
             plan: {

@@ -242,7 +242,7 @@ export const getSpecificServiceProfile = asyncHandler(
 );
 
 // Get all services
-export const getServices = asyncHandler(
+export const getFreelancers = asyncHandler(
     async (req: Request, res: Response) => {
 
         try {
@@ -263,37 +263,36 @@ export const getServices = asyncHandler(
                 };
             }
 
-
-            let tServices: any[] = await Freelancer.find(filter, {
-                name: true,
+            let tStores = await Store.find(filter, {
+                storeName: true,
                 location: true,
                 city: true,
                 district: true,
                 phone: true,
-                icon: true,
+                shopImgUrl: true,
             })
                 .skip(skip)
                 .limit(limit)
-                .populate('categories', 'name').lean();
-            const services = tServices.map((e) => {
-
+                //TODO: maybe support multiple category to choose.
+                .populate('category', 'name')
+                .lean();
+            const stores = tStores.map((e: any) => {
                 const distance = latitude && longitude ? calculateDistance(
                     latitude,
                     longitude, e.location.coordinates[0],
                     e.location.coordinates[1],) : 0;
                 e.distance = distance.toFixed(2);
                 e.address = e.city + ", " + e.district;
+                if(e.category) {
+                    e.categories = [e.category];
+                    delete e.category;
+                }
                 delete e.city;
                 delete e.district;
                 delete e.location;
                 return e;
             })
-
-            let tStores = await Store.find(filter, {})
-                .skip(skip)
-                .limit(limit)
-                .lean();
-            res.json({services, tStores})
+            res.json(stores)
         } catch (error) {
             console.log(error)
             onCatchError(error, res);

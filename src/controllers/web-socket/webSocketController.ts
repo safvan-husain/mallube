@@ -12,7 +12,7 @@ export const socketHandler = (io: Server) => {
 
         if (!Types.ObjectId.isValid(userId)) {
             // If the user exists, reject the connection with an error message
-            socket.emit('message', { message:  'not valid ObjectId on userId'});
+            socket.emit('message', { error:  'not valid ObjectId on userId'});
             socket.disconnect(true);
             return;
         }
