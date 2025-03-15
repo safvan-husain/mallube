@@ -262,7 +262,7 @@ export const getStoreDetails = asyncHandler(
                 tStore.location.coordinates[1]
             );
             store.category = store.category.name;
-            store.distance = distance.toString();
+            store.distance = distance.toFixed(2);
             res.status(200).json(store);
         } catch (error) {
             console.log(error);
