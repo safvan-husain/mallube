@@ -40,7 +40,7 @@ messageSchema.pre('save', async function(next) {
   
   // Check if chat exists
   let chat = await Chat.findOne({
-    participants: { $in: [message.senderId, message.receiverId] },
+    participants: { $all: [message.senderId, message.receiverId] },
   });
 
   if (!chat) {
@@ -56,7 +56,6 @@ messageSchema.pre('save', async function(next) {
     chat.lastMessage = message._id;
     await chat.save();
   }
-
   next();
 });
 
