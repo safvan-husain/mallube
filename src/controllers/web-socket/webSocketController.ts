@@ -30,10 +30,6 @@ export const socketHandler = (io: Server) => {
                 socket.emit('message', { error: 'not valid ObjectId on receiverId' });
                 return;
             }
-            if (!data.message) {
-                socket.emit('message', { error:  'message cannot be empty'});
-                return;
-            }
             try {
                 await saveMessage(data);
             } catch (e) {
@@ -62,13 +58,13 @@ export const socketHandler = (io: Server) => {
 
 export interface Message {
     receiverId: string;
-    message: string;
+    content: string;
     senderId: string;
     timestamp: number;
 }
 
 function checkObjectAndFields(obj: any): boolean {
-    const fieldNames = ['receiverId', 'message', 'senderId']
+    const fieldNames = ['receiverId', 'content', 'senderId']
     if (typeof obj === "object" && obj !== null) {
         for (const fieldName of fieldNames) {
             if (!(fieldName in obj) || !obj.hasOwnProperty(fieldName)) {

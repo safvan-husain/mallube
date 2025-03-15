@@ -75,7 +75,7 @@ export const saveMessage = async (message: s.Message) => {
         await Message.create({
             senderId: message.senderId,
             receiverId: message.receiverId,
-            content: message.message,
+            content: message.content,
             timestamp: message.timestamp,
             isRead: false,
         });
