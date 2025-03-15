@@ -32,7 +32,7 @@ export const getServiceCategory = asyncHandler(
             const serviceCategory = await Category.find({
                 isEnabledForIndividual: true,
                 parentId: {$exists: false}
-            }, {name: true});
+            }, {name: true, icon: true});
             res.status(201).json(serviceCategory);
         } catch (error) {
             res.status(500).json({message: "Internal server error", error});
