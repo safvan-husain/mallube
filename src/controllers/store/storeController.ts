@@ -456,7 +456,7 @@ export const fetchStoresNearByV2 = async (req: Request, res: Response) => {
       openTime: true, closeTime: true, isDeliveryAvailable: true,
       instagram: true, facebook: true, whatsapp: true,
       phone: true, shopImgUrl: true,
-      service: true, location: true, city: true
+      service: true, location: true, city: true, type: true,
     })
       .populate("category", "name icon")
       .skip(parseInt(skip as string))
