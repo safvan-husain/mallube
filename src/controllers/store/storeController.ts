@@ -24,6 +24,8 @@ import { getNextYearSameDateMinusOneDay } from "../../utils/misc";
 import { store } from "../../middleware/auth";
 import { FeedBack } from "../../models/feedbackModel";
 import { toTimeOnly } from "../../utils/ist_time";
+import {createStoreValidation} from "./validation/store_validation";
+import {onCatchError} from "../service/serviceContoller";
 
 const { TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN } = process.env;
 // const twilioclient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN, {
@@ -157,7 +159,13 @@ export const getProfile = async (req: any, res: Response) => {
 
 export const signup = async (req: ICustomRequest<ISignUpStoreSchema>, res: Response) => {
   try {
-    const { shopImgUrl, latitude, longitude, ...rest } = req.body;
+    //don't have time to upate all into validation now, so the validation only for new fields
+    //TODO: add validation.
+    let s = createStoreValidation.parse(req.body);
+    const { shopImgUrl, latitude, longitude, ...rest } = {
+      ...s,
+      ...req.body
+    };
 
     let uniqueName = (req.body as ISignUpStoreSchema).uniqueName;
     let phone = (req.body as ISignUpStoreSchema).phone;
@@ -218,37 +226,37 @@ export const signup = async (req: ICustomRequest<ISignUpStoreSchema>, res: Respo
     const token = store.generateAuthToken();
     res.status(201).json({ message: "Store created", authToken: token });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Internal server error" });
-
+    onCatchError(error, res);
   }
 };
 //TODO: delete duplication.
 export const editStore = async (req: any, res: Response) => {
-  const {
-    name, email, storeName, uniqueName, category, phone,
-    location, shopImageUrl, bio,
-    isAvailable, subscription,
-  } = req.body;
+  //TODO: add validation
+
+  // const {
+  //   name, email, storeName, uniqueName, category, phone,
+  //   location, shopImageUrl, bio,
+  //   isAvailable, subscription, ...rest
+  // } = req.body;
 
   const storeId: any = req?.store._id;
   try {
-    const store = await Store.findById(storeId);
+    const store = await Store.findByIdAndUpdate(storeId, req.body);
     if (!store) {
       return res.status(404).json({ message: "Store not found" });
     }
-    store.storeOwnerName = name || store.storeOwnerName;
-    store.email = email || store.email;
-    store.storeName = storeName || store.storeName;
-    store.uniqueName = uniqueName || store.uniqueName;
-    store.category = category || store.category;
-    store.phone = phone || store.phone;
-    store.location = location || store.location;
-    store.shopImgUrl = shopImageUrl || store.shopImgUrl;
-    store.bio = bio || store.bio;
-    store.isAvailable = isAvailable || store.isAvailable;
-    store.subscription = subscription || store.subscription;
-    await store.save();
+    // store.storeOwnerName = name || store.storeOwnerName;
+    // store.email = email || store.email;
+    // store.storeName = storeName || store.storeName;
+    // store.uniqueName = uniqueName || store.uniqueName;
+    // store.category = category || store.category;
+    // store.phone = phone || store.phone;
+    // store.location = location || store.location;
+    // store.shopImgUrl = shopImageUrl || store.shopImgUrl;
+    // store.bio = bio || store.bio;
+    // store.isAvailable = isAvailable || store.isAvailable;
+    // store.subscription = subscription || store.subscription;
+    // await store.save();
     res.status(200).json({ message: "Store updated successfully" });
   } catch (error) {
     console.log("error while edit store", error);

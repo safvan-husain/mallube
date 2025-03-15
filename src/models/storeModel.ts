@@ -58,6 +58,7 @@ export interface IStore extends Document {
     updatedAt?: Date;
     storeProviding?: "productBased" | "serviceBased";
     isDeliveryAvailable: boolean;
+    deliveryRadius: number;
 }
 
 const storeSchema = new Schema<IStore>(
@@ -204,6 +205,9 @@ const storeSchema = new Schema<IStore>(
         type: {
             type: String,
             default: 'business',
+        },
+        deliveryRadius: {
+            type: Number,
         }
     },
     {
