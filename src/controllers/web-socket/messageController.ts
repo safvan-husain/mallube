@@ -51,12 +51,12 @@ export const getChats = asyncHandler(
                     let otherUser: any = e.participants.find((k: any) => k.toString() !== userId?.toString());
                     if (!otherUser) return null; // Handle edge case where no other user is found
 
-                    otherUser = await User.findById(otherUser, { name: true }).lean();
+                    otherUser = await User.findById(otherUser, { fullName: true }).lean();
                     if (!otherUser) return null; // Handle case where user is not found in DB
 
                     return {
                         _id: otherUser._id,
-                        name: otherUser.name,
+                        name: otherUser.fullName,
                         lastMessage: e.lastMessage.content,
                         timeStamps: e.lastMessage.timestamp.getTime(),
                         isRead: e.lastMessage.isRead
