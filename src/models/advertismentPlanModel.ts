@@ -4,9 +4,12 @@ import { Schema, model, Document } from "mongoose";
 interface IAdvertisementPlan extends Document {
     name: string;
     price: number;
+    offerPrice?: number;
     duration: number;
-    maxRadius: number;
-    maxRadiusInRadians: number;
+    //When radius are undefined, which mean no limit (all users should see the advertisement)
+    maxRadius?: number;
+    maxRadiusInRadians?: number;
+    message?: string;
 }
 
 const advertisementPlanSchema = new Schema<IAdvertisementPlan>({
@@ -18,18 +21,22 @@ const advertisementPlanSchema = new Schema<IAdvertisementPlan>({
         type: Number,
         required: true,
     },
+    offerPrice: {
+        type: Number,
+    },
     duration: {
         type: Number,
         required: true,
     },
     maxRadius: {
         type: Number,
-        required: true,
     },
     maxRadiusInRadians: {
         type: Number,
-        required: true,
     },
+    message: {
+        type: String,
+    }
 })
 
 const AdvertisementPlan = model<IAdvertisementPlan>(
