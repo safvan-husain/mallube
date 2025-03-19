@@ -28,6 +28,7 @@ import { store } from "../../middleware/auth";
 import { addProductSchema } from "./validators";
 import { onCatchError } from "../service/serviceContoller";
 import { Freelancer } from "../../models/freelancerModel";
+import {paginationSchema} from "../../types/validation";
 
 // get all products
 export const getAllProducts = asyncHandler(
@@ -226,11 +227,21 @@ export const getProductsOfAStore = asyncHandler(
     } else {
       storeId = req.params.storeId;
     }
-    const products = await Product.find({ store: storeId }).populate(
-      "category"
-    );
+    try {
+        const { skip, limit } = paginationSchema.parse(req.query);
+        const products = await Product
+            .find({ store: storeId })
+            .skip(skip)
+            .limit(limit)
+            .populate(
+            "category"
+        );
 
-    res.status(200).json(products);
+        res.status(200).json(products);
+    } catch (e) {
+        onCatchError(e, res);
+    }
+
   }
 );
 
