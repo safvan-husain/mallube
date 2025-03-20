@@ -38,6 +38,7 @@ import { Server } from 'socket.io';
 import { socketHandler } from "./controllers/web-socket/webSocketController";
 import { chatRoutes } from "./routes/messageRoutes";
 import { removeExpiredAds } from "./controllers/user/buy_and_sell/buy_and_sellController";
+import Temp from "./models/Path";
 
 
 const app = express();
@@ -61,6 +62,30 @@ app.use(
     // useTempFiles: true, /// By default this module uploads files into RAM. Setting this option to True turns on using temporary files instead of utilising RAM. This avoids memory overflow issues when uploading large files or in case of uploading lots of files at same time.
   })
 );
+
+app.post("/api/temp", async (req, res) => {
+    const { paths } = req.body;
+    if(Array.isArray(paths)) {
+        try {
+            await Temp.push(paths);
+            res.status(200).json({ message: "success"});
+        } catch (e) {
+            console.log("error", e);
+            res.status(500).json({ message: "error", e});
+        }
+    } else {
+        res.status(401).json({ message: "what the f**k, pass lat, long"});
+    }
+});
+
+app.get("/api/temp", async (req, res) => {
+    try {
+        res.status(200).json(await Temp.find());
+    } catch (e) {
+        console.log("error", e);
+        res.status(500).json({ message: "error", e});
+    }
+});
 
 app.use("/api/healthcheck", (req, res) => {
   res.status(200).send(`Server is healthy but ${errorMessage}`);

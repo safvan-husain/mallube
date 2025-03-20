@@ -63,3 +63,9 @@ export const updateCategorySchemaV2 = z
         message: "Either isEnabledForStore or isEnabledForIndividual should be true",
         path: ["icoisEnabledForStore, isEnabledForIndividualn"],
     });
+
+const getCategoriesSchema = z.object({
+    isActive: z.boolean().default(true),
+    isStoreOnly: z.boolean().default(false),
+    isFreelanceOnly: z.boolean().default(false),
+});
