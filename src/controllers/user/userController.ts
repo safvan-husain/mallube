@@ -16,6 +16,9 @@ import Store from "../../models/storeModel";
 import mongoose from "mongoose";
 import Specialisation from "../../models/specialisationModel";
 import {calculateDistance} from "../../utils/interfaces/common";
+import {ObjectIdSchema} from "../../types/validation";
+import {z} from "zod";
+import {onCatchError} from "../service/serviceContoller";
 
 const {TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN} = process.env;
 // const twilioclient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN, {
@@ -651,6 +654,7 @@ export const fetchTimeSlot = async (req: Request, res: Response) => {
     }
 };
 
+//TODO: delete this.
 export const slotBooking = async (req: any, res: Response) => {
     try {
         const {slotId, date, startTime, endTime, storeId} = req.body;
@@ -777,10 +781,18 @@ export const slotBookingV2 = async (req: any, res: Response) => {
         const newBooking = new Booking({
             timeSlotId: slotId,
             storeId: timeslot.storeId,
+            startTime: timeslot.startTime,
+            endTime: timeslot.endTime,
             userId,
         });
 
-        var booking = await newBooking.save();
+        let booking: any = await newBooking.save();
+        booking = booking.toObject();
+        booking = {
+            ...booking,
+            startTime: booking.startTime?.getTime(),
+            endTime: booking.endTime?.getTime(),
+        }
 
         res.status(201).json({
             message: `Requested. You will get a call from shop owner.`,
@@ -791,6 +803,42 @@ export const slotBookingV2 = async (req: any, res: Response) => {
         res.status(500).json({message: "Internal server error", error});
     }
 };
+
+export const getBookingHistory = async (req: any, res: any) => {
+    try {
+        let {storeId} = z.object({storeId: ObjectIdSchema}).parse(req.query);
+        let bookingHistory = await Booking.find({storeId, userId: req.user._id}, {
+            createdAt: true,
+            startTime: true,
+            endTime: true,
+            isActive: true
+        }).lean();
+        res.status(200).json(bookingHistory.map(e => ({
+            ...e,
+            startTime: e.startTime?.getTime(),
+            endTime: e.endTime?.getTime(),
+            createdAt: e.createdAt?.getTime()
+        })));
+    } catch (e) {
+        console.log(e);
+        onCatchError(e, res);
+    }
+}
+
+export const deleteBookingHistory = async (req: any, res: any) => {
+    try {
+        let {storeId} = z.object({storeId: ObjectIdSchema}).parse(req.query);
+        let bookingHistory = await Booking.findOneAndDelete({storeId, userId: req.user._id});
+        if(bookingHistory) {
+            res.status(200).json({ message: "Booking deleted successfully"});
+            return;
+        }
+        res.status(404).json({ message: "Booking not found"});
+    } catch (e) {
+        console.log(e);
+        onCatchError(e, res);
+    }
+}
 
 export const getBookingsV2 = asyncHandler(
     async (req: any, res: any) => {

@@ -5,14 +5,16 @@ export interface IBooking extends Document {
     storeId: Schema.Types.ObjectId;
     userId: Schema.Types.ObjectId;
     token:number;
-    startTime:string,
-    endTime:string,
+    startTime:Date,
+    endTime:Date,
     date:Date;
     name:string;
     phone:string;
     doctor:Schema.Types.ObjectId;
     isActive: boolean;
+    createdAt: Date;
 }
+
 const bookingSchema = new Schema<IBooking>(
     {
         timeSlotId:{
@@ -20,6 +22,7 @@ const bookingSchema = new Schema<IBooking>(
         },
         storeId:{
             type:Schema.Types.ObjectId,
+            ref: 'stores',
             required: true
         },
         isActive: {
@@ -28,6 +31,7 @@ const bookingSchema = new Schema<IBooking>(
         },
         userId:{
             type:Schema.Types.ObjectId,
+            ref: 'users',
             required:true
         },
         name:{
@@ -41,10 +45,10 @@ const bookingSchema = new Schema<IBooking>(
             default:1
         },
         startTime:{
-            type:String,
+            type:Date,
         },
         endTime:{
-            type:String,
+            type:Date,
         },
         doctor:{
             type:Schema.Types.ObjectId

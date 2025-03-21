@@ -30,7 +30,7 @@ import {
   getTimeSlotV2,
   deleteTimeSlotV2,
   fetchStoresNearByV2,
-  fetchStoreByCategoryV2
+  fetchStoreByCategoryV2, addKeyWords
 } from "../controllers/store/storeController";
 import { store } from "../middleware/auth";
 import { addSpecialisation, fetchAllSpecialisation } from "../controllers/specialisation/specialisationController";
@@ -39,6 +39,7 @@ import { addProduct, deleteProductOfAStore, getProductsOfAStore, switchStockStat
 import { rePublishRequestAnAdvertisement } from "../controllers/advertisement/advertisementController";
 import { createNote, deleteNote, getNotesForStore, updateNote } from "../controllers/store/notes_controller";
 import { createBillForCustomer, createCustomer, deleteCustomer, deleteSelectedBills, getAllCustomers, getCustomerPurchaseHistory, getSpecificBill, markRecievedPayment, updateCustomer, updateSpecificBill } from "../controllers/store/pattu_book_controller";
+import {getBookingHistory, getTodayBookings} from "../controllers/store/store-booking-timeslot-Controller";
 const router = express.Router();
 
 router.route("/login").post(login);
@@ -72,6 +73,9 @@ router.route('/customer/bill')
 
 router.route('/customer/history')
   .get(store, getCustomerPurchaseHistory);
+
+router.route('/booking-history').get(store, getBookingHistory);
+router.route('/booking-v3').get(store, getTodayBookings);
 
 router.route('/customer/mark-recieved-payment').post(store, markRecievedPayment)
 

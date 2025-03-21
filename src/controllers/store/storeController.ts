@@ -1,36 +1,24 @@
-import { NextFunction, Request, Response } from "express";
+import {NextFunction, Request, Response} from "express";
 import asyncHandler from "express-async-handler";
 import bcrypt from "bcryptjs";
 import Store from "../../models/storeModel";
 import Advertisement from "../../models/advertisementModel";
-import { calculateDistance } from "../../utils/interfaces/common";
-import { populate } from "dotenv";
+import {calculateDistance} from "../../utils/interfaces/common";
 import Category from "../../models/categoryModel";
 import mongoose from "mongoose";
 import Product from "../../models/productModel";
 import ProductSearch from "../../models/productSearch";
 import jwt from "jsonwebtoken";
-// import twilio from "twilio";
-import { TimeSlot } from "../../models/timeSlotModel";
+import {TimeSlot} from "../../models/timeSlotModel";
 import Booking from "../../models/bookingModel";
-import Specialisation from "../../models/specialisationModel";
-import { ICustomRequest } from "../../types/requestion";
-import { getStoreByPhoneOrUniqueNameOrEmail } from "../../service/store/index";
-import {
-  IAddStoreSchema,
-  ISignUpStoreSchema
-} from "../../schemas/store.schema";
-import { getNextYearSameDateMinusOneDay } from "../../utils/misc";
-import { store } from "../../middleware/auth";
-import { FeedBack } from "../../models/feedbackModel";
-import { toTimeOnly } from "../../utils/ist_time";
+import {ICustomRequest} from "../../types/requestion";
+import {getStoreByPhoneOrUniqueNameOrEmail} from "../../service/store/index";
+import {ISignUpStoreSchema, updateStoreSchema} from "../../schemas/store.schema";
+import {FeedBack} from "../../models/feedbackModel";
+import {toTimeOnly} from "../../utils/ist_time";
 import {createStoreValidation} from "./validation/store_validation";
 import {onCatchError} from "../service/serviceContoller";
-
-const { TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN } = process.env;
-// const twilioclient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN, {
-//   lazyLoading: true,
-// });
+import {z} from "zod";
 
 const twilioServiceId = process.env.TWILIO_SERVICE_ID;
 
@@ -405,7 +393,7 @@ export const fetchAllAdvertisement = async (req: any, res: Response) => {
       {
         $addFields: {
           plan_name: '$ad_plan_details.name', // Map storeDetails.name to
-          // 
+          //
           // TODO: remove later (added as fix for initila play store fix)
           advertisementDisplayStatus: "hideFromBothCarousal"
         },
@@ -742,6 +730,7 @@ export const fetchStoreByCategoryV2 = async (req: Request, res: Response) => {
   }
 };
 
+//TODO: delete if not using.
 export const searchStoresByProductName = asyncHandler(
   async (req: Request, res: Response) => {
     try {
@@ -832,7 +821,7 @@ export const searchStoresByProductName = asyncHandler(
     }
   }
 );
-
+//TODO: delete if not using.
 export const changePassword = async (
   req: any,
   res: Response,
@@ -1001,8 +990,11 @@ export const updateStoreProfile = async (req: any, res: Response) => {
   try {
     const storeId = req.store._id;
 
-    const { ...updatedFields } = req.body;
+    let updatedFields = {...updateStoreSchema.parse(req.body), ...req.body};
     delete updatedFields._id;
+    if(updatedFields.password) {
+      updatedFields.password = await bcrypt.hash(updatedFields.password, 10);
+    }
 
     const store = await Store.findById(storeId);
 
@@ -1045,11 +1037,11 @@ export const updateStoreProfile = async (req: any, res: Response) => {
 export const addTimeSlotV2 = asyncHandler(
   async (req: ICustomRequest<any>, res: Response) => {
     try {
-      var { startTime, endTime, numberOfTotalSeats, slotIndex } = req.body;
+      let { startTime, endTime, numberOfTotalSeats, slotIndex } = req.body;
       console.log("adding time slot", req.body);
 
       const storeId = req.store?._id;
-      //converting milli second since epoach format to Date
+      //converting millisecond since epoch format to Date
       startTime = toTimeOnly(parseInt(startTime));
       endTime = toTimeOnly(parseInt(endTime));
 
@@ -1059,7 +1051,7 @@ export const addTimeSlotV2 = asyncHandler(
         startTime,
         endTime,
         numberOfTotalSeats,
-        numberOfAvaiableSeats: numberOfTotalSeats
+        numberOfAvailableSeats: numberOfTotalSeats
       });
       timeSlot = await timeSlot.save();
       res.status(200).json({
@@ -1086,8 +1078,8 @@ export const getTimeSlotV2 = asyncHandler(
 
       const tempTimeSlots = await TimeSlot.find({ storeId, createdAt: { $gte: startOfDay } });
 
-      var timeSlots = [];
-      for (var slot of tempTimeSlots) {
+      let timeSlots = [];
+      for (const slot of tempTimeSlots) {
         try {
           timeSlots.push(
             {
@@ -1129,9 +1121,6 @@ export const confirmBookingV2 = asyncHandler(
   async (req: ICustomRequest<any>, res: Response) => {
     try {
       const { bookingId } = req.query;
-
-      console.log(`recieved confirm for ${bookingId}`);
-
 
       const booking = await Booking.findById(bookingId);
       if (!booking) {
@@ -1344,5 +1333,22 @@ export const updateFcmToken = asyncHandler(
       res.status(500).json({ message: "Internal server error", error });
     }
   }
+)
+
+export const addKeyWords = asyncHandler(
+    async (req: ICustomRequest<any>, res: Response) => {
+        const storeId = req.store?._id;
+
+        try {
+            const keyWords = z.object({keyWords: z.string()}).parse(req.body).keyWords;
+
+            if (storeId) {
+                await Store.findByIdAndUpdate(storeId, {keyWords});
+            }
+            res.status(200).json({message: "key words added succesfully"});
+        } catch (error) {
+            onCatchError(error, res);
+        }
+    }
 )
 
