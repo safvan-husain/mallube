@@ -28,7 +28,8 @@ import { store } from "../../middleware/auth";
 import { addProductSchema } from "./validators";
 import { onCatchError } from "../service/serviceContoller";
 import { Freelancer } from "../../models/freelancerModel";
-import {paginationSchema} from "../../types/validation";
+import {ObjectIdSchema, paginationSchema} from "../../types/validation";
+import {z} from "zod";
 
 // get all products
 export const getAllProducts = asyncHandler(
@@ -221,16 +222,23 @@ export const getProductById = asyncHandler(
 //get product of a store
 export const getProductsOfAStore = asyncHandler(
   async (req: ICustomRequest<undefined>, res: Response) => {
-    let storeId;
+    let query: any = {}
     if (req.store?._id) {
-      storeId = req.store._id;
+      query.store = req.store._id;
     } else {
-      storeId = req.params.storeId;
+      query.store = req.params.storeId;
     }
     try {
-        const { skip, limit } = paginationSchema.parse(req.query);
+        const { skip, limit, category } = z.object({
+            category: ObjectIdSchema.optional(),
+        }).merge(paginationSchema).parse(req.query);
+
+        if(category) {
+            query.category = category;
+        }
+
         const products = await Product
-            .find({ store: storeId })
+            .find(query)
             .skip(skip)
             .limit(limit)
             .populate(
@@ -241,7 +249,6 @@ export const getProductsOfAStore = asyncHandler(
     } catch (e) {
         onCatchError(e, res);
     }
-
   }
 );
 

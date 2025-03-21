@@ -8,3 +8,8 @@ export const createStoreValidation = z.object({
     isDeliveryAvailable: z.boolean().default(false),
     deliveryRadius: z.number().optional(),
 });
+
+//TODO: add rest later.
+export const updateProfileSchema = z.object({
+    password: z.string().min(6, { message: "password should be at least 6 char long"}).optional()
+});

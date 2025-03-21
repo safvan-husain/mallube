@@ -60,6 +60,8 @@ export interface IStore extends Document {
     storeProviding?: "productBased" | "serviceBased";
     isDeliveryAvailable: boolean;
     deliveryRadius: number;
+    authToken?: string;
+    keyWords: string;
 }
 
 const storeSchema = new Schema<IStore>(
@@ -214,6 +216,13 @@ const storeSchema = new Schema<IStore>(
         },
         deliveryRadius: {
             type: Number,
+        },
+        authToken: {
+            type: String
+        },
+        keyWords: {
+            type: String,
+            default: ''
         }
     },
     {

@@ -117,6 +117,9 @@ router.route("/product")
   .delete(store, deleteProductOfAStore)
   .put(store, updateProduct);
 router.route("/product/stock-status").put(store, switchStockStatusOfAProduct);
+
+router.route('/key-word').post(store, addKeyWords)
+
 router.route("/:uniqueName").get(fetchStoreByUniqueName);
 
 

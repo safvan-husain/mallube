@@ -2,11 +2,12 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import fileUpload from "express-fileupload";
-import { initializeApp } from "firebase-admin/app";
-import { credential } from "firebase-admin";
+import {initializeApp} from "firebase-admin/app";
+import {credential} from "firebase-admin";
 import mongoose from "mongoose";
 
 import connectDb from "./config/db";
+
 const serviceAccount = require('./secrets/serviceAccountKey.json');
 
 import adminRoutes from "./routes/adminRoutes";
@@ -19,26 +20,27 @@ import advertisementRoutes from "./routes/advertisementRoutes";
 import utilsRoutes from "./routes/utilsRoutes";
 import subscriptionRoutes from "./routes/subscriptionRoutes"
 import bookingRoutes from './routes/bookingRoutes'
-import { notificationRouter } from "./routes/notificationRoute";
+import {notificationRouter} from "./routes/notificationRoute";
 import './utils/common'
 
 require("dotenv").config();
-import { errorHandler, notFound } from "./middleware/error.middleware";
-import { config } from "./config/vars";
-import { periodicallyChangeStatusOfExpiredAdvertisemets } from "./controllers/advertisement/advertisementController";
+import {errorHandler, notFound} from "./middleware/error.middleware";
+import {config} from "./config/vars";
+import {periodicallyChangeStatusOfExpiredAdvertisemets} from "./controllers/advertisement/advertisementController";
 import expressAsyncHandler from "express-async-handler";
 import Store from "./models/storeModel";
 import Product from "./models/productModel";
-import { searchRouter } from "./routes/searchRoutes";
-import { individualBussinessRoutes } from "./routes/individualBussinessRoutes";
+import {searchRouter} from "./routes/searchRoutes";
+import {individualBussinessRoutes} from "./routes/individualBussinessRoutes";
 import Category from "./models/categoryModel";
-import { Freelancer } from "./models/freelancerModel";
-import { buyAndSellRouter } from "./routes/buy_and_sell_route";
-import { Server } from 'socket.io';
-import { socketHandler } from "./controllers/web-socket/webSocketController";
-import { chatRoutes } from "./routes/messageRoutes";
-import { removeExpiredAds } from "./controllers/user/buy_and_sell/buy_and_sellController";
+import {Freelancer} from "./models/freelancerModel";
+import {buyAndSellRouter} from "./routes/buy_and_sell_route";
+import {Server} from 'socket.io';
+import {socketHandler} from "./controllers/web-socket/webSocketController";
+import {chatRoutes} from "./routes/messageRoutes";
+import {removeExpiredAds} from "./controllers/user/buy_and_sell/buy_and_sellController";
 import Temp from "./models/Path";
+import User from "./models/userModel";
 
 
 const app = express();
@@ -47,34 +49,34 @@ let errorMessage = "nothing";
 
 
 connectDb();
-initializeApp({ credential: credential.cert(serviceAccount) });
+initializeApp({credential: credential.cert(serviceAccount)});
 
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({limit: "50mb"}));
+app.use(express.urlencoded({extended: true}));
 app.use(cors());
 
 app.use(
-  fileUpload({
-    limits: { fileSize: 10 * 1024 * 1024 },
-    // createParentPath: true,
-    abortOnLimit: true,
-    responseOnLimit: 'max _ mb only',
-    // useTempFiles: true, /// By default this module uploads files into RAM. Setting this option to True turns on using temporary files instead of utilising RAM. This avoids memory overflow issues when uploading large files or in case of uploading lots of files at same time.
-  })
+    fileUpload({
+        limits: {fileSize: 10 * 1024 * 1024},
+        // createParentPath: true,
+        abortOnLimit: true,
+        responseOnLimit: 'max _ mb only',
+        // useTempFiles: true, /// By default this module uploads files into RAM. Setting this option to True turns on using temporary files instead of utilising RAM. This avoids memory overflow issues when uploading large files or in case of uploading lots of files at same time.
+    })
 );
 
 app.post("/api/temp", async (req, res) => {
-    const { paths } = req.body;
-    if(Array.isArray(paths)) {
+    const {paths} = req.body;
+    if (Array.isArray(paths)) {
         try {
             await Temp.push(paths);
-            res.status(200).json({ message: "success"});
+            res.status(200).json({message: "success"});
         } catch (e) {
             console.log("error", e);
-            res.status(500).json({ message: "error", e});
+            res.status(500).json({message: "error", e});
         }
     } else {
-        res.status(401).json({ message: "what the f**k, pass lat, long"});
+        res.status(401).json({message: "what the f**k, pass lat, long"});
     }
 });
 
@@ -83,25 +85,45 @@ app.get("/api/temp", async (req, res) => {
         res.status(200).json(await Temp.find());
     } catch (e) {
         console.log("error", e);
-        res.status(500).json({ message: "error", e});
+        res.status(500).json({message: "error", e});
     }
 });
 
 app.use("/api/healthcheck", (req, res) => {
-  res.status(200).send(`Server is healthy but ${errorMessage}`);
+    res.status(200).send(`Server is healthy but ${errorMessage}`);
 });
 
 const updateData = expressAsyncHandler(
-  async (req, res) => {
-    try {
-      // let s = await removeExpiredAds();
-      let s = await Store.updateMany({ type: { $exists: false }}, { type: 'business'});
-      res.status(200).json(s);
-    } catch (error) {
-      res.status(400).json({ message: error })
+    async (req, res) => {
+        try {
+            // let s = await removeExpiredAds();
+            let s = await Store.updateMany({type: {$exists: false}}, {type: 'business'});
+            res.status(200).json(s);
+        } catch (error) {
+            res.status(400).json({message: error})
+        }
     }
-  }
 )
+
+app.get('/test', async (req, res) => {
+    try {
+        let stores: any[] = await Store.find({authToken: {$exists: false}});
+        let result = await Promise.all(stores.map(async (e) => {
+            e.authToken = e.generateAuthToken();
+            return await e.save();
+        }));
+        console.log(result);
+        let users = await User.find({ authToken: { $exists: false }});
+        let result2 = await Promise.all(users.map(async (e) => {
+            e.authToken = e.generateAuthToken();
+            return await e.save();
+        }));
+        res.status(200).json({ result, result2 });
+    } catch (e) {
+        console.log(e);
+        res.status(500).json({message: "error mhn"});
+    }
+});
 
 app.use("/api/developer/transform", updateData);
 
@@ -133,20 +155,20 @@ let server = app.listen(PORT, () => console.log(`API server listening at ${PORT}
 
 const io = new Server(server);
 try {
-  socketHandler(io);
+    socketHandler(io);
 } catch (error: any) {
-  console.log('socket error');
-  errorMessage = error.toString();
-  console.log(error);
+    console.log('socket error');
+    errorMessage = error.toString();
+    console.log(error);
 }
 
 
 //to delelte expired ads (buy and sell), and it related images.
 setInterval(() => {
-  try {
-    removeExpiredAds();
-  } catch (error) {
-    console.error(error)
-  }
+    try {
+        removeExpiredAds();
+    } catch (error) {
+        console.error(error)
+    }
 }, 24 * 60 * 60 * 1000);
 
