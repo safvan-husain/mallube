@@ -39,6 +39,6 @@ const displayCategorySchema = new Schema<IDisplayCategory>(
     }
 );
 
-const DisplayCategory = model<IDisplayCategory>("categories", displayCategorySchema);
+const DisplayCategory = model<IDisplayCategory>("displayCategories", displayCategorySchema);
 
 export default DisplayCategory;

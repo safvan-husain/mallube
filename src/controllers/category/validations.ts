@@ -69,3 +69,13 @@ const getCategoriesSchema = z.object({
     isStoreOnly: z.boolean().default(false),
     isFreelanceOnly: z.boolean().default(false),
 });
+
+export const getCategoriesSchemaV2 = z.object({
+    isActive: z.boolean().default(true),
+    businessType: z.enum(['business', 'freelancer']).optional(),
+    isPending: z.boolean().default(false)
+})
+
+export const getDisplayCategorySchema = z.object({
+    businessType: z.enum(['business', 'freelancer']).optional(),
+});

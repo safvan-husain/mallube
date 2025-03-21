@@ -10,7 +10,7 @@ import {
   deleteCategory,
   getStoreSubCategories,
   deleteCategoryPermenently,
-  getProductCategories
+  getProductCategories, getCategoriesV2, getProductCategoriesV2, getDisplayCategories
   //   getCategoryById,
   //   updateCategory,
 } from "../controllers/category/categoryController";
@@ -29,6 +29,10 @@ router
   .post(addCategory)
   .get(getCategories)
   .delete(admin, deleteCategoryPermenently);
+
+router.route('/v2').get(getCategoriesV2);
+router.route('/product/v2').get(store, getProductCategoriesV2);
+router.route('/display').get(getDisplayCategories);
 
 //TODO: remove later.
 router.route("/sub").get(store, getStoreSubCategories);

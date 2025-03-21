@@ -26,6 +26,7 @@ export interface IStore extends Document {
     password: string;
     category: Schema.Types.ObjectId;
     subCategories: Schema.Types.ObjectId[];
+    categories: Schema.Types.ObjectId[];
     addedBy: Schema.Types.ObjectId;
     visitors: number;
     shopImgUrl: string;
@@ -84,6 +85,11 @@ const storeSchema = new Schema<IStore>(
         category: {
             type: Schema.Types.ObjectId,
             ref: "categories",
+        },
+        categories: {
+            type: [Schema.Types.ObjectId],
+            ref: "categories",
+            default: []
         },
         subCategories: {
             type: [Schema.Types.ObjectId],
