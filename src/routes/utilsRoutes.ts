@@ -43,7 +43,7 @@ router.route("/upload").post(function (request, response) {
         } else {
             // Construct the URL for accessing the file
             // This assumes you've set up your server to serve the static folder
-            const fileUrl = `/static/${uniqueFileName}`;
+            const fileUrl = `https://static.vendroo.in/${uniqueFileName}`;
 
             response.status(200).json({
                 filename: uniqueFileName,
