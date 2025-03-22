@@ -95,7 +95,7 @@ const userSchema = new Schema<IUser>(
 // generate auth token
 userSchema.methods.generateAuthToken = function (): string {
     const jwte = config.jwtSecret
-    return jwt.sign({_id: this._id}, jwte, {expiresIn: "200d"});
+    return jwt.sign({_id: this._id}, jwte);
 };
 
 const User = model<IUser>("users", userSchema);

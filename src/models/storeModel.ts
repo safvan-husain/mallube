@@ -240,7 +240,7 @@ const storeSchema = new Schema<IStore>(
 
 // GENERATE AUTH TOKEN
 storeSchema.methods.generateAuthToken = function (): string {
-    return jwt.sign({_id: this._id}, config.jwtSecret, {expiresIn: "7d"});
+    return jwt.sign({_id: this._id}, config.jwtSecret);
 };
 
 storeSchema.index({location: "2dsphere"});
