@@ -105,20 +105,23 @@ const updateData = expressAsyncHandler(
     }
 )
 
-app.get('/test', async (req, res) => {
+app.get('/api/test', async (req, res) => {
     try {
-        let stores: any[] = await Store.find({authToken: {$exists: false}});
-        let result = await Promise.all(stores.map(async (e) => {
-            e.authToken = e.generateAuthToken();
-            return await e.save();
-        }));
-        console.log(result);
-        let users = await User.find({ authToken: { $exists: false }});
-        let result2 = await Promise.all(users.map(async (e) => {
-            e.authToken = e.generateAuthToken();
-            return await e.save();
-        }));
-        res.status(200).json({ result, result2 });
+        // let stores: any[] = await Store.find({authToken: {$exists: false}});
+        // let result = await Promise.all(stores.map(async (e) => {
+        //     e.authToken = e.generateAuthToken();
+        //     return await e.save();
+        // }));
+        // console.log(result);
+        // let users = await User.find({ authToken: { $exists: false }});
+        // let result2 = await Promise.all(users.map(async (e) => {
+        //     e.authToken = e.generateAuthToken();
+        //     return await e.save();
+        // }));
+        // res.status(200).json({ result, result2 });
+        const stores = await Store.find({}, { shopImgUrl: true }).lean();
+        const products = await Product.find({}, { images: true }).lean();
+        res.status(200).json({ stores, products, length: stores.length + products.length });
     } catch (e) {
         console.log(e);
         res.status(500).json({message: "error mhn"});
