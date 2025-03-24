@@ -42,6 +42,9 @@ import {removeExpiredAds} from "./controllers/user/buy_and_sell/buy_and_sellCont
 import Temp from "./models/Path";
 import User from "./models/userModel";
 import AdminModel from "./models/adminModel";
+import {paginationSchema} from "./types/validation";
+import {onCatchError} from "./controllers/service/serviceContoller";
+import {z} from "zod";
 
 
 const app = express();
@@ -110,6 +113,10 @@ const updateData = expressAsyncHandler(
 
 app.get('/api/test', async (req, res) => {
     try {
+        let data = z.object({
+            search: z.string().optional(),
+            image: z.string().optional()
+        }).merge(paginationSchema).parse(req.query);
         let admin = await AdminModel.findOne({ email: "m.safvan@gmail.com"});
         if(!admin) {
             res.status(200);
@@ -117,6 +124,13 @@ app.get('/api/test', async (req, res) => {
         }
         admin.token = admin.generateAuthToken(admin._id);
         await admin.save();
+        let query: any = {};
+        if(data.search) {
+            query.storeName = {$regex: data.search, $options: 'i'};
+        }
+        if(data.image) {
+            query.shopImgUrl = { $regex: data.image, $options: 'i'};
+        }
         // let stores: any[] = await Store.find({authToken: {$exists: false}});
         // let result = await Promise.all(stores.map(async (e) => {
         //     e.authToken = e.generateAuthToken();
@@ -129,12 +143,11 @@ app.get('/api/test', async (req, res) => {
         //     return await e.save();
         // }));
         // res.status(200).json({ result, result2 });
-        const stores = await Store.find({}, { shopImgUrl: true, storeName: true, uniqueName: true }).lean();
-        const products = await Product.find({}, { images: true, name: true }).lean();
+        const stores = await Store.find({}, { shopImgUrl: true, storeName: true, uniqueName: true }).skip(data.skip).limit(data.limit).lean();
+        const products = await Product.find({}, { images: true, name: true }).skip(data.skip).limit(data.limit).lean();
         res.status(200).json({ stores, products, length: stores.length + products.length });
     } catch (e) {
-        console.log(e);
-        res.status(500).json({message: "error mhn"});
+        onCatchError(e, res);
     }
 });
 
