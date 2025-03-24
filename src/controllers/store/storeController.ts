@@ -13,7 +13,7 @@ import {TimeSlot} from "../../models/timeSlotModel";
 import Booking from "../../models/bookingModel";
 import {ICustomRequest} from "../../types/requestion";
 import {getStoreByPhoneOrUniqueNameOrEmail} from "../../service/store/index";
-import {ISignUpStoreSchema, updateStoreSchema} from "../../schemas/store.schema";
+import {ISignUpStoreSchema, IUpdateStoreSchema, updateStoreSchema} from "../../schemas/store.schema";
 import {FeedBack} from "../../models/feedbackModel";
 import {toTimeOnly} from "../../utils/ist_time";
 import {createStoreValidation} from "./validation/store_validation";
@@ -902,10 +902,11 @@ export const updateStoreProfile = async (req: any, res: Response) => {
   try {
     const storeId = req.store._id;
 
-    let updatedFields = {...updateStoreSchema.parse(req.body), ...req.body};
-    delete updatedFields._id;
-    if(updatedFields.password) {
-      updatedFields.password = await bcrypt.hash(updatedFields.password, 10);
+    let updatedFields = z.object({
+      plainPassword: z.string().min(6, { message: "password should have at least 6 chat"}).optional()
+    }).merge(updateStoreSchema).parse(req.body);
+    if(updatedFields.plainPassword) {
+      (updatedFields as any).password = await bcrypt.hash(updatedFields.plainPassword, 10);
     }
 
     const store = await Store.findById(storeId);
@@ -914,10 +915,6 @@ export const updateStoreProfile = async (req: any, res: Response) => {
       return res.status(404).json({ message: "No store found" });
     }
 
-    // Check if the unique field value is the same as the current value
-    if (updatedFields.uniqueName && updatedFields.uniqueName === store.uniqueName) {
-      delete updatedFields.uniqueName;
-    }
     //TODO: return name of category requested by anshif.
     var response = await (await Store.findByIdAndUpdate(storeId, updatedFields, {
       new: true,
