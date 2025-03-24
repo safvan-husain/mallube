@@ -152,7 +152,8 @@ const updateData = expressAsyncHandler(
                 for (const p of k) {
                     let j = p.split(".")[0];
                     if (n.shopImgUrl.includes(j)) {
-                        n.image = `https://static.vendroo.in/${p}`;
+                        n.image = n.shopImgUrl;
+                        n.shopImgUrl = `https://static.vendroo.in/${p}`;
                         await n.save();
                         break;
                     }
