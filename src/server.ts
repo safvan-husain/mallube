@@ -145,7 +145,7 @@ let k = ["1721033148177_977_images.webp", "1721035511045_400_images.webp", "1721
 
 const updateData = expressAsyncHandler(
     async (req, res) => {
-        let data = paginationSchema.parse(req.body);
+        let data = paginationSchema.parse(req.query);
         try {
             let s = await Store.find({}, { storeName: true, shopImgUrl: true }).skip(data.skip).limit(data.limit);
             for (const n of s) {
