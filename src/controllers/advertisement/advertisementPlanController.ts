@@ -1,7 +1,7 @@
 import asyncHandler from "express-async-handler";
 import { Request, Response } from "express";
 import AdvertisementPlan from "../../models/advertismentPlanModel";
-import { ICustomRequest } from "../../types/requestion";
+import {ICustomRequest, TypedResponse} from "../../types/requestion";
 import { IAddAdvertisementPlanSchema } from "../../schemas/advertisement.schema";
 import {onCatchError} from "../service/serviceContoller";
 import {createAdsPlanSchema} from "./validation";
@@ -41,14 +41,29 @@ export const deleteAdvertisementPlan = asyncHandler(
     }
 )
 
+interface AdPlanResponse {
+    message?: string;
+    _id: string;
+    duration: number;
+    price: number;
+    offerPrice?: number;
+    radius: number;
+}
+
 export const fetchAllAdvertisementPlan = asyncHandler(
-    async (req: Request, res: Response) => {
+    async (req: Request, res: TypedResponse<AdPlanResponse[]>) => {
         try {
             const advertisementPlans = await AdvertisementPlan.find({});
-            res.status(200).json(advertisementPlans ?? []);
+            res.status(200).json(advertisementPlans.map(e => ({
+                message: e.message,
+                _id: e._id.toString(),
+                duration: e.duration,
+                price: e.price,
+                offerPrice: e.offerPrice,
+                radius: e.maxRadius ?? 0
+            })));
         } catch (error) {
             res.status(500).json({ message: "Internal server error" });
         }
-
     }
 )

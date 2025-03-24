@@ -303,31 +303,6 @@ export const updateLiveStatus = async (
   }
 };
 
-export const AddAdvertisement = async (req: any, res: Response) => {
-  try {
-    const storeId = req.store;
-    const { image, radius, adPlan } = req.body;
-
-    if (adPlan == undefined) {
-      return res.status(400).json({ message: "AdPlan is required" });
-    }
-    const c = await Store.findById(storeId);
-    const earthRadiusInMeters = 6378137; // Earth's radius in meters
-    const radiusInRadians = radius / earthRadiusInMeters;
-    const newAdvertisement = new Advertisement({
-      image,
-      store: storeId,
-      radius: radius || 10,
-      location: c?.location,
-      radiusInRadians,
-      adPlan
-    });
-    await newAdvertisement.save();
-    res.status(201).json({ message: "Advertisement added successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
 
 export const deleteAdvertisement = asyncHandler(
   async (req: Request, res: Response) => {
@@ -350,70 +325,7 @@ export const deleteAdvertisement = asyncHandler(
   }
 );
 
-export const fetchAllAdvertisement = async (req: any, res: Response) => {
-  try {
-    const storeId = req.store._id;
-    // const advertisements = await Advertisement.find({ store: storeId });
-    const advertisements = await Advertisement.aggregate([
-      {
-        $match: {
-          store: new mongoose.Types.ObjectId(storeId)
-        }
-      },
-      {
-        $lookup: {
-          from: 'stores', // Name of the store collection
-          localField: 'store', // Field in the Product collection
-          foreignField: '_id', // Field in the Store collection
-          as: 'storeDetails', // Output array field
-        },
-      },
-      {
-        $unwind: '$storeDetails', // Convert the array to an object
-      },
-      {
-        $addFields: {
-          store: '$storeDetails.uniqueName', // Map storeDetails.name to store
-        },
-      },
-      {
-        $unset: 'storeDetails', // Optionally remove the storeDetails field
-      },
-      {
-        $lookup: {
-          from: 'advertisementplans', // Name of the store collection
-          localField: 'adPlan', // Field in the Product collection
-          foreignField: '_id', // Field in the Store collection
-          as: 'ad_plan_details', // Output array field
-        },
-      },
-      {
-        $unwind: '$ad_plan_details', // Convert the array to an object
-      },
-      {
-        $addFields: {
-          plan_name: '$ad_plan_details.name', // Map storeDetails.name to
-          //
-          // TODO: remove later (added as fix for initila play store fix)
-          advertisementDisplayStatus: "hideFromBothCarousal"
-        },
-      },
-      {
-        $unset: 'ad_plan_details', // Optionally remove the storeDetails field
-      },
-    ]);
-    //TODO: remove the maping for efficancy, added since some older data don't have isActive field
-    res.status(200).json(advertisements.map((i) => {
-      if (i.isActive == undefined) {
-        i.isActive = false;
-      }
-      return i;
-    }));
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
+
 
 export const fetchStoresNearByV2 = async (req: Request, res: Response) => {
   try {

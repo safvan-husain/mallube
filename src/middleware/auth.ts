@@ -21,7 +21,14 @@ declare global {
 
 export const admin = asyncHandler(
   async (req: RequestWithAdmin | any, res: Response, next: NextFunction) => {
-    let token = req.headers.authorization;
+    let token = req.headers.authorization.split(" ");
+    if (token.length > 1) {
+      token = token[1];
+    } else {
+        token = token[0]
+    }
+
+      console.log( "token", token, " ",req.headers.authorization)
     console.log(req.originalUrl);
 
     if (!token) {

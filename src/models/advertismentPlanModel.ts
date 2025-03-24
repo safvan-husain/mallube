@@ -1,7 +1,7 @@
 
 import { Schema, model, Document } from "mongoose";
 
-interface IAdvertisementPlan extends Document {
+export interface IAdvertisementPlan extends Document {
     name: string;
     price: number;
     offerPrice?: number;

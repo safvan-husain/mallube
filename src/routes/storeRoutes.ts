@@ -4,9 +4,7 @@ import {
   signup,
   fetchStore,
   updateLiveStatus,
-  AddAdvertisement,
   deleteAdvertisement,
-  fetchAllAdvertisement,
   fetchStoresNearBy,
   fetchStoreByUniqueName,
   fetchAllStore,
@@ -36,7 +34,11 @@ import { store } from "../middleware/auth";
 import { addSpecialisation, fetchAllSpecialisation } from "../controllers/specialisation/specialisationController";
 import { addDoctor, changeDrAvailability, deleteDoctor, fetchAllDoctors } from "../controllers/doctor/doctorController";
 import { addProduct, deleteProductOfAStore, getProductsOfAStore, switchStockStatusOfAProduct, updateProduct } from "../controllers/product/productController";
-import { rePublishRequestAnAdvertisement } from "../controllers/advertisement/advertisementController";
+import {
+  AddAdvertisement,
+  fetchAllStoreAdvertisement,
+  rePublishRequestAnAdvertisement
+} from "../controllers/advertisement/advertisementController";
 import { createNote, deleteNote, getNotesForStore, updateNote } from "../controllers/store/notes_controller";
 import { createBillForCustomer, createCustomer, deleteCustomer, deleteSelectedBills, getAllCustomers, getCustomerPurchaseHistory, getSpecificBill, markRecievedPayment, updateCustomer, updateSpecificBill } from "../controllers/store/pattu_book_controller";
 import {getBookingHistory, getTodayBookings} from "../controllers/store/store-booking-timeslot-Controller";
@@ -88,7 +90,7 @@ router
   .route("/advertisement")
   .post(store, AddAdvertisement)
   // .delete(store, deleteAdvertisement)
-  .get(store, fetchAllAdvertisement);
+  .get(store, fetchAllStoreAdvertisement);
 router.route("/advertisement/republish").put(store, rePublishRequestAnAdvertisement);
 router
   .route("/advertisement/:advertisementId")
