@@ -144,7 +144,7 @@ app.get('/api/test', async (req, res) => {
         //     return await e.save();
         // }));
         // res.status(200).json({ result, result2 });
-        const stores = await Store.find({}, { shopImgUrl: true, storeName: true, uniqueName: true }).skip(data.skip).limit(data.limit).lean();
+        const stores = await Store.find(query, { shopImgUrl: true, storeName: true, uniqueName: true }).skip(data.skip).limit(data.limit).lean();
         const products = await Product.find({}, { images: true, name: true }).skip(data.skip).limit(data.limit).lean();
         res.status(200).json({ stores, products, length: stores.length + products.length });
     } catch (e) {
