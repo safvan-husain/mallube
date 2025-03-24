@@ -41,6 +41,7 @@ import {chatRoutes} from "./routes/messageRoutes";
 import {removeExpiredAds} from "./controllers/user/buy_and_sell/buy_and_sellController";
 import Temp from "./models/Path";
 import User from "./models/userModel";
+import AdminModel from "./models/adminModel";
 
 
 const app = express();
@@ -97,7 +98,9 @@ const updateData = expressAsyncHandler(
     async (req, res) => {
         try {
             // let s = await removeExpiredAds();
-            let s = await Store.updateMany({type: {$exists: false}}, {type: 'business'});
+            // let s = await Store.updateMany({type: {$exists: false}}, {type: 'business'});
+            let s = await Store.deleteMany({ _id: { $in: ["67909506af88c9c7b9134b0e", "67909519af88c9c7b9134b11"]}})
+            // let s = await Store.find({ authToken: {$exists: false}})
             res.status(200).json(s);
         } catch (error) {
             res.status(400).json({message: error})
@@ -107,6 +110,13 @@ const updateData = expressAsyncHandler(
 
 app.get('/api/test', async (req, res) => {
     try {
+        let admin = await AdminModel.findOne({ email: "m.safvan@gmail.com"});
+        if(!admin) {
+            res.status(200);
+            return;
+        }
+        admin.token = admin.generateAuthToken(admin._id);
+        await admin.save();
         // let stores: any[] = await Store.find({authToken: {$exists: false}});
         // let result = await Promise.all(stores.map(async (e) => {
         //     e.authToken = e.generateAuthToken();

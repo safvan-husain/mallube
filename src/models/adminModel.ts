@@ -4,19 +4,19 @@ import jwt from "jsonwebtoken";
 
 export interface IAdmin {
   _id: string;
-  name: string;
+  name?: string;
   email: string;
   password: string;
   generateAuthToken: (userId: string) => string;
   addedStaff:Array<string>;
-
+  //TODO: remove
+  token?: string;
 }
 
 const adminSchema = new Schema<IAdmin>(
   {
     name: {
       type: String,
-      required: true,
     },
     email: {
       type: String,
@@ -29,7 +29,10 @@ const adminSchema = new Schema<IAdmin>(
     },
     addedStaff:{
       type:[String]
-    }
+    },
+      token: {
+        type: String
+      }
 
   },
   {
