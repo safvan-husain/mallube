@@ -117,13 +117,14 @@ app.get('/api/test', async (req, res) => {
             search: z.string().optional(),
             image: z.string().optional()
         }).merge(paginationSchema).parse(req.query);
-        let admin = await AdminModel.findOne({ email: "m.safvan@gmail.com"});
-        if(!admin) {
-            res.status(200);
-            return;
-        }
-        admin.token = admin.generateAuthToken(admin._id);
-        await admin.save();
+
+        // let admin = await AdminModel.findOne({ email: "m.safvan@gmail.com"});
+        // if(!admin) {
+        //     res.status(200);
+        //     return;
+        // }
+        // admin.token = admin.generateAuthToken(admin._id);
+        // await admin.save();
         let query: any = {};
         if(data.search) {
             query.storeName = {$regex: data.search, $options: 'i'};
