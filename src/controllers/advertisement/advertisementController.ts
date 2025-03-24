@@ -51,9 +51,9 @@ export const AddAdvertisement = async (req: any, res: TypedResponse<{
     res.status(201).json({ message: "Advertisement added successfully", advertisement: {
       _id: ad._id,
       image: ad.image,
-      store: ad.store as unknown as Types.ObjectId,
-      expireAt: ad.expireAt!.getTime(),
-      status: ad.status,
+      store: storeId as unknown as Types.ObjectId,
+      expireAt: ad.expireAt?.getTime() ?? 0,
+      status: ad.status ?? "pending",
       isActive: false,
       } });
   } catch (error) {
@@ -78,7 +78,7 @@ export const fetchAllStoreAdvertisement = async (req: ICustomRequest<any>, res: 
     const processedAds: StoreAdvertisementResponse[] = advertisements.map((ad) : StoreAdvertisementResponse => ({
       _id: ad._id,
       image: ad.image,
-      status: ad.status,
+      status: ad.status ?? "pending",
       store: storeId as unknown as Types.ObjectId,
       expireAt: ad.expireAt?.getTime() ?? 0,
       isActive: ad.isActive ?? false,
