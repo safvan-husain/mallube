@@ -92,27 +92,7 @@ app.use("/api/healthcheck", (req, res) => {
     res.status(200).send(`Server is healthy but ${errorMessage}`);
 });
 
-const updateData = expressAsyncHandler(
-    async (req, res) => {
-        try {
-            // let s = await removeExpiredAds();
-            // let s = await Store.updateMany({type: {$exists: false}}, {type: 'business'});
-            // let s = await Store.deleteMany({ _id: { $in: ["67909506af88c9c7b9134b0e", "67909519af88c9c7b9134b11"]}})
-            let s = await Store.findOne({ phone: "9876543210"});
-            if(!s) {
-                res.status(200).json({ message: "not found"});
-                return;
-            }
-            const salt = await bcrypt.genSalt(10);
-            s.password = await bcrypt.hash("12345678", salt);
-            s = await s.save();
-            // let s = await Store.find({ authToken: {$exists: false}})
-            res.status(200).json(s);
-        } catch (error) {
-            res.status(400).json({message: error})
-        }
-    }
-)
+
 
 let k = ["1721033148177_977_images.webp", "1721035511045_400_images.webp", "1721036459229_679_IMG_20240715_151021_HDR (1).webp",
     "1721036459229_679_IMG_20240715_151021_HDR.webp", "1721043630712_824_IMG_1840.webp",
@@ -163,6 +143,29 @@ let k = ["1721033148177_977_images.webp", "1721035511045_400_images.webp", "1721
     "1730881879098_712_17308817893543375670849599659106.webp", "1730888838782_653_IMG-20241106-WA0001.webp", "1731152839763_389_IMG-20241109-WA0000.webp", "1737541293794_928_74a037f3-a3b1-4253-81e6-ba40b430bf113812981757201376421.jpeg", "1737544380189_182_6cddac1a-e386-443c-9043-74cc0ebb1f2a1433262342518024756.jpeg", "1737544872436_272_1c92755e-5861-409a-9d67-721fe402fe8a8503685781863758886.jpeg", "1737545131987_871_1000079757.webp", "1737545467492_829_b978e4b6-4c6c-478f-bd6a-80e7e26a78e16829538626276051452.jpeg", "1737545868334_722_ef38ed4f-42fe-4c55-be5c-89bc0206a42d1361031593622907363.jpeg", "1737547444562_818_1000079471.webp", "1737631604222_434_1000079968.webp", "1737733078416_902_1000041454.webp", "1737734590708_142_1000041454.webp", "1737734993137_280_1000041454.webp", "1737790245265_382_1000080319.webp", "1737791719096_92_1000001352.webp", "1738047225342_516_1000079757.webp", "1738084898126_508_1000080742.webp", "1738085179538_749_1000080742.webp", "1738134206910_516_1000080742.webp", "1738135015451_70_1000080308.webp", "1738135688762_176_1000080742.webp", "1738500631362_706_1000081155.webp", "1738572677851_648_1000081606.jpeg", "1738579050175_885_1000080901.webp", "1738669544414_310_1000081020.webp", "1739431488624_979_20250213_124343.jpeg", "1739432586444_835_20250213_124343.jpeg"]
 
 
+const updateData = expressAsyncHandler(
+    async (req, res) => {
+        let data = paginationSchema.parse(req.body);
+        try {
+            let s = await Store.find({}, { storeName: true, shopImgUrl: true }).skip(data.skip).limit(data.limit);
+            for (const n of s) {
+                for (const p of k) {
+                    let j = p.split(".")[0];
+                    if (n.shopImgUrl.includes(j)) {
+                        n.image = `https://static.vendroo.in/${p}`;
+                        await n.save();
+                        break;
+                    }
+                }
+            }
+            let z = await Store.find({ }, { storeName: true, shopImgUrl: true, image: true}).skip(data.skip).limit(data.limit).lean();
+            // let s = await Store.find({ authToken: {$exists: false}})
+            res.status(200).json({ s, z});
+        } catch (error) {
+            res.status(400).json({message: error})
+        }
+    }
+)
 app.get('/api/test', async (req, res) => {
     try {
         let data = z.object({

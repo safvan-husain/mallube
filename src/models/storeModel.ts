@@ -62,10 +62,14 @@ export interface IStore extends Document {
     deliveryRadius: number;
     authToken?: string;
     keyWords: string;
+    image?: string
 }
 
 const storeSchema = new Schema<IStore>(
     {
+       image: {
+           type: String
+       },
         fcmToken: {
             type: String,
         },
