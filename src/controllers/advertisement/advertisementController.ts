@@ -12,6 +12,7 @@ import {ObjectIdSchema} from "../../types/validation";
 
 
 interface StoreAdvertisementResponse {
+  _id: string;
   image: string;
   store: Types.ObjectId;
   expireAt: number;
@@ -48,6 +49,7 @@ export const AddAdvertisement = async (req: any, res: TypedResponse<{
     });
     let ad = await newAdvertisement.save();
     res.status(201).json({ message: "Advertisement added successfully", advertisement: {
+      _id: ad._id,
       image: ad.image,
       store: ad.store as unknown as Types.ObjectId,
       expireAt: ad.expireAt!.getTime(),
@@ -74,6 +76,7 @@ export const fetchAllStoreAdvertisement = async (req: ICustomRequest<any>, res: 
         .lean();
 
     const processedAds: StoreAdvertisementResponse[] = advertisements.map((ad) : StoreAdvertisementResponse => ({
+      _id: ad._id,
       image: ad.image,
       status: ad.status,
       store: storeId as unknown as Types.ObjectId,
@@ -368,6 +371,7 @@ export const rePublishRequestAnAdvertisement = asyncHandler(async (req: ICustomR
     });
     newAdvertisement = await newAdvertisement.save();
     res.status(201).json({ message: "New advertisement created", advertisement: {
+        _id: newAdvertisement._id,
         image: newAdvertisement.image,
         expireAt: newAdvertisement.expireAt?.getTime() ?? 0,
         status: newAdvertisement.status,
