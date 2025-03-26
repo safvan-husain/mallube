@@ -19,65 +19,31 @@ export interface IUser {
     favouriteFreelancers: Types.ObjectId[];
     favouriteShops: Types.ObjectId[];
     authToken?: string;
+    favouriteUserProducts: Types.ObjectId[];
 }
 
 const userSchema = new Schema<IUser>(
     {
-        username: {
-            type: String,
-        },
-        fullName: {
-            type: String,
-            required: true,
-        },
-        email: {
-            type: String,
-            unique: true,
-        },
-        password: {
-            type: String,
-            required: true,
-        },
-        phone: {
-            type: String,
-            required: true,
-            unique: true,
-        },
-        otp: {
-            type: String,
-        },
-        isVerified: {
-            type: Boolean,
-            default: false,
-            required: true,
-        },
-        isBlocked: {
-            type: Boolean,
-            default: false
-        },
-        fcmToken: {
-            type: String
-        },
-        authToken: {
-            type: String
-        },
-        isPushNotificationEnabled: {
-            type: Boolean,
-            default: true,
-        },
+        username: {type: String,},
+        fullName: {type: String, required: true,},
+        email: {type: String, unique: true,},
+        password: {type: String, required: true,},
+        phone: {type: String, required: true, unique: true,},
+        otp: {type: String,},
+        isVerified: {type: Boolean, default: false, required: true,},
+        isBlocked: {type: Boolean, default: false},
+        fcmToken: {type: String},
+        authToken: {type: String},
+        isPushNotificationEnabled: {type: Boolean, default: true,},
         favouriteFreelancers: [
-            {
-                type: Schema.Types.ObjectId,
-                ref: "Service",
-            },
+            {type: Schema.Types.ObjectId, ref: "Service",},
         ],
         favouriteShops: [
-            {
-                type: Schema.Types.ObjectId,
-                ref: "stores",
-            },
+            {type: Schema.Types.ObjectId, ref: "stores",},
         ],
-
+        favouriteUserProducts: [
+            {type: Schema.Types.ObjectId, ref: "userproducts"}
+        ]
     },
     {
         timestamps: true,

@@ -1,6 +1,6 @@
-import { z } from "zod";
-import { Types } from "mongoose";
-import { createdAtIST, getIST } from "../../../utils/ist_time";
+import {z} from "zod";
+import {Types} from "mongoose";
+import {createdAtIST, getIST} from "../../../utils/ist_time";
 
 const UserProductSchema = z.object({
     name: z.string(),
@@ -22,14 +22,21 @@ const UserProductSchema = z.object({
     ),
 });
 
+export const locationSchema = z.object({
+    latitude: z.string().refine((val) => /^-?\d+(\.\d+)?$/.test(val), {
+        message: "must be a valid number"
+    }).transform((val) => parseFloat(val)),
+    longitude: z.string().refine((val) => /^-?\d+(\.\d+)?$/.test(val), {
+        message: "must be a valid number"
+    }).transform((val) => parseFloat(val)),
+})
+
 const querySchema = z.object({
     searchTerm: z.string().optional(),
-    latitude: z.string().optional().transform((val) => val ? parseFloat(val) : undefined),
-    longitude: z.string().optional().transform((val) => val ? parseFloat(val) : undefined),
     categoryId: z.string().optional(),
     skip: z.string().default('0').transform((val) => parseInt(val, 10)),
     limit: z.string().default('10').transform((val) => parseInt(val, 10))
-});
+}).merge(locationSchema);
 
 const UpdateUserProductSchema = UserProductSchema.partial();
 
@@ -43,4 +50,4 @@ const CreateUserProductSchema = UserProductSchema.extend({
     owner: z.instanceof(Types.ObjectId),
 });
 
-export { CreateUserProductSchema, UpdateUserProductSchema, querySchema };
+export {CreateUserProductSchema, UpdateUserProductSchema, querySchema};

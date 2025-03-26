@@ -51,6 +51,7 @@ router.route("/fcm-token").put(store, updateFcmToken);
 // router.route("/edit-profile").put(store, updateStoreProfile);
 // need to add store authentication middleware
 router.route("/")
+    //fetch store not using on mobile app TODO:
   .get(store, fetchStore)
   .put(store, updateStoreProfile)
   .delete(store, deleteStore);

@@ -31,7 +31,7 @@ import { validateData } from "../middleware/zod.validation";
 import { addCartSchema } from "../schemas/cart.schema";
 import { drBooking } from "../controllers/booking/bookingController";
 import { pushNotifcationStatusSchema } from "../schemas/user.schema";
-import { getFavoriteFreelancers, getFavoriteShops, toggleFavorite } from "../controllers/user/favourites/favouritesController";
+import { getFavoriteFreelancers, getFavoriteShops, toggleFavorite, getFavoriteUserProducts } from "../controllers/user/favourites/favouritesController";
 const router = express.Router();
 
 router.route("/register").post(register)
@@ -43,6 +43,7 @@ router.route("/fcm-token").put(user, updateUserFcmToken);
 router.route('/fav').post(user, toggleFavorite)
 router.route('/fav/shops').get(user, getFavoriteShops);
 router.route('/fav/freelancers').get(user, getFavoriteFreelancers);
+router.route('/fav/user-products').get(user, getFavoriteUserProducts);
 
 router.route("/store-details").get(user, getStoreDetails);
 router.route("/cart").post(user, validateData(addCartSchema), addToCart).put(user, removeProductFromCart);
