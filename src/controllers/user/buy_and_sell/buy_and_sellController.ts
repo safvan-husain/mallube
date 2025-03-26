@@ -1,21 +1,20 @@
-
-import { Request, Response, Router } from "express";
+import {Request, Response, Router} from "express";
 import asyncHandler from "express-async-handler";
-import mongoose, { Types, Schema } from "mongoose";
-import { onCatchError } from "../../service/serviceContoller";
-import { querySchema, UpdateUserProductSchema, CreateUserProductSchema } from "./validation";
-import UserProduct from "../../../models/user_product";
-import { calculateDistance } from "../../../utils/interfaces/common";
+import mongoose, {Types, Schema} from "mongoose";
+import {onCatchError} from "../../service/serviceContoller";
+import {querySchema, UpdateUserProductSchema, CreateUserProductSchema} from "./validation";
+import UserProduct, {IUserProduct, UserProductResponse} from "../../../models/user_product";
+import {calculateDistance} from "../../../utils/interfaces/common";
 import Category from "../../../models/categoryModel";
-import { ICustomRequest } from "../../../types/requestion";
-import { createdAtIST } from "../../../utils/ist_time";
-import { deleteFile } from "../../upload/fileUploadController";
+import {ICustomRequest, TypedResponse} from "../../../types/requestion";
+import {createdAtIST} from "../../../utils/ist_time";
+import {deleteFile} from "../../upload/fileUploadController";
 
 export const createUserPoduct = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {
         const id = req.user?._id;
         if (!Types.ObjectId.isValid(id as string)) {
-            res.status(400).json({ message: "Invalid id" })
+            res.status(400).json({message: "Invalid id"})
             return;
         }
 
@@ -40,11 +39,11 @@ export const createUserPoduct = asyncHandler(
 )
 
 export const updateUserProduct = asyncHandler(
-    async (req: Request, res: Response) => {
+    async (req: Request, res: TypedResponse<UserProductResponse>) => {
         try {
             const id = req.params.id;
             if (!Types.ObjectId.isValid(id)) {
-                res.status(400).json({ message: "Invalid id" })
+                res.status(400).json({message: "Invalid id"})
             }
             const data = UpdateUserProductSchema.parse({
                 ...req.body,
@@ -53,8 +52,12 @@ export const updateUserProduct = asyncHandler(
                     coordinates: [req.body.latitude, req.body.longitude]
                 } : undefined
             });
-            const product = await UserProduct.findByIdAndUpdate(id, data, { new: true });
-            res.status(200).json(product);
+            const product = await UserProduct.findByIdAndUpdate(id, data, {new: true});
+            if (!product) {
+                res.status(404).json({message: "Product not found"})
+                return;
+            }
+            res.status(200).json(product.forResponse(0));
         } catch (error) {
             console.log(error);
             onCatchError(error, res);
@@ -67,16 +70,16 @@ export const deleteUserProduct = asyncHandler(
         try {
             const id = req.params.id;
             if (!Types.ObjectId.isValid(id)) {
-                res.status(400).json({ message: "Invalid id" })
+                res.status(400).json({message: "Invalid id"})
             }
             const product = await UserProduct.findById(id);
 
             if (product) {
                 let r = await product?.deleteImagesFromBucket()
                 await UserProduct.findByIdAndDelete(id);
-                res.status(200).json({ message: "Product deleted", r })
+                res.status(200).json({message: "Product deleted", r})
             } else {
-                res.status(404).json({ message: "Product not found" })
+                res.status(404).json({message: "Product not found"})
             }
         } catch (error) {
             console.log(error);
@@ -88,13 +91,13 @@ export const deleteUserProduct = asyncHandler(
 export const getPoductDetails = asyncHandler(
     async (req: Request, res: Response) => {
         try {
-            const { id, latitude, longitude } = req.params;
+            const {id, latitude, longitude} = req.params;
             if (!Types.ObjectId.isValid(id)) {
-                res.status(400).json({ message: "Invalid id" })
+                res.status(400).json({message: "Invalid id"})
             }
             const product = await UserProduct.findById(id).lean();
             if (!product) {
-                res.status(404).json({ message: "Product not found" })
+                res.status(404).json({message: "Product not found"})
                 return;
             }
             let distance = "";
@@ -119,22 +122,22 @@ export const getPoductDetails = asyncHandler(
 )
 
 export const getUserProducts = asyncHandler(
-    async (req: Request, res: Response) => {
+    async (req: Request, res: TypedResponse<UserProductResponse[]>) => {
         try {
-            const { searchTerm, latitude, longitude, categoryId, skip, limit } = await querySchema.parseAsync(req.query);
+            const {searchTerm, latitude, longitude, categoryId, skip, limit} = await querySchema.parseAsync(req.query);
 
             var pipeline = [];
 
             if (searchTerm) {
-                const tCategories = await Category.find({ name: { $regex: new RegExp(searchTerm as string, 'i') } }, { _id: 1 }).lean();
+                const tCategories = await Category.find({name: {$regex: new RegExp(searchTerm as string, 'i')}}, {_id: 1}).lean();
                 const categoryIds = tCategories.map(category => category._id);
                 pipeline.push({
                     $match: {
                         $or: [
-                            { name: { $regex: searchTerm, $options: 'i' } },
-                            { description: { $regex: searchTerm, $options: 'i' } },
-                            { keywords: { $regex: searchTerm, $options: 'i' } },
-                            { category: { $in: categoryIds } },
+                            {name: {$regex: searchTerm, $options: 'i'}},
+                            {description: {$regex: searchTerm, $options: 'i'}},
+                            {keywords: {$regex: searchTerm, $options: 'i'}},
+                            {category: {$in: categoryIds}},
                         ]
                     }
                 });
@@ -155,7 +158,9 @@ export const getUserProducts = asyncHandler(
                             $function: {
                                 //calculating distance between two points (userLocation, advertisementLocation)
                                 body: function (
-                                    location: { coordinates: Array<number> } | undefined | null, lat1: number, lon1: number,
+                                    location: {
+                                        coordinates: Array<number>
+                                    } | undefined | null, lat1: number, lon1: number,
                                 ): number | null {
                                     if (location === null || location === undefined) {
                                         return null;
@@ -190,9 +195,9 @@ export const getUserProducts = asyncHandler(
 
             const products = await UserProduct.aggregate([
                 ...pipeline,
-                { $sort: { distance: 1, _id: 1 } },
-                { $skip: skip },
-                { $limit: limit },
+                {$sort: {distance: 1, _id: 1}},
+                {$skip: skip},
+                {$limit: limit},
                 {
                     $lookup: {
                         from: "users", // Collection name for categories
@@ -216,23 +221,17 @@ export const getUserProducts = asyncHandler(
                         description: 1,
                         locationName: 1,
                         "phone": {
-                            "$ifNull": [{ "$arrayElemAt": ["$owner_details.phone", 0] }, "N/A"]
+                            "$ifNull": [{"$arrayElemAt": ["$owner_details.phone", 0]}, "N/A"]
                         }
                     }
                 }
             ]);
 
-            //for mobile users
-            if (latitude != undefined && longitude != undefined) {
-                res.status(200).json(products.map(e => ({
-                    ...e,
-                    distance: (e.distance as number).toFixed(2),
-                    createdAt: e.createdAt.getTime(),
-                })));
-            } else {
-                //maybe for admin
-                res.status(200).json(products);
-            }
+            res.status(200).json(products.map(e => ({
+                ...e,
+                distance: (e.distance as number).toFixed(2),
+                createdAt: e.createdAt.getTime(),
+            })));
         } catch (error) {
             onCatchError(error, res);
         }
@@ -243,7 +242,7 @@ export const getUserProducts = asyncHandler(
 export const getUserProductsCategories = asyncHandler(
     async (req: Request, res: Response) => {
         try {
-            const categories = await Category.find({ isEnabledForIndividual: true }, { name: 1 });
+            const categories = await Category.find({isEnabledForIndividual: true}, {name: 1});
             res.status(200).json(categories);
         } catch (error) {
             console.log(error);
@@ -257,10 +256,10 @@ export const getUserMyAds = asyncHandler(
         try {
             const id = req.user?._id;
             if (!Types.ObjectId.isValid(id as string)) {
-                res.status(400).json({ message: "Invalid id" })
+                res.status(400).json({message: "Invalid id"})
                 return;
             }
-            const products = await UserProduct.find({ owner: id }, {
+            const products = await UserProduct.find({owner: id}, {
                 name: true,
                 images: true, description: true,
                 price: true, category: true,
@@ -284,11 +283,11 @@ export const getUserMyAds = asyncHandler(
 
 export const removeExpiredAds = async (): Promise<void> => {
     try {
-        const expiredAds = await UserProduct.find({ expireAt: { $lt: createdAtIST() } }).lean();
+        const expiredAds = await UserProduct.find({expireAt: {$lt: createdAtIST()}}).lean();
         if (expiredAds.length === 0) return;
         const expiredAdsIds = expiredAds.map((e) => e._id);
         await Promise.all(expiredAds.map(e => e.deleteImagesFromBucket()));
-        await UserProduct.deleteMany({ _id: { $in: expiredAdsIds } });
+        await UserProduct.deleteMany({_id: {$in: expiredAdsIds}});
     } catch (error) {
         console.log(error);
     }

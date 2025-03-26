@@ -2,6 +2,21 @@ import { Schema, model, Document } from "mongoose";
 import { createdAtIST, getIST } from "../utils/ist_time";
 import { deleteFile } from "../controllers/upload/fileUploadController";
 
+export interface UserProductResponse {
+    id: string;
+    name: string;
+    images: string[];
+    description: string;
+    price: number;
+    category: string;
+    keyWords: string;
+    owner: string;
+    isShowPhone: boolean;
+    locationName: string;
+    createdAt: number;
+    distance: string;
+}
+
 //generate zod schema
 export interface IUserProduct extends Document {
   name: string;
@@ -21,6 +36,7 @@ export interface IUserProduct extends Document {
   expireAt: Date;
   isExpired: () => boolean;
   deleteImagesFromBucket: () => Promise<boolean[]>;
+  forResponse: (distance: number) => UserProductResponse;
 }
 
 const productSchema = new Schema<IUserProduct>(
@@ -101,6 +117,23 @@ productSchema.methods.deleteImagesFromBucket = async function () {
 
     await Promise.all(deletePromises);
 };
+
+productSchema.methods.forResponse = function(distance: number) : UserProductResponse  {
+   return {
+        id: this._id.toString(),
+        name: this.name,
+        images: this.images,
+        description: this.description,
+        price: this.price,
+        category: this.category.toString(),
+        keyWords: this.keyWords,
+        owner: this.owner.toString(),
+        isShowPhone: this.isShowPhone,
+        locationName: this.locationName,
+        createdAt: this.createdAt.getTime(),
+        distance: distance.toFixed(2),
+   }
+}
 
 
 const UserProduct = model<IUserProduct>("userproducts", productSchema);
