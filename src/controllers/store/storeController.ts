@@ -11,7 +11,7 @@ import ProductSearch from "../../models/productSearch";
 import jwt from "jsonwebtoken";
 import {TimeSlot} from "../../models/timeSlotModel";
 import Booking from "../../models/bookingModel";
-import {ICustomRequest} from "../../types/requestion";
+import {ICustomRequest, TypedResponse} from "../../types/requestion";
 import {getStoreByPhoneOrUniqueNameOrEmail} from "../../service/store/index";
 import {ISignUpStoreSchema, IUpdateStoreSchema, updateStoreSchema} from "../../schemas/store.schema";
 import {FeedBack} from "../../models/feedbackModel";
@@ -1245,19 +1245,24 @@ export const updateFcmToken = asyncHandler(
 )
 
 export const addKeyWords = asyncHandler(
-    async (req: ICustomRequest<any>, res: Response) => {
-        const storeId = req.store?._id;
+    async (req: ICustomRequest<any>, res: TypedResponse<undefined>) => {
+      const storeId = req.store?._id;
+      if (!storeId) {
+        res.status(400).json({message: "Store id is required"});
+        return;
+      }
+      try {
+        const keyWords = z.object({keyWords: z.string()}).parse(req.body).keyWords;
 
-        try {
-            const keyWords = z.object({keyWords: z.string()}).parse(req.body).keyWords;
-
-            if (storeId) {
-                await Store.findByIdAndUpdate(storeId, {keyWords});
-            }
-            res.status(200).json({message: "key words added succesfully"});
-        } catch (error) {
-            onCatchError(error, res);
+        const store = await Store.findByIdAndUpdate(storeId, {keyWords});
+        if (!store) {
+          res.status(404).json({message: "Store not found"});
+          return;
         }
+        res.status(200).json({message: "key words added successfully"});
+      } catch (error) {
+        onCatchError(error, res);
+      }
     }
 )
 
