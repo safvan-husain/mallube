@@ -93,7 +93,6 @@ app.use("/api/healthcheck", (req, res) => {
 });
 
 
-
 let k = ["1721033148177_977_images.webp", "1721035511045_400_images.webp", "1721036459229_679_IMG_20240715_151021_HDR (1).webp",
     "1721036459229_679_IMG_20240715_151021_HDR.webp", "1721043630712_824_IMG_1840.webp",
     "1721383071110_211_df1f0de6-617d-47db-afc5-96467b051dcb.webp", "1721385882461_576_images.webp",
@@ -145,23 +144,44 @@ let k = ["1721033148177_977_images.webp", "1721035511045_400_images.webp", "1721
 
 const updateData = expressAsyncHandler(
     async (req, res) => {
-        let data = paginationSchema.parse(req.query);
+        // let data = paginationSchema.parse(req.query);
         try {
-            let s = await Store.find({}, { storeName: true, shopImgUrl: true }).skip(data.skip).limit(data.limit);
-            for (const n of s) {
-                for (const p of k) {
-                    let j = p.split(".")[0];
-                    if (n.shopImgUrl.includes(j)) {
-                        n.image = n.shopImgUrl;
-                        n.shopImgUrl = `https://static.vendroo.in/${p}`;
-                        await n.save();
-                        break;
+
+            let documents = await Store.find({ subscriptionExpireDate: { $exists: false }});
+
+            const bulkOperations = documents.map(doc => {
+                const expireAt = doc.createdAt
+                    ? new Date(doc.createdAt.getTime() + 365 * 24 * 60 * 60 * 1000) // 1 year in milliseconds
+                    : null;
+                return {
+                    updateOne: {
+                        filter: {_id: doc._id},
+                        update: {$set: {subscriptionExpireDate: expireAt}}
                     }
                 }
+            })
+            let s;
+            if (bulkOperations.length > 0) {
+                s = await Store.bulkWrite(bulkOperations, {ordered: false});
+            } else {
+                console.log('No documents to migrate');
             }
-            let z = await Store.find({ }, { storeName: true, shopImgUrl: true, image: true}).skip(data.skip).limit(data.limit).lean();
-            // let s = await Store.find({ authToken: {$exists: false}})
-            res.status(200).json({ s, z});
+
+            //     let s = await Store.find({}, { storeName: true, shopImgUrl: true }).skip(data.skip).limit(data.limit);
+            //     for (const n of s) {
+            //         for (const p of k) {
+            //             let j = p.split(".")[0];
+            //             if (n.shopImgUrl.includes(j)) {
+            //                 // n.image = n.shopImgUrl;
+            //                 n.shopImgUrl = `https://static.vendroo.in/${p}`;
+            //                 await n.save();
+            //                 break;
+            //             }
+            //         }
+            //     }
+            //     let z = await Store.find({ }, { storeName: true, shopImgUrl: true, image: true}).skip(data.skip).limit(data.limit).lean();
+            //     // let s = await Store.find({ authToken: {$exists: false}})
+            res.status(200).json({s});
         } catch (error) {
             res.status(400).json({message: error})
         }
@@ -182,11 +202,11 @@ app.get('/api/test', async (req, res) => {
         // admin.token = admin.generateAuthToken(admin._id);
         // await admin.save();
         let query: any = {};
-        if(data.search) {
+        if (data.search) {
             query.storeName = {$regex: data.search, $options: 'i'};
         }
-        if(data.image) {
-            query.shopImgUrl = { $regex: data.image, $options: 'i'};
+        if (data.image) {
+            query.shopImgUrl = {$regex: data.image, $options: 'i'};
         }
         // let stores: any[] = await Store.find({authToken: {$exists: false}});
         // let result = await Promise.all(stores.map(async (e) => {
@@ -200,9 +220,13 @@ app.get('/api/test', async (req, res) => {
         //     return await e.save();
         // }));
         // res.status(200).json({ result, result2 });
-        const stores = await Store.find(query, { shopImgUrl: true, storeName: true, uniqueName: true }).skip(data.skip).limit(data.limit).lean();
-        const products = await Product.find({}, { images: true, name: true }).skip(data.skip).limit(data.limit).lean();
-        res.status(200).json({ stores, products, length: stores.length + products.length });
+        const stores = await Store.find(query, {
+            shopImgUrl: true,
+            storeName: true,
+            uniqueName: true
+        }).skip(data.skip).limit(data.limit).lean();
+        const products = await Product.find({}, {images: true, name: true}).skip(data.skip).limit(data.limit).lean();
+        res.status(200).json({stores, products, length: stores.length + products.length});
     } catch (e) {
         onCatchError(e, res);
     }

@@ -100,6 +100,7 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
+//TODO: correct this, no need for category or aggregate.
 export const getProfile = async (req: any, res: Response) => {
   let storeId = req.store._id;
   try {
@@ -137,13 +138,13 @@ export const getProfile = async (req: any, res: Response) => {
     res.status(200).json({
       ...store[0],
       isDeliveryAvailable: store[0]?.isDeliveryAvailable ?? false,
+      subscriptionExpireDate: store[0]?.subscriptionExpireDate.getTime() ?? 0,
     });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Internal server error" });
   }
 }
-
 
 export const signup = async (req: ICustomRequest<ISignUpStoreSchema>, res: Response) => {
   try {
@@ -159,6 +160,7 @@ export const signup = async (req: ICustomRequest<ISignUpStoreSchema>, res: Respo
     let phone = (req.body as ISignUpStoreSchema).phone;
     let password = (req.body as ISignUpStoreSchema).password;
     let email = (req.body as ISignUpStoreSchema).email;
+    let subscriptionExpireDate = (d => new Date(d.getFullYear() + 1, d.getMonth(), d.getDate()))(new Date());
 
     const phoneOrUniqueNameAlreadyExist = await getStoreByPhoneOrUniqueNameOrEmail(
       phone,
@@ -193,6 +195,7 @@ export const signup = async (req: ICustomRequest<ISignUpStoreSchema>, res: Respo
       shopImgUrl,
       // addedBy: staffId,
       ...rest,
+      subscriptionExpireDate
     };
 
     storeDetails.password = hashedPassword;
@@ -302,7 +305,6 @@ export const updateLiveStatus = async (
     return res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 export const deleteAdvertisement = asyncHandler(
   async (req: Request, res: Response) => {

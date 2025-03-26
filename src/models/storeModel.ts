@@ -27,7 +27,7 @@ export interface IStore extends Document {
     category: Schema.Types.ObjectId;
     subCategories: Schema.Types.ObjectId[];
     categories: Schema.Types.ObjectId[];
-    addedBy: Schema.Types.ObjectId;
+    addedBy?: Schema.Types.ObjectId;
     visitors: number;
     shopImgUrl: string;
     retail?: boolean;
@@ -62,17 +62,13 @@ export interface IStore extends Document {
     deliveryRadius: number;
     authToken?: string;
     keyWords: string;
-    image?: string
+    //subscription expiration.
+    subscriptionExpireDate: Date;
 }
 
 const storeSchema = new Schema<IStore>(
     {
-       image: {
-           type: String
-       },
-        fcmToken: {
-            type: String,
-        },
+        fcmToken: {type: String,},
         storeName: {
             type: String,
             required: true,
@@ -154,6 +150,7 @@ const storeSchema = new Schema<IStore>(
         },
         email: {
             type: String,
+            default: "",
         },
         instagram: {
             type: String,
@@ -214,23 +211,20 @@ const storeSchema = new Schema<IStore>(
             type: Boolean,
             default: false,
         },
-        type: {
-            type: String,
-            default: 'business',
-        },
-        deliveryRadius: {
-            type: Number,
-        },
-        authToken: {
-            type: String
-        },
-        keyWords: {
-            type: String,
-            default: ''
-        }
+        type: {type: String, default: 'business',},
+        deliveryRadius: {type: Number,},
+        authToken: {type: String},
+        keyWords: {type: String, default: ''},
+        subscriptionExpireDate: {type: Date, required: true}
     },
     {
         timestamps: true,
+        toJSON: {
+            transform(doc, ret) {
+                ret.subscriptionExpireDate = doc.subscriptionExpireDate?.getTime() ?? 0;
+                return ret;
+            }
+        }
     }
 );
 
