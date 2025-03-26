@@ -1,13 +1,13 @@
 import {Request, Response} from "express";
 import asyncHandler from "express-async-handler";
 
-import Category from "../../models/categoryModel";
+import Category, {ICategory} from "../../models/categoryModel";
 import {
     IAddCategorySchema,
     IUpdateCategorySchema,
     updateCategorySchema,
 } from "../../schemas/category.schemas";
-import {ICustomRequest} from "../../types/requestion";
+import {ICustomRequest, TypedResponse} from "../../types/requestion";
 import {
     isDuplicateCategory,
     getCategoriesInFormat,
@@ -43,7 +43,7 @@ export const getCategories = asyncHandler(
 
 //TODO: this one is required, clean rest.
 export const getCategoriesV2 = asyncHandler(
-    async (req: Request, res: Response) => {
+    async (req: Request, res: TypedResponse<{ _id: string, name: string}[]>) => {
         const {businessType, isActive, isPending} = getCategoriesSchemaV2.parse(req.query);
         let query = {};
         if (businessType) {
@@ -66,7 +66,7 @@ export const getCategoriesV2 = asyncHandler(
 );
 
 export const getDisplayCategories = asyncHandler(
-    async (req: Request, res: Response) => {
+    async (req: Request, res: TypedResponse<{ _id: string, name: string, icon: string}[]>) => {
         try {
             let { businessType } = getDisplayCategorySchema.parse(req.params);
             let query: any = {};
@@ -86,7 +86,7 @@ export const getDisplayCategories = asyncHandler(
 )
 
 export const getProductCategoriesV2 = asyncHandler(
-    async (req: ICustomRequest<undefined>, res: Response) => {
+    async (req: ICustomRequest<undefined>, res: TypedResponse<{ _id: string, name: string}[]>) => {
         try {
             const storeId = req.store!._id;
             if (!storeId) {
@@ -117,7 +117,6 @@ export const getProductCategoriesV2 = asyncHandler(
 export const getPendingSubCategories = asyncHandler(
     async (req: Request, res: Response) => {
         const categories = await listPendingSubCategories();
-
         res.status(200).json(categories);
     }
 );
