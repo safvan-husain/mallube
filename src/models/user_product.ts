@@ -15,6 +15,7 @@ export interface UserProductResponse {
     locationName: string;
     createdAt: number;
     distance: string;
+    phone: string;
 }
 
 //generate zod schema
@@ -36,7 +37,7 @@ export interface IUserProduct extends Document {
   expireAt: Date;
   isExpired: () => boolean;
   deleteImagesFromBucket: () => Promise<boolean[]>;
-  forResponse: (distance: number) => UserProductResponse;
+  forResponse: (distance: number, phone: string, ownerId: string) => UserProductResponse;
 }
 
 const productSchema = new Schema<IUserProduct>(
@@ -118,7 +119,7 @@ productSchema.methods.deleteImagesFromBucket = async function () {
     await Promise.all(deletePromises);
 };
 
-productSchema.methods.forResponse = function(distance: number) : UserProductResponse  {
+productSchema.methods.forResponse = function(distance: number, phone: string, ownerId: string) : UserProductResponse  {
    return {
         id: this._id.toString(),
         name: this.name,
@@ -127,11 +128,12 @@ productSchema.methods.forResponse = function(distance: number) : UserProductResp
         price: this.price,
         category: this.category.toString(),
         keyWords: this.keyWords,
-        owner: this.owner.toString(),
+        owner: ownerId,
         isShowPhone: this.isShowPhone,
         locationName: this.locationName,
         createdAt: this.createdAt.getTime(),
         distance: distance.toFixed(2),
+       phone: phone,
    }
 }
 

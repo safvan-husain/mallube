@@ -84,7 +84,7 @@ export const getFavoriteFreelancers = asyncHandler(
                 res.status(404).json([]);
                 return;
             }
-            const freelancers = await Freelancer.find({ _id: { $in: user.favouriteFreelancers } });
+            const freelancers = await Store.find({ _id: { $in: user.favouriteFreelancers } });
             res.status(200).json(freelancers);
         } catch (error) {
             onCatchError(error, res);
@@ -106,10 +106,10 @@ export const getFavoriteUserProducts = asyncHandler(
                 res.status(404).json([]);
                 return;
             }
-            const products = await UserProduct.find({ _id: { $in: user.favouriteUserProducts } });
+            const products = await UserProduct.find({ _id: { $in: user.favouriteUserProducts } }).populate<{owner: {phone: string, _id: string}}>('owner', 'phone');
             res.status(200).json(products.map(e => {
                 const distance = calculateDistance(e.location.coordinates[0], e.location.coordinates[1], data.latitude, data.longitude);
-                return e.forResponse(distance);
+                return e.forResponse(distance, e.owner.phone, e.owner._id);
             }));
         } catch (error) {
             onCatchError(error, res);

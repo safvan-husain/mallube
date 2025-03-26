@@ -36,7 +36,7 @@ const userSchema = new Schema<IUser>(
         authToken: {type: String},
         isPushNotificationEnabled: {type: Boolean, default: true,},
         favouriteFreelancers: [
-            {type: Schema.Types.ObjectId, ref: "Service",},
+            {type: Schema.Types.ObjectId, ref: "stores",},
         ],
         favouriteShops: [
             {type: Schema.Types.ObjectId, ref: "stores",},

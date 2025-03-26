@@ -52,12 +52,12 @@ export const updateUserProduct = asyncHandler(
                     coordinates: [req.body.latitude, req.body.longitude]
                 } : undefined
             });
-            const product = await UserProduct.findByIdAndUpdate(id, data, {new: true});
+            const product = await UserProduct.findByIdAndUpdate(id, data, {new: true}).populate<{owner: {phone: string, _id: string}}>('owner', 'phone');
             if (!product) {
                 res.status(404).json({message: "Product not found"})
                 return;
             }
-            res.status(200).json(product.forResponse(0));
+            res.status(200).json(product.forResponse(0, product.owner.phone, product.owner._id));
         } catch (error) {
             console.log(error);
             onCatchError(error, res);
