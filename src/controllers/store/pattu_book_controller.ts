@@ -182,6 +182,7 @@ export const getCustomerPurchaseHistory = asyncHandler(
             _id: string;
             amount: number;
             date: string;
+            billPhotoUrl?: string
         }[]
     }>) => {
         try {
@@ -199,7 +200,8 @@ export const getCustomerPurchaseHistory = asyncHandler(
                 bills.push({
                     _id: bill._id,
                     amount: bill.totalAmount,
-                    date: bill.date.toDateString()
+                    date: bill.date.toDateString(),
+                    billPhotoUrl: bill.billPhotoUrl
                 });
             }
             res.status(200).json({
