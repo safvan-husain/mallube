@@ -106,7 +106,7 @@ export const getProfile = async (req: any, res: Response) => {
     const store: any[] = await Store.aggregate([
       {
         $match: {
-          _id: new mongoose.Types.ObjectId(storeId),
+          _id: mongoose.Types.ObjectId.createFromHexString(storeId),
         },
       },
       {
