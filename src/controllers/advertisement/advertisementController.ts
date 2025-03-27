@@ -30,13 +30,28 @@ export const AddAdvertisement = async (req: any, res: TypedResponse<{
       res.status(403).json({ message: "Invalid store id"});
       return;
     }
-    const { image, radius, adPlan } = z.object({
+    const { image, adPlan } = z.object({
       image: z.string().url(),
-      radius: z.number(),
       adPlan: ObjectIdSchema
     }).parse(req.body);
 
     const c = await Store.findById(storeId);
+    if(!c) {
+      res.status(404).json({ message: "Store not found"});
+      return;
+    }
+    let adsPlanDoc = await AdvertisementPlan.findById(adPlan).lean();
+    if(!adsPlanDoc) {
+      res.status(404).json({ message: "Advertisement plan not found"});
+      return;
+    }
+    //TODO: check admin use this same api.
+    let radius = adsPlanDoc.maxRadius;
+    if(!radius) {
+      console.log("no radius found, check here");
+      radius = 20;
+    }
+
     const earthRadiusInMeters = 6378137; // Earth's radius in meters
     const radiusInRadians = radius / earthRadiusInMeters;
     const newAdvertisement = new Advertisement({
