@@ -1,4 +1,5 @@
 import * as z from "zod";
+import {ObjectIdSchema} from "../types/validation";
 
 const numericRegex = /^\d+$/;
 
@@ -82,6 +83,14 @@ const signUpStoreSchema = z.object({
   password: z.string().min(6, "password must be atleast 6 characters long"),
   facebook: z.string().optional(),
   instagram: z.string().optional(),
+  storeProviding: z.enum(['productBased', 'serviceBased']).default("productBased"),
+  isDeliveryAvailable: z.boolean().default(false),
+  deliveryRadius: z.number().default(0),
+  openTime: z.number(),
+  closeTime: z.number(),
+  workingDays: z.array(z.string()),
+  categories: z.array(ObjectIdSchema).optional(),
+  isAvailable: z.boolean().optional(),
 });
 
 export type ISignUpStoreSchema = z.infer<typeof signUpStoreSchema>;
