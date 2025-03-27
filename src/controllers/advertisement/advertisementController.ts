@@ -25,7 +25,7 @@ export const AddAdvertisement = async (req: any, res: TypedResponse<{
   message: string
 }>) => {
   try {
-    const storeId = req.store;
+    const storeId = req.store?._id;
     if(!Types.ObjectId.isValid(storeId ?? "")) {
       res.status(403).json({ message: "Invalid store id"});
       return;
