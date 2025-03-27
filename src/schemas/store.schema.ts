@@ -39,7 +39,14 @@ export const addStoreSchema = z.object({
   bio: z.string().optional(),
   shopImgUrl: z.string(),
   otp: z.string().min(6, "invalid otp").max(6, "invalid otp"),
-  storeProviding:z.string().optional(),
+  service: z.boolean().default(false),
+  isDeliveryAvailable: z.boolean().default(false),
+  deliveryRadius: z.number().default(0),
+  openTime: z.number(),
+  closeTime: z.number(),
+  workingDays: z.array(z.string()),
+  categories: z.array(ObjectIdSchema).optional(),
+  isAvailable: z.boolean().default(true),
 });
 
 export type IAddStoreSchema = z.infer<typeof addStoreSchema>;
