@@ -903,10 +903,11 @@ export const updatePassword = async (req: Request, res: Response) => {
 export const updateStoreProfile = async (req: any, res: Response) => {
   try {
     const storeId = req.store._id;
-
+    console.log(req.body);
     let updatedFields = z.object({
       plainPassword: z.string().min(6, { message: "password should have at least 6 chat"}).optional()
     }).merge(updateStoreSchema).parse(req.body);
+    console.log(updatedFields);
     if(updatedFields.plainPassword) {
       (updatedFields as any).password = await bcrypt.hash(updatedFields.plainPassword, 10);
     }
@@ -940,7 +941,7 @@ export const updateStoreProfile = async (req: any, res: Response) => {
         error: error.errmsg,
       });
     } else {
-      res.status(500).json({ message: "Internal server error", error });
+      onCatchError(error, res);
     }
   }
 };
