@@ -5,7 +5,7 @@ import Store from "../../models/storeModel";
 import Advertisement from "../../models/advertisementModel";
 import {calculateDistance} from "../../utils/interfaces/common";
 import Category from "../../models/categoryModel";
-import mongoose from "mongoose";
+import mongoose, {Types} from "mongoose";
 import Product from "../../models/productModel";
 import ProductSearch from "../../models/productSearch";
 import jwt from "jsonwebtoken";
@@ -279,30 +279,29 @@ export const fetchStore = asyncHandler(
 
 export const updateLiveStatus = async (
   req: any,
-  res: Response,
+  res: TypedResponse<{ message: string, store: any}>,
 ) => {
   try {
-    const storeId: string = req.store._id;
-    const { isAvailable } = req.body;
-
-    if (isAvailable == undefined || isAvailable == null) {
-      res.status(401).json({ message: "isAvailable field is required" });
+    const storeId = req.store?._id;
+    if(!Types.ObjectId.isValid(storeId ?? "")) {
+      res.status(403).json({ message: "Invalid user id"});
       return;
     }
-    const store = await Store.findById(storeId);
+    const { isAvailable } = z.object({
+      isAvailable: z.boolean()
+    }).parse(req.body);
+  
+    const store = await Store.findByIdAndUpdate(storeId, { isAvailable }, { new: true });
 
     if (!store) {
       return res.status(404).json({ message: "Store not found" });
     }
-    store.isAvailable = isAvailable;
-    await store.save();
-
+    
     return res
       .status(200)
       .json({ message: "Store status updated successfully", store });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Internal server error" });
+    onCatchError(error, res);
   }
 };
 
@@ -735,7 +734,7 @@ export const searchStoresByProductName = asyncHandler(
     }
   }
 );
-//TODO: delete if not using.
+//TODO: delete if not using. maybe using on website.
 export const changePassword = async (
   req: any,
   res: Response,
@@ -781,47 +780,7 @@ export const changePassword = async (
   }
 };
 
-export const forgotPasswordOtpSendToPhone = async (
-  req: Request,
-  res: Response
-) => {
-  try {
-    const { phone } = req.body;
-    const store = await Store.findOne({ phone });
 
-    if (!store) {
-      return res.status(404).json({ message: "Invalid number" });
-    }
-
-    if (!twilioServiceId) {
-      return res
-        .status(500)
-        .json({ message: "Twilio service id is not configured" });
-    }
-
-    // const otpResponse = await twilioclient.verify.v2
-    //   .services(twilioServiceId)
-    //   .verifications.create({
-    //     to: `+91${phone}`,
-    //     channel: "sms",
-    //   });
-    const otpResponse = { data: "test temp data" }
-
-    const token = jwt.sign(
-      { phone },
-      process.env.JWT_SECRET_FOR_PASSWORD_RESET!,
-      { expiresIn: "10m" }
-    );
-    res.status(201).json({
-      message: `otp send successfully : ${JSON.stringify(otpResponse)}`,
-      otpSend: true,
-      token,
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
 
 export const OtpVerify = async (req: Request, res: Response) => {
   try {
