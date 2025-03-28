@@ -9,6 +9,7 @@ import {ICustomRequest, TypedResponse} from "../../types/requestion";
 import {onCatchError} from "../service/serviceContoller";
 import {z} from "zod";
 import {ObjectIdSchema} from "../../types/validation";
+import {BusinessAccountType, businessAccountTypeSchema} from "../store/validation/store_validation";
 
 
 interface StoreAdvertisementResponse {
@@ -86,8 +87,6 @@ export const fetchAllStoreAdvertisement = async (req: ICustomRequest<any>, res: 
     }
 
     const advertisements: IAdvertisement<IStore, IAdvertisementPlan>[] = await Advertisement.find({ store: storeId })
-        // .populate('store', 'uniqueName')
-        // .populate('adPlan', 'name')
         .lean();
 
     const processedAds: StoreAdvertisementResponse[] = advertisements.map((ad) : StoreAdvertisementResponse => ({
@@ -115,71 +114,6 @@ export const fetchAllStoreAdvertisement = async (req: ICustomRequest<any>, res: 
       message: "Failed to fetch advertisements",
       // error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
-  }
-};
-
-export const fetchAllStoreAdvertisement2 = async (req: any, res: Response) => {
-  try {
-    const storeId = req.store._id;
-    // const advertisements = await Advertisement.find({ store: storeId });
-    const advertisements = await Advertisement.aggregate([
-      {
-        $match: {
-          store: new Types.ObjectId(storeId)
-        }
-      },
-      {
-        $lookup: {
-          from: 'stores', // Name of the store collection
-          localField: 'store', // Field in the Product collection
-          foreignField: '_id', // Field in the Store collection
-          as: 'storeDetails', // Output array field
-        },
-      },
-      {
-        $unwind: '$storeDetails', // Convert the array to an object
-      },
-      {
-        $addFields: {
-          store: '$storeDetails.uniqueName', // Map storeDetails.name to store
-        },
-      },
-      {
-        $unset: 'storeDetails', // Optionally remove the storeDetails field
-      },
-      {
-        $lookup: {
-          from: 'advertisementplans', // Name of the store collection
-          localField: 'adPlan', // Field in the Product collection
-          foreignField: '_id', // Field in the Store collection
-          as: 'ad_plan_details', // Output array field
-        },
-      },
-      {
-        $unwind: '$ad_plan_details', // Convert the array to an object
-      },
-      {
-        $addFields: {
-          plan_name: '$ad_plan_details.name', // Map storeDetails.name to
-          //
-          // TODO: remove later (added as fix for initila play store fix)
-          advertisementDisplayStatus: "hideFromBothCarousal"
-        },
-      },
-      {
-        $unset: 'ad_plan_details', // Optionally remove the storeDetails field
-      },
-    ]);
-    //TODO: remove the maping for efficancy, added since some older data don't have isActive field
-    res.status(200).json(advertisements.map((i) => {
-      if (i.isActive == undefined) {
-        i.isActive = false;
-      }
-      return i;
-    }));
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -259,11 +193,37 @@ export const fetchAllAdvertisement = asyncHandler(
   }
 );
 
+const relaventAdvertisementSchema = z.object({
+  image: z.string(),
+  type: businessAccountTypeSchema.optional(),
+  storeId: z.instanceof(Types.ObjectId).optional()
+});
+
+const LATITUDE_REGEX = /^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?)$/;
+const LONGITUDE_REGEX = /^[-+]?((?:1[0-7]\d|0?\d{1,2})(\.\d+)?|180(\.0+)?)$/;
+
+// Custom error messages
+const ERROR_MESSAGES = {
+  latitude: 'Invalid latitude. Must be between -90 and 90.',
+  longitude: 'Invalid longitude. Must be between -180 and 180.'
+};
+
 //TODO: check this and fix.
 export const fetchRelaventAdvertisement = asyncHandler(
-  async (req: Request, res: Response) => {
-    const { latitude, longitude } = req.query;
-
+  async (req: Request, res: TypedResponse<{ image: string, type?: BusinessAccountType, storeId?: Types.ObjectId }[]>) => {
+    const {latitude, longitude} = z.object({
+      latitude: z.string().trim()
+          .refine(value => LATITUDE_REGEX.test(value), {
+            message: ERROR_MESSAGES.latitude
+          })
+          .transform(value => parseFloat(value)),
+      longitude: z.string()
+          .trim()
+          .refine(value => LONGITUDE_REGEX.test(value), {
+            message: ERROR_MESSAGES.longitude
+          })
+          .transform(value => parseFloat(value))
+    }).parse(req.query);
     try {
       const advertisements = await Advertisement.aggregate([
         {
@@ -309,14 +269,33 @@ export const fetchRelaventAdvertisement = asyncHandler(
             show: { $eq: true }
           }
         },
+        {
+          $lookup: {
+            from: 'stores',
+            localField: "store",
+            foreignField: "_id",
+            as: "storeDetails"
+          }
+        },
+        {
+          $unwind: {
+            path: "$storeDetails",
+            preserveNullAndEmptyArrays: true
+          }
+        },
+        {
+          $project: {
+            image: 1,
+            type: "$storeDetails.type",
+            storeId: "$storeDetails._id"
+          }
+        }
+
       ]);
-      res.status(200).json(advertisements);
+      res.status(200).json(advertisements.map(ad => relaventAdvertisementSchema.parse(ad)));
     } catch (error) {
-      console.log(error);
-
-      res.status(500).json({ message: "Error fetching advertisements" });
+      onCatchError(error, res);
     }
-
   }
 );
 
