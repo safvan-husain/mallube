@@ -42,7 +42,7 @@ import { createNote, deleteNote, getNotesForStore, updateNote } from "../control
 import { createBillForCustomer, createCustomer, deleteCustomer, deleteSelectedBills, getAllCustomers, getCustomerPurchaseHistory, getSpecificBill, markRecievedPayment, updateCustomer, updateSpecificBill } from "../controllers/store/pattu_book_controller";
 import {getBookingHistory, getTodayBookings} from "../controllers/store/store-booking-timeslot-Controller";
 import {otpVerifyV2, sendOtpV2} from "../controllers/otp-verification/otp-verification-controller";
-import {changeStorePasswordV2} from "../controllers/store/auth-controller";
+import {changeStorePasswordV2, changeStorePushNotificationStatus} from "../controllers/store/auth-controller";
 const router = express.Router();
 
 router.route("/login").post(login);
@@ -82,6 +82,8 @@ router.route('/booking-history').get(store, getBookingHistory);
 router.route('/booking-v3').get(store, getTodayBookings);
 
 router.route('/customer/mark-recieved-payment').post(store, markRecievedPayment)
+
+router.route('/push-notification-status').put(store, changeStorePushNotificationStatus);
 
 router.route("/search-stores").get(searchStoresByProductName);
 router.route("/fetch-store-by-category").get(fetchStoreByCategory);

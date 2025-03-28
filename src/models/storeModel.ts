@@ -64,6 +64,7 @@ export interface IStore extends Document {
     keyWords: string;
     //subscription expiration.
     subscriptionExpireDate: Date;
+    isPushNotificationEnabled: boolean;
 }
 
 const storeSchema = new Schema<IStore>(
@@ -215,7 +216,8 @@ const storeSchema = new Schema<IStore>(
         deliveryRadius: {type: Number,},
         authToken: {type: String},
         keyWords: {type: String, default: ''},
-        subscriptionExpireDate: {type: Date, required: true}
+        subscriptionExpireDate: {type: Date, required: true},
+        isPushNotificationEnabled: { type: Boolean, default: true }
     },
     {
         timestamps: true,

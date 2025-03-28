@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import {z} from "zod";
 import {onCatchError} from "../service/serviceContoller";
 import jwt, {JsonWebTokenError} from "jsonwebtoken";
+import User from "../../models/userModel";
 
 export const changeStorePasswordV2 = async (
     req: ICustomRequest<any>,
@@ -36,6 +37,27 @@ export const changeStorePasswordV2 = async (
             res.status(400).json({ message: "invalid hash" });
             return;
         }
+        onCatchError(error, res);
+    }
+};
+
+export const changeStorePushNotificationStatus = async (req: ICustomRequest<any>, res: Response) => {
+    const {status} = z.object({
+        status: z.boolean()
+    }).parse(req.body);
+    try {
+        const userId = req.store?._id;
+        if(!userId) {
+            res.status(400).json({message: "Invalid user id"});
+            return;
+        }
+        const user = await Store.findByIdAndUpdate(userId, {isPushNotificationEnabled: status})
+        if(!user) {
+            res.status(404).json({message: "Store not found"});
+            return;
+        }
+        res.status(200).json({message: "Success"});
+    } catch (error) {
         onCatchError(error, res);
     }
 };
