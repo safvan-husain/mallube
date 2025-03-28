@@ -11,7 +11,6 @@ import {
   fetchStoreByCategory,
   searchStoresByProductName,
   changePassword,
-  forgotPasswordOtpSendToPhone,
   OtpVerify,
   updatePassword,
   updateStoreProfile,
@@ -42,6 +41,8 @@ import {
 import { createNote, deleteNote, getNotesForStore, updateNote } from "../controllers/store/notes_controller";
 import { createBillForCustomer, createCustomer, deleteCustomer, deleteSelectedBills, getAllCustomers, getCustomerPurchaseHistory, getSpecificBill, markRecievedPayment, updateCustomer, updateSpecificBill } from "../controllers/store/pattu_book_controller";
 import {getBookingHistory, getTodayBookings} from "../controllers/store/store-booking-timeslot-Controller";
+import {otpVerifyV2, sendOtpV2} from "../controllers/otp-verification/otp-verification-controller";
+import {changeStorePasswordV2} from "../controllers/store/auth-controller";
 const router = express.Router();
 
 router.route("/login").post(login);
@@ -99,7 +100,8 @@ router
 router.route("/near-by-shop/:longitude/:latitude").get(fetchStoresNearBy);
 router.route("/near-by-shop-v2").get(fetchStoresNearByV2);
 router.route("/change-password").put(store, changePassword);
-router.route("/otp-send-forgot-password").post(forgotPasswordOtpSendToPhone);
+router.route("/change-password-v2").put(changeStorePasswordV2);
+router.route("/otp-send-forgot-password").post(sendOtpV2);
 router.route("/otp-verify-forgot-password").post(OtpVerify);
 router.route("/update-password-request").put(updatePassword);
 router.route("/time-slots").post(store, addTimeSlot).get(store, fetchTimeSlot).delete(store, deleteTimeSlots)

@@ -36,6 +36,7 @@ import Temp from "./models/Path";
 import {paginationSchema} from "./types/validation";
 import {onCatchError} from "./controllers/service/serviceContoller";
 import {z} from "zod";
+import {otpRouter} from "./routes/otp-verification-route";
 
 const serviceAccount = require('./secrets/serviceAccountKey.json');
 
@@ -234,6 +235,7 @@ app.get('/api/test', async (req, res) => {
 
 app.use("/api/developer/transform", updateData);
 
+app.use('/api/otp', otpRouter);
 app.use("/api/admin", adminRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/staff", staffRoutes);

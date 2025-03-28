@@ -7,9 +7,6 @@ import {
     getCart,
     removeCart,
     updateProfile,
-    forgetPasswordOtpSend,
-    verifyOtpForPasswrodReset,
-    updatePassword,
     updateProfilePassword,
     fetchUser,
     fetchTimeSlot,
@@ -32,6 +29,7 @@ import { addCartSchema } from "../schemas/cart.schema";
 import { drBooking } from "../controllers/booking/bookingController";
 import { pushNotifcationStatusSchema } from "../schemas/user.schema";
 import { getFavoriteFreelancers, getFavoriteShops, toggleFavorite, getFavoriteUserProducts } from "../controllers/user/favourites/favouritesController";
+import {changeUserPasswordV2} from "../controllers/user/auth-controller";
 const router = express.Router();
 
 router.route("/register").post(register)
@@ -49,9 +47,7 @@ router.route("/store-details").get(user, getStoreDetails);
 router.route("/cart").post(user, validateData(addCartSchema), addToCart).put(user, removeProductFromCart);
 router.route("/cart/:storeId").get(user, getCart).delete(user, removeCart)
 router.route('/update-profile').put(user,updateProfile)
-router.route('/forget-password').post(forgetPasswordOtpSend)
-router.route('/verify-otp-for-password-reset').post(verifyOtpForPasswrodReset)
-router.route("/update-password").put(updatePassword)
+router.route("/update-password-v2").put(changeUserPasswordV2)
 router.route("/change-profile-password").put(user,updateProfilePassword)
 router.route("/change-notification-status").put(user, validateData(pushNotifcationStatusSchema), changePushNotificationStatus);
 router.route("/fetch-user-details").get(user,fetchUser)
