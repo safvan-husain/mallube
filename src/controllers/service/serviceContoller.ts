@@ -15,17 +15,41 @@ import Product from "../../models/productModel";
 import Category from "../../models/categoryModel";
 import Store from "../../models/storeModel";
 import {businessAccountTypeSchema} from "../store/validation/store_validation";
+import {TypedResponse} from "../../types/requestion";
 
 export const onCatchError = (error: any, res: Response) => {
     if (error instanceof z.ZodError) {
         res.status(400).json({
-            message: "Validation error",
+            message: error.errors.length > 0 ? `${error.errors[0].path[0]}: ${error.errors[0].message}` : "Validation error",
             errors: error.errors
         });
         return;
     }
     res.status(500).json({message: "Internal server error", error});
 }
+
+export const internalValidation = <T>(schema: z.ZodSchema<T>, data: T)
+    : ({ data: T; error: null } | { data: null; error: { message: string; errors?: any } }) => {
+    try {
+        return {data: schema.parse(data), error: null};
+    } catch (e) {
+        if (e instanceof z.ZodError) {
+            return {
+                data: null,
+                error: {
+                    message: e.errors.length > 0 ? `${e.errors[0].path[0]}: ${e.errors[0].message}` : "Response error",
+                    errors: e.errors
+                }
+            };
+        } else {
+            console.error("Unexpected error:", e);
+            return {
+                data: null,
+                error: {message: "Internal server error"}
+            }
+        }
+    }
+};
 
 export const getServiceCategory = asyncHandler(
     async (_: Request, res: Response) => {
@@ -285,7 +309,7 @@ export const getFreelancers = asyncHandler(
                     e.location.coordinates[1],) : 0;
                 e.distance = distance.toFixed(2);
                 e.address = e.city + ", " + e.district;
-                if(e.category) {
+                if (e.category) {
                     e.categories = [e.category];
                     delete e.category;
                 }
