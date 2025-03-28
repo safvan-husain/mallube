@@ -3,6 +3,7 @@ import {ICustomRequest, TypedResponse} from "../../types/requestion";
 import {z} from "zod";
 import {onCatchError} from "../service/serviceContoller";
 import jwt from "jsonwebtoken";
+import {phoneZodValidation} from "../../schemas/commom.schema";
 
 //TODO: otp-secret.
 export const otpVerifyV2 = async (req: Request, res: Response) => {
@@ -26,7 +27,7 @@ export const otpVerifyV2 = async (req: Request, res: Response) => {
 export const sendOtpV2 = async (req: Request, res: TypedResponse<{ message: string, hash: string }>) => {
     try {
         const { phone } = z.object({
-            phone: z.string().min(10, { message: "phone should exactly 10 numbers"}).regex(/^\d+$/, { message: "phone should contain only numbers"} )
+            phone: phoneZodValidation
         }).parse(req.body);
 
         let hash = jwt.sign({ phone, otp: "0000" }, "otp-secret", { expiresIn: "1d"})
