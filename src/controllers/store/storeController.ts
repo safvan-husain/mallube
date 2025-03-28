@@ -16,9 +16,11 @@ import {getStoreByPhoneOrUniqueNameOrEmail} from "../../service/store/index";
 import {ISignUpStoreSchema, IUpdateStoreSchema, updateStoreSchema} from "../../schemas/store.schema";
 import {FeedBack} from "../../models/feedbackModel";
 import {toTimeOnly} from "../../utils/ist_time";
-import {createStoreValidation} from "./validation/store_validation";
+import {BusinessAccountType, businessAccountTypeSchema, createStoreValidation} from "./validation/store_validation";
 import {onCatchError} from "../service/serviceContoller";
 import {z} from "zod";
+import {ObjectIdSchema} from "../../types/validation";
+import {locationQuerySchema} from "../../schemas/localtion-schema";
 
 const twilioServiceId = process.env.TWILIO_SERVICE_ID;
 
@@ -565,16 +567,15 @@ export const fetchStoreByCategory = async (req: Request, res: Response) => {
   }
 };
 
+//TODO: need to add validation for the response.
 export const fetchStoreByCategoryV2 = async (req: Request, res: Response) => {
   try {
-    const { categoryId, longitude, latitude }: any = req.query;
+    const { categoryId, longitude, latitude } = z.object({
+      categoryId: ObjectIdSchema
+    }).merge(locationQuerySchema).parse(req.query);
 
     let response: any;
-    if (longitude === "null" || latitude === "null") {
-      return res
-        .status(400)
-        .json({ message: "longitude and latitude are required" });
-    }
+
     const findStores = async (query: any) => {
       const stores = await Store.find(query, {
         storeName: true, bio: true, address: true,
@@ -588,8 +589,8 @@ export const fetchStoreByCategoryV2 = async (req: Request, res: Response) => {
       }
       const storesWithDistance = stores.map((tStore: any) => {
         const distance = calculateDistance(
-          parseFloat(latitude),
-          parseFloat(longitude),
+          latitude,
+          longitude,
           tStore.location.coordinates[0],
           tStore.location.coordinates[1]
         );
@@ -604,14 +605,22 @@ export const fetchStoreByCategoryV2 = async (req: Request, res: Response) => {
       return res.status(200).json(storesWithDistance);
     };
 
-    if (categoryId && mongoose.Types.ObjectId.isValid(categoryId)) {
+    let type: BusinessAccountType;
+    if(req.url.includes("freelancer")) {
+       type = businessAccountTypeSchema.enum.freelancer;
+    } else {
+       type = businessAccountTypeSchema.enum.business;
+    }
+    console.log(type);
+
       response = await findStores({
-        category: categoryId,
+        $or: [{ category: categoryId, categories: { $in: categoryId } }],
+        type,
         location: {
           $near: {
             $geometry: {
               type: "Point",
-              coordinates: [parseFloat(latitude), parseFloat(longitude)],
+              coordinates: [latitude, longitude],
             },
             // $maxDistance: 10000, // in meters
           },
@@ -619,27 +628,11 @@ export const fetchStoreByCategoryV2 = async (req: Request, res: Response) => {
         isActive: true,
         isAvailable: true,
       });
-    } else {
-      response = await findStores({
-        location: {
-          $near: {
-            $geometry: {
-              type: "Point",
-              coordinates: [parseFloat(latitude), parseFloat(longitude)],
-            },
-            // $maxDistance: 10000,
-          },
-        },
-        isActive: true,
-        isAvailable: true,
-      });
-    }
     if (!response || response.length === 0) {
       return res.status(404).json({ message: "No stores found" });
     }
   } catch (error) {
-    console.log(" fetching category  error =>>>>>>>>>>>>>>>>>>", error);
-    res.status(500).json({ message: "Internal server error", error });
+    onCatchError(error, res);
   }
 };
 

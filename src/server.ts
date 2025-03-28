@@ -147,41 +147,7 @@ const updateData = expressAsyncHandler(
     async (req, res) => {
         // let data = paginationSchema.parse(req.query);
         try {
-
-            let documents = await Store.find({ subscriptionExpireDate: { $exists: false }});
-
-            const bulkOperations = documents.map(doc => {
-                const expireAt = doc.createdAt
-                    ? new Date(doc.createdAt.getTime() + 365 * 24 * 60 * 60 * 1000) // 1 year in milliseconds
-                    : null;
-                return {
-                    updateOne: {
-                        filter: {_id: doc._id},
-                        update: {$set: {subscriptionExpireDate: expireAt}}
-                    }
-                }
-            })
-            let s;
-            if (bulkOperations.length > 0) {
-                s = await Store.bulkWrite(bulkOperations, {ordered: false});
-            } else {
-                console.log('No documents to migrate');
-            }
-
-            //     let s = await Store.find({}, { storeName: true, shopImgUrl: true }).skip(data.skip).limit(data.limit);
-            //     for (const n of s) {
-            //         for (const p of k) {
-            //             let j = p.split(".")[0];
-            //             if (n.shopImgUrl.includes(j)) {
-            //                 // n.image = n.shopImgUrl;
-            //                 n.shopImgUrl = `https://static.vendroo.in/${p}`;
-            //                 await n.save();
-            //                 break;
-            //             }
-            //         }
-            //     }
-            //     let z = await Store.find({ }, { storeName: true, shopImgUrl: true, image: true}).skip(data.skip).limit(data.limit).lean();
-            //     // let s = await Store.find({ authToken: {$exists: false}})
+            let s = await Store.updateMany({ isPushNotificationEnabled: { $exists: false }}, { isPushNotificationEnabled: true });
             res.status(200).json({s});
         } catch (error) {
             res.status(400).json({message: error})

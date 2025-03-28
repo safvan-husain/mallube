@@ -14,6 +14,7 @@ import bcrypt from "bcryptjs";
 import Product from "../../models/productModel";
 import Category from "../../models/categoryModel";
 import Store from "../../models/storeModel";
+import {businessAccountTypeSchema} from "../store/validation/store_validation";
 
 export const onCatchError = (error: any, res: Response) => {
     if (error instanceof z.ZodError) {
@@ -244,7 +245,6 @@ export const getSpecificServiceProfile = asyncHandler(
 // Get all services
 export const getFreelancers = asyncHandler(
     async (req: Request, res: Response) => {
-
         try {
             const validatedQuery = getServicesQuerySchema.parse(req.query);
             const {categories, latitude, longitude, skip, limit} = validatedQuery;
@@ -252,6 +252,8 @@ export const getFreelancers = asyncHandler(
             if (categories) {
                 filter = {categories: {$in: [categories]}};
             }
+            //TODO: change this.
+            filter.type = businessAccountTypeSchema.enum.business;
             if (latitude && longitude) {
                 filter.location = {
                     $near: {
