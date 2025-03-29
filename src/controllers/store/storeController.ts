@@ -890,6 +890,7 @@ export const updateStoreProfile = async (req: any, res: Response) => {
       response,
     });
   } catch (error: any) {
+    console.log("error at edit profile", error);
     if (error.code === 11000) {
       return res.status(400).json({
         message: "Duplicate key error",
