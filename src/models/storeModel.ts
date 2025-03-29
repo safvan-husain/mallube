@@ -72,7 +72,6 @@ const storeSchema = new Schema<IStore>(
         fcmToken: {type: String,},
         storeName: {
             type: String,
-            required: true,
         },
         //TODO: remove.
         live: {
