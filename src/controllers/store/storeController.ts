@@ -881,9 +881,10 @@ export const updateStoreProfile = async (req: any, res: Response) => {
     if (!response) {
       return res.status(404).json({ message: "Update failed" });
     }
+    //TODO: remove the belows.
     (response as any).category_name = response?.category;
 
-    (response as any).category = (response?.category as any)._id;
+    (response as any).category = (response?.category as any)?._id;
 
     res.status(200).json({
       message: "Store profile updated successfully",
