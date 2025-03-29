@@ -154,8 +154,8 @@ export const signup = async (req: ICustomRequest<ISignUpStoreSchema>, res: Respo
     //TODO: add validation.
     let s = createStoreValidation.parse(req.body);
     const { shopImgUrl, latitude, longitude, ...rest } = {
+      ...req.body,
       ...s,
-      ...req.body
     };
 
     let uniqueName = (req.body as ISignUpStoreSchema).uniqueName;
@@ -854,7 +854,10 @@ export const updatePassword = async (req: Request, res: Response) => {
 
 export const updateStoreProfile = async (req: any, res: Response) => {
   try {
-    const storeId = req.store._id;
+    const storeId = req.store?._id;
+    if(!storeId) {
+      return res.status(400).json({ message: "Store id is required" });
+    }
     console.log(req.body);
     let updatedFields = z.object({
       plainPassword: z.string().min(6, { message: "password should have at least 6 chat"}).optional()

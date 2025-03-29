@@ -59,7 +59,7 @@ export interface IStore extends Document {
     updatedAt?: Date;
     storeProviding?: "productBased" | "serviceBased";
     isDeliveryAvailable: boolean;
-    deliveryRadius: number;
+    deliveryRadius?: number;
     authToken?: string;
     keyWords: string;
     //subscription expiration.
