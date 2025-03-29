@@ -24,8 +24,8 @@ export interface IStore extends Document {
         expiresAt?: Date;
     };
     password: string;
-    category: Schema.Types.ObjectId;
-    subCategories: Schema.Types.ObjectId[];
+    category?: Schema.Types.ObjectId;
+    subCategories?: Schema.Types.ObjectId[];
     categories: Schema.Types.ObjectId[];
     addedBy?: Schema.Types.ObjectId;
     visitors: number;
