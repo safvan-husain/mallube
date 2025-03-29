@@ -53,7 +53,7 @@ export const addStoreSchema = z.object({
 export type IAddStoreSchema = z.infer<typeof addStoreSchema>;
 
 const signUpStoreSchema = z.object({
-  storeName: z.string().trim().min(1, "shop name cannot be empty"),
+  storeName: z.string().trim().optional(),
   serviceTypeSuggestion: z.string().optional(),
   uniqueName: z
     .string()
