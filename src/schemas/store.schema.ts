@@ -47,7 +47,8 @@ export const addStoreSchema = z.object({
   workingDays: z.array(z.string()),
   categories: z.array(ObjectIdSchema).optional(),
   isAvailable: z.boolean().default(true),
-  serviceType: z.array(z.enum(['salon, beauty parlour & spa' , 'other']).default('other'))
+  serviceType: z.array(z.enum(['salon, beauty parlour & spa' , 'other']).default('other')),
+  serviceTypeSuggestion: z.string().optional()
 });
 
 export type IAddStoreSchema = z.infer<typeof addStoreSchema>;
