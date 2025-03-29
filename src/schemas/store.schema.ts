@@ -4,7 +4,7 @@ import {ObjectIdSchema} from "../types/validation";
 const numericRegex = /^\d+$/;
 
 export const addStoreSchema = z.object({
-  storeName: z.string().trim().min(1, "shop name cannot be empty"),
+  storeName: z.string().optional(),
   uniqueName: z
     .string()
     .trim()
