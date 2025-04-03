@@ -83,7 +83,7 @@ const searchStoresByProductNameV2 = asyncHandler(
                             ]
                         },
                         spherical: true,
-                        distanceMultiplier: 0.0001
+                        distanceMultiplier: 0.001
                     }
                 },
                 {$sort: {distance: 1, _id: 1}},
