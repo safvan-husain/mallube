@@ -26,6 +26,11 @@ import {
 import { updateAdvertisementStatus, fetchAllAdvertisement } from "../controllers/advertisement/advertisementController";
 import { admin } from "../middleware/auth";
 import { createNewAdvertisementPlan, deleteAdvertisementPlan } from "../controllers/advertisement/advertisementPlanController";
+import {
+  appendCategoryToDisplay,
+  createDisplayCategory,
+  getAdminDisplayCategories, removeCategoryFromDisplay
+} from '../controllers/category/categoryController';
 const router = express.Router();
 
 router.route("/login").post(login);
@@ -81,5 +86,9 @@ router.route("/delete-user/:userId")
   .delete(admin, deleteUser)
 router.route("/users-count")
   .get(admin, fetchUsersCount)
+
+router.route("/category").get(getAdminDisplayCategories).post(createDisplayCategory);
+router.route("/category/append").post(appendCategoryToDisplay);
+router.route("/category/remove").post(removeCategoryFromDisplay);
 
 export default router;

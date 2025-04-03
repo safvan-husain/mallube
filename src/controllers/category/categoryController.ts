@@ -26,7 +26,9 @@ import {
 } from "./validations";
 import {onCatchError} from "../service/serviceContoller";
 import {Freelancer} from "../../models/freelancerModel";
-import DisplayCategory from "../../models/DisplayCategory";
+import DisplayCategory, {DisplayCategoryZod} from "../../models/DisplayCategory";
+import {z} from "zod";
+import {ObjectIdSchema} from "../../schemas/commom.schema";
 
 // get all categories for admin category management
 export const getCategories = asyncHandler(
@@ -84,6 +86,64 @@ export const getDisplayCategories = asyncHandler(
         }
     }
 )
+
+type populatedMainCat = { name: string, isActive: boolean, isEnabledForStore: boolean, isEnabledForFreelancer: boolean };
+
+type adminDisplayCatResponse = {
+    _id: string;
+    name: string;
+    icon: string;
+    categories: populatedMainCat[];
+    businessIndex: number;
+    freelancerIndex: number;
+}
+
+export const createDisplayCategory = asyncHandler(
+  async (req: Request, res: TypedResponse<adminDisplayCatResponse>) => {
+    try {
+      let requestData = z.object({
+        isEnabledForStore: z.boolean().default(false),
+        isEnabledForFreelancer: z.boolean().default(false),
+        name: z.string().min(3, { message: 'Should have at least 3 characters' }),
+        icon: z.string().url(),
+        categories: z.array(ObjectIdSchema).default([])
+      }).parse(req.body);
+      const catExist = await DisplayCategory.findOne({ name: requestData.name }).lean();
+      if (catExist) {
+        res.status(400).json({ message: `${requestData.name} already exist` });
+        return;
+      }
+      const category = await (await DisplayCategory.create<DisplayCategoryZod>({
+        ...requestData,
+        businessIndex: requestData.isEnabledForStore ? 1 : -1,
+        freelancerIndex: requestData.isEnabledForFreelancer ? 1 : -1
+      }))
+        .populate<{
+          categories: populatedMainCat[]
+        }>('categories', 'name isActive isEnabledForStore isEnabledForStore');
+      res.status(200).json({
+        _id: category._id,
+        name: category.name,
+        icon: category.icon,
+        categories: category.categories,
+        businessIndex: category.businessIndex,
+        freelancerIndex: category.freelancerIndex
+      });
+    } catch (e) {
+      onCatchError(e, res);
+    }
+  }
+);
+
+export  const getAdminDisplayCategories = async (req: Request, res: TypedResponse<adminDisplayCatResponse[]>) => {
+    try {
+        let categories = await DisplayCategory.find({}, {name: true, icon: true, categories: true, businessIndex: true, freelancerIndex: true })
+            .populate<{ categories: populatedMainCat[]}>('categories', 'name isActive isEnabledForStore isEnabledForFreelancer').lean();
+        res.status(200).json(categories);
+    } catch (e) {
+       onCatchError(e, res);
+    }
+}
 
 export const getProductCategoriesV2 = asyncHandler(
     async (req: ICustomRequest<undefined>, res: TypedResponse<{ _id: string, name: string}[]>) => {
@@ -249,6 +309,38 @@ export const deleteCategory = asyncHandler(
         }
     }
 );
+
+export const appendCategoryToDisplay = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { categoryId, id } = z.object({
+      categoryId: ObjectIdSchema,
+      id: ObjectIdSchema
+    }).parse(req.body);
+
+    const category = await DisplayCategory.findByIdAndUpdate(id, { $addToSet: { categories: categoryId }});
+    if (category) {
+      res.status(200).json(`${category?.name} has been updated`);
+    } else {
+      res.status(404).json({message: "Invalid category id"});
+    }
+  }
+);
+
+export const removeCategoryFromDisplay = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { categoryId, id } = z.object({
+      categoryId: ObjectIdSchema,
+      id: ObjectIdSchema
+    }).parse(req.body);
+
+    const category = await DisplayCategory.findByIdAndUpdate(id, { $pull: { categories: categoryId }});
+    if (category) {
+      res.status(200).json(`${category.name} has been updated`);
+    } else {
+      res.status(404).json({message: "Invalid category id"});
+    }
+  }
+)
 
 export const deleteCategoryPermenently = asyncHandler(
     async (req: Request, res: Response) => {

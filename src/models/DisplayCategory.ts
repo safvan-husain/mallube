@@ -1,4 +1,17 @@
-import {Schema, model, Document, ObjectId} from "mongoose";
+import {Schema, model, Document, ObjectId, Types} from "mongoose";
+import {z} from "zod";
+import {ObjectIdSchema} from "../types/validation";
+
+export const displayCategoryZodSchema = z.object({
+    _id: z.instanceof(Types.ObjectId).optional(),
+    name: z.string(),
+    businessIndex: z.number(),
+    freelancerIndex: z.number(),
+    icon: z.string().url(),
+    categories: z.array(z.union([ObjectIdSchema, z.instanceof(Types.ObjectId)])),
+})
+
+export type DisplayCategoryZod = z.infer<typeof displayCategoryZodSchema>;
 
 export interface IDisplayCategory extends Document {
     name: string;
