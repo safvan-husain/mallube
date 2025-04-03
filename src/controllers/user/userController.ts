@@ -18,7 +18,7 @@ import Specialisation from "../../models/specialisationModel";
 import {calculateDistance} from "../../utils/interfaces/common";
 import {ObjectIdSchema} from "../../types/validation";
 import {z} from "zod";
-import {internalValidation, onCatchError} from "../service/serviceContoller";
+import {internalRunTimeResponseValidation, onCatchError} from "../service/serviceContoller";
 import {BusinessAccountType, businessAccountTypeSchema} from "../store/validation/store_validation";
 import {locationQuerySchema} from "../../schemas/localtion-schema";
 
@@ -311,7 +311,7 @@ export const getStoreDetails = asyncHandler(
                     service: tStore.service ?? false,
                     distance,
                 }
-            const response = internalValidation<StoreDetailsResponse>(StoreDetailsSchema as any, data);
+            const response = internalRunTimeResponseValidation<StoreDetailsResponse>(StoreDetailsSchema as any, data);
             if (response.error) {
                 res.status(500).json(response.error);
                 return;

@@ -1,6 +1,6 @@
 import { z} from 'zod';
 import {ICustomRequest, TypedResponse} from "../../../types/requestion";
-import {onCatchError, internalValidation} from "../../service/serviceContoller";
+import {onCatchError, internalRunTimeResponseValidation} from "../../service/serviceContoller";
 import {istFromStringOrNumberSchema, phoneZodValidation} from "../../../schemas/commom.schema";
 import Manager, {TManager} from "../../../models/managerModel";
 import { Types } from 'mongoose';
@@ -41,7 +41,7 @@ export const createManager = async (req: ICustomRequest<any>, res: TypedResponse
             ...data,
             isActive: true
         });
-        let response = internalValidation(managerMinimalResponse, manager);
+        let response = internalRunTimeResponseValidation(managerMinimalResponse, manager);
         if(response.error != null) {
             res.status(500).json(response.error)
             return;

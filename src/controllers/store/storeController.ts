@@ -1,11 +1,11 @@
 import {NextFunction, Request, Response} from "express";
 import asyncHandler from "express-async-handler";
 import bcrypt from "bcryptjs";
-import Store from "../../models/storeModel";
+import Store, {IStore} from "../../models/storeModel";
 import Advertisement from "../../models/advertisementModel";
 import {calculateDistance} from "../../utils/interfaces/common";
 import Category from "../../models/categoryModel";
-import mongoose, {Types} from "mongoose";
+import mongoose, {FilterQuery, Types} from "mongoose";
 import Product from "../../models/productModel";
 import ProductSearch from "../../models/productSearch";
 import jwt from "jsonwebtoken";
@@ -17,10 +17,12 @@ import {ISignUpStoreSchema, IUpdateStoreSchema, updateStoreSchema} from "../../s
 import {FeedBack} from "../../models/feedbackModel";
 import {toTimeOnly} from "../../utils/ist_time";
 import {BusinessAccountType, businessAccountTypeSchema, createStoreValidation} from "./validation/store_validation";
-import {onCatchError} from "../service/serviceContoller";
+import {internalRunTimeResponseValidation, onCatchError} from "../service/serviceContoller";
 import {z} from "zod";
 import {ObjectIdSchema} from "../../types/validation";
 import {locationQuerySchema} from "../../schemas/localtion-schema";
+import {StoreDetailsResponse, StoreDetailsSchema} from "../user/userController";
+import {paginationSchema} from "../../schemas/commom.schema";
 
 const twilioServiceId = process.env.TWILIO_SERVICE_ID;
 
@@ -329,25 +331,12 @@ export const deleteAdvertisement = asyncHandler(
 );
 
 
-
-export const fetchStoresNearByV2 = async (req: Request, res: Response) => {
+export const fetchStoresNearByV2 = async (req: Request, res: TypedResponse<StoreDetailsResponse[]>) => {
   try {
-    var { longitude, latitude, limit, skip, type } = req.query;
-    let query: any = {};
-    if(type === 'freelancer') query.type = 'freelancer';
-    if (!longitude || !latitude) {
-      return res
-        .status(400)
-        .json({ message: "Longitude and latitude are required" });
-    }
-
-    if(!limit) {
-      limit = '50';
-    }
-
-    if(!skip) {
-      skip = '0';
-    }
+    const {longitude, latitude, limit, skip} = locationQuerySchema.merge(paginationSchema).parse(req.query);
+    let query: FilterQuery<IStore> = {
+      type: businessAccountTypeSchema.enum.business
+    };
 
     const nearStores = await Store.find({
       ...query,
@@ -355,12 +344,12 @@ export const fetchStoresNearByV2 = async (req: Request, res: Response) => {
         $near: {
           $geometry: {
             type: "Point",
-            coordinates: [parseFloat(latitude as string), parseFloat(longitude as string)],
+            coordinates: [latitude, longitude],
           },
-          // $maxDistance: 10000, // in meters
         },
       },
       isActive: true,
+      //TODO: when closed, do we need to show on user app?
       isAvailable: true,
     }, {
       storeName: true, bio: true, address: true,
@@ -369,31 +358,47 @@ export const fetchStoresNearByV2 = async (req: Request, res: Response) => {
       phone: true, shopImgUrl: true,
       service: true, location: true, city: true, type: true,
     })
-      .populate("category", "name icon")
-      .skip(parseInt(skip as string))
-      .limit(parseInt(limit as string));
+        .skip(skip)
+        .limit(limit)
+        .populate<{ category: { name: string } }>("category", "name")
+        .populate<{ categories: { name: string }[] }>("categories", "name")
+        .lean()
 
-    // distance geting wrong. need to work on this
-    const storeWithDistance = nearStores.map((tStore) => {
-      const distance = calculateDistance(
-        parseFloat(latitude as string),
-        parseFloat(longitude as string),
-        tStore.location.coordinates[0],
-        tStore.location.coordinates[1]
-      );
-      var store: any = tStore.toObject();
-      store.category = store.category?.name ?? "Unkown";
-      return {
-        ...store,
-        category: store.category,
-        distance: distance.toFixed(2),
+
+    //TODO: distance getting wrong. need to work on this
+    const storeWithDistance = [];
+
+    for (const tStore of nearStores) {
+      const distance =
+          calculateDistance(
+              latitude,
+              longitude,
+              tStore.location.coordinates[0],
+              tStore.location.coordinates[1]
+          ).toFixed(2)
+
+      const data: StoreDetailsResponse = {
+        ...tStore,
+        _id: tStore._id.toString(),
+        categories: tStore.categories?.map(e => e.name),
+        category: tStore.category?.name,
+        service: tStore.service ?? false,
+        distance,
       };
-    });
+      const response = internalRunTimeResponseValidation<StoreDetailsResponse>(
+          StoreDetailsSchema as any,
+          data
+      );
 
+      if (response.error) {
+        return res.status(500).json(response.error); // Stop execution if error occurs
+      }
+      console.log(`got ${response.data.storeName}`)
+      storeWithDistance.push(response.data);
+    }
     res.status(200).json(storeWithDistance);
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Internal server error" });
+    onCatchError(error, res);
   }
 };
 

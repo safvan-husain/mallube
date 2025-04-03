@@ -28,7 +28,7 @@ export const onCatchError = (error: any, res: Response) => {
     res.status(500).json({message: "Internal server error", error});
 }
 
-export const internalValidation = <T>(schema: z.ZodSchema<T>, data: T)
+export const internalRunTimeResponseValidation = <T>(schema: z.ZodSchema<T>, data: T)
     : ({ data: T; error: null } | { data: null; error: { message: string; errors?: any } }) => {
     try {
         return {data: schema.parse(data), error: null};
