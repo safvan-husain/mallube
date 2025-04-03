@@ -4,7 +4,7 @@ import User from "../../models/userModel";
 import bcrypt, {hash} from "bcryptjs";
 // import twilio from "twilio";
 import Cart from "../../models/cartModel";
-import {ICustomRequest} from "../../types/requestion";
+import {ICustomRequest, TypedResponse} from "../../types/requestion";
 import {IAddCartSchema} from "../../schemas/cart.schema";
 import Product from "../../models/productModel";
 import jwt, {decode} from "jsonwebtoken";
@@ -18,7 +18,9 @@ import Specialisation from "../../models/specialisationModel";
 import {calculateDistance} from "../../utils/interfaces/common";
 import {ObjectIdSchema} from "../../types/validation";
 import {z} from "zod";
-import {onCatchError} from "../service/serviceContoller";
+import {internalValidation, onCatchError} from "../service/serviceContoller";
+import {BusinessAccountType, businessAccountTypeSchema} from "../store/validation/store_validation";
+import {locationQuerySchema} from "../../schemas/localtion-schema";
 
 const {TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN} = process.env;
 // const twilioclient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN, {
@@ -223,42 +225,100 @@ export const updateUserFcmToken = asyncHandler(
     }
 )
 
+// type StoreDetailsResponse = {
+//     type: BusinessAccountType;
+//     location: { type: string, coordinates: [number, number] };
+//     _id: string;
+//     storeName: string; //pass store owner name here for freelancer
+//     category: string;
+//     categories: string[];
+//     city: string;
+//     address: string;
+//     phone: string;
+//     whatsapp: string;
+//     bio: string;
+//     shopImgUrl: string;
+//     distance: string;
+//     service: boolean;
+//     openTime: number;
+//     closeTime: number;
+//     isDeliveryAvailable: boolean;
+//     instagram: string;
+//     facebook: string;
+// };
+
+export const StoreDetailsSchema = z.object({
+    type: businessAccountTypeSchema,
+    location: z.object({
+        type: z.string(),
+        coordinates: z.tuple([z.number(), z.number()]),
+    }),
+    _id: z.string(),
+    storeName: z.string(),
+    category: z.string().default(''),
+    categories: z.array(z.string()),
+    city: z.string(),
+    address: z.string(),
+    phone: z.string(),
+    whatsapp: z.string(),
+    bio: z.string().optional().default(''),
+    shopImgUrl: z.string(),
+    distance: z.string().optional().default('NA'),
+    service: z.boolean().optional().default(false),
+    openTime: z.number().optional().default(0),
+    closeTime: z.number().optional().default(0),
+    isDeliveryAvailable: z.boolean().optional().default(false),
+    instagram: z.string().optional().default(''),
+    facebook: z.string().optional().default(''),
+});
+
+export type StoreDetailsResponse = z.infer<typeof StoreDetailsSchema>;
+
 export const getStoreDetails = asyncHandler(
-    async (req: ICustomRequest<undefined>, res: Response) => {
+    async (req: ICustomRequest<undefined>, res: TypedResponse<StoreDetailsResponse>) => {
         try {
-            const {storeId, latitude, longitude} = req.query;
-            if (!storeId) {
-                res.status(400).json({message: "Store id is required"});
-                return;
-            }
-            if (!latitude || !longitude) {
-                res.status(400).json({message: "Latitude and longitude is required"});
-            }
-            var tStore = await Store.findById(storeId, {
-                storeName: true, bio: true, address: true,
+            const {storeId, latitude, longitude} = z.object({
+                storeId: ObjectIdSchema
+            }).merge(locationQuerySchema).parse(req.query);
+
+            let tStore = await Store.findById(storeId, {
+                storeName: true, bio: true, address: true, storeOwnerName: true,
                 openTime: true, closeTime: true, isDeliveryAvailable: true,
                 instagram: true, facebook: true, whatsapp: true,
                 phone: true, shopImgUrl: true,
                 service: true, location: true, city: true, type: true,
-            }).populate('category', "name");
+            })
+                .populate<{ category: { name: string } }>('category', "name")
+                .populate<{ categories: { name: string }[] }>('categories', "name")
+                .lean()
 
             if (!tStore) {
                 res.status(401).json({message: "Store not found"});
                 return;
             }
-            var store: any = tStore?.toObject();
-            const distance = calculateDistance(
-                parseFloat(latitude as string),
-                parseFloat(longitude as string),
+            const distance = (calculateDistance(
+                latitude,
+                longitude,
                 tStore.location.coordinates[0],
                 tStore.location.coordinates[1]
-            );
-            store.category = store.category.name;
-            store.distance = distance.toFixed(2);
-            res.status(200).json(store);
+            )).toFixed(2);
+            const data: StoreDetailsResponse =
+                {
+                    ...tStore,
+                    _id: tStore._id.toString(),
+                    categories: tStore.categories?.map(e => e.name),
+                    category: tStore.category?.name,
+                    service: tStore.service ?? false,
+                    distance,
+                }
+            const response = internalValidation<StoreDetailsResponse>(StoreDetailsSchema as any, data);
+            if (response.error) {
+                res.status(500).json(response.error);
+                return;
+            }
+            res.status(200).json(response.data);
         } catch (error) {
-            console.log(error);
-            res.status(500).json({message: "Internal server error", error});
+            onCatchError(error, res);
         }
     })
 

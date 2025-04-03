@@ -37,7 +37,7 @@ export const internalValidation = <T>(schema: z.ZodSchema<T>, data: T)
             return {
                 data: null,
                 error: {
-                    message: e.errors.length > 0 ? `${e.errors[0].path[0]}: ${e.errors[0].message}` : "Response error",
+                    message: e.errors.length > 0 ? `${e.errors[0].path[0]}: ${e.errors[0].message} while validating response` : "Response error",
                     errors: e.errors
                 }
             };
