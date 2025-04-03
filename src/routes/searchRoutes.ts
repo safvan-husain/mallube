@@ -99,6 +99,13 @@ const searchStoresByProductNameV2 = asyncHandler(
                         localField: "category",
                         foreignField: "_id",
                         as: "category",
+                        pipeline: [
+                            {
+                                $project: {
+                                    name: 1,
+                                }
+                            }
+                        ]
                     },
                 },
                 {
@@ -107,17 +114,18 @@ const searchStoresByProductNameV2 = asyncHandler(
                         localField: "categories",
                         foreignField: "_id",
                         as: "categories",
+                        pipeline: [
+                            {
+                                $project: {
+                                    name: 1,
+                                }
+                            }
+                        ]
                     },
                 },
                 {
                     $unwind: {
                         path: "$category",
-                        preserveNullAndEmptyArrays: true
-                    },
-                },
-                {
-                    $unwind: {
-                        path: "$categories",
                         preserveNullAndEmptyArrays: true
                     },
                 },
