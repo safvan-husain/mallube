@@ -248,7 +248,7 @@ export const updateUserFcmToken = asyncHandler(
 // };
 
 export const StoreDetailsSchema = z.object({
-    type: businessAccountTypeSchema,
+    type: businessAccountTypeSchema.optional().default('business'),
     location: z.object({
         type: z.string(),
         coordinates: z.tuple([z.number(), z.number()]),
