@@ -217,7 +217,6 @@ export const getSpecificServiceProfile = asyncHandler(
         let {id} = req.params;
         if (!id) {
             id = req.requester._id;
-            ;
         }
 
         try {
@@ -266,9 +265,19 @@ export const getSpecificServiceProfile = asyncHandler(
     }
 );
 
+type freelancerPartialResponse = {
+    _id: string,
+    storeOwnerName: string,
+    categories: string[],
+    shopImgUrl: string,
+    phone: string,
+    distance: string,
+    address: string
+}
+
 // Get all services
 export const getFreelancers = asyncHandler(
-    async (req: Request, res: Response) => {
+    async (req: Request, res: TypedResponse<freelancerPartialResponse[]>) => {
         try {
             const validatedQuery = getServicesQuerySchema.parse(req.query);
             const {categories, latitude, longitude, skip, limit} = validatedQuery;
@@ -277,7 +286,7 @@ export const getFreelancers = asyncHandler(
                 filter = {categories: {$in: [categories]}};
             }
             //TODO: change this.
-            filter.type = businessAccountTypeSchema.enum.business;
+            filter.type = businessAccountTypeSchema.enum.freelancer;
             if (latitude && longitude) {
                 filter.location = {
                     $near: {
@@ -290,33 +299,33 @@ export const getFreelancers = asyncHandler(
             }
 
             let tStores = await Store.find(filter, {
-                storeName: true,
                 location: true,
                 city: true,
                 district: true,
                 phone: true,
                 shopImgUrl: true,
+                categories: true,
+                storeOwnerName: true,
             })
                 .skip(skip)
                 .limit(limit)
-                //TODO: maybe support multiple category to choose.
-                .populate('category', 'name')
+                .populate<{ categories: { name: string }[] }>('categories', 'name')
                 .lean();
-            const stores = tStores.map((e: any) => {
-                const distance = latitude && longitude ? calculateDistance(
+            const stores = tStores.map((e): freelancerPartialResponse => {
+                const distance = (latitude && longitude ? calculateDistance(
                     latitude,
                     longitude, e.location.coordinates[0],
-                    e.location.coordinates[1],) : 0;
-                e.distance = distance.toFixed(2);
-                e.address = e.city + ", " + e.district;
-                if (e.category) {
-                    e.categories = [e.category];
-                    delete e.category;
+                    e.location.coordinates[1],) : 0).toFixed(2);
+
+                return {
+                    address: e.city + ", " + e.district,
+                    categories: e.categories.map(e => e.name),
+                    distance,
+                    phone: e.phone,
+                    shopImgUrl: e.shopImgUrl,
+                    _id: e._id,
+                    storeOwnerName: e.storeOwnerName
                 }
-                delete e.city;
-                delete e.district;
-                delete e.location;
-                return e;
             })
             res.json(stores)
         } catch (error) {
