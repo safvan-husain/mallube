@@ -25,6 +25,7 @@ export const onCatchError = (error: any, res: Response) => {
         });
         return;
     }
+    console.log(error);
     res.status(500).json({message: "Internal server error", error});
 }
 
