@@ -106,11 +106,11 @@ export const getAllManagers = async (req: ICustomRequest<any>, res: TypedRespons
 
 export const getSpecificManagerForAdmin = async (req: ICustomRequest<any>, res: TypedResponse<any>) => {
     try {
-        const { managerId } = z.object({
-            managerId: ObjectIdSchema
+        const { id } = z.object({
+            id: ObjectIdSchema
         }).parse(req.params);
 
-        const manager = await Manager.findById(managerId, {}).lean();
+        const manager = await Manager.findById(id, {}).lean();
         if (!manager) {
             res.status(400).json({message: "Manager not found"});
             return;
@@ -139,6 +139,22 @@ export const updateManager = async (req: ICustomRequest<any>, res: TypedResponse
             return;
         }
         res.status(200).json(manager);
+    } catch (e) {
+        onCatchError(e, res);
+    }
+}
+
+export const deleteManager = async (req: ICustomRequest<any>, res: TypedResponse<never>) => {
+    try {
+        const { id } = z.object({
+            id: ObjectIdSchema
+        }).parse(req.params);
+        const manager = await Manager.findByIdAndDelete(id);
+        if (!manager) {
+            res.status(400).json({message: "Manager not found"});
+            return;
+        }
+        res.status(200).json({message: "Manager deleted successfully"});
     } catch (e) {
         onCatchError(e, res);
     }
