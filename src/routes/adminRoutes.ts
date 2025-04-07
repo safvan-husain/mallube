@@ -31,6 +31,11 @@ import {
   createDisplayCategory,
   getAdminDisplayCategories, removeCategoryFromDisplay
 } from '../controllers/category/categoryController';
+import {
+  createManager,
+  getAllManagers,
+  getSpecificManagerForAdmin
+} from "../controllers/marketting-section/manager/auth-manager-controller";
 const router = express.Router();
 
 router.route("/login").post(login);
@@ -90,5 +95,8 @@ router.route("/users-count")
 router.route("/category").get(getAdminDisplayCategories).post(createDisplayCategory);
 router.route("/category/append").post(appendCategoryToDisplay);
 router.route("/category/remove").post(removeCategoryFromDisplay);
+
+router.route('/manager').post(createManager).get(getAllManagers)
+router.route('/manager/:id').get(getSpecificManagerForAdmin)
 
 export default router;
