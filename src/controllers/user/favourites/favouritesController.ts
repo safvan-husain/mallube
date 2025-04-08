@@ -79,6 +79,10 @@ export const getFavoriteShops = asyncHandler(
             for (const shop of shops) {
                 //TODO: correct this for type safety.
                 console.log(`location, ${shop.location}`);
+                if(!shop.location) {
+                    console.log(`no location stoer name ${shop.storeName} and ${shop.storeOwnerName}`);
+                    continue;
+                }
                 const validation = internalRunTimeResponseValidation<StoreDetailsResponse>(StoreDetailsSchema as any, {
                     ...shop,
                     category: shop.category?.name,
