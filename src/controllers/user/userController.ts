@@ -13,7 +13,7 @@ import Booking from "../../models/bookingModel";
 import TokenNumber from "../../models/tokenModel";
 import Doctor from "../../models/doctorModel";
 import Store from "../../models/storeModel";
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 import Specialisation from "../../models/specialisationModel";
 import {calculateDistance} from "../../utils/interfaces/common";
 import {ObjectIdSchema} from "../../types/validation";
@@ -253,7 +253,7 @@ export const StoreDetailsSchema = z.object({
         type: z.string(),
         coordinates: z.tuple([z.number(), z.number()]),
     }),
-    _id: z.string(),
+    _id: z.union([z.string(), z.instanceof(Types.ObjectId)]),
     storeName: z.string(),
     storeOwnerName: z.string().optional().default("Unknown"),
     category: z.string().optional().default(''),
