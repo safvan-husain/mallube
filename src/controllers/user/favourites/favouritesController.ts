@@ -64,25 +64,24 @@ export const getFavoriteShops = asyncHandler(
             }
 
             if (user.favouriteShops.length === 0) {
-                res.status(404).json([]);
+                res.status(200).json([]);
                 return;
             }
             let responseList: StoreDetailsResponse[] = [];
-            const shops = await Store.find({_id: {$in: user.favouriteShops}}, {
-                storeName: true, bio: true, address: true, storeOwnerName: true,
-                openTime: true, closeTime: true, isDeliveryAvailable: true,
-                instagram: true, facebook: true, whatsapp: true,
-                phone: true, shopImgUrl: true,
-                service: true, location: true, city: true, type: true,
-            }).populate<{ category: { name: string } }>('category', "name")
-                .populate<{ categories: { name: string }[] }>('categories', "name");
+            const shops = await Store
+                .find({_id: {$in: user.favouriteShops}}, {
+                    storeName: true, bio: true, address: true, storeOwnerName: true,
+                    openTime: true, closeTime: true, isDeliveryAvailable: true,
+                    instagram: true, facebook: true, whatsapp: true,
+                    phone: true, shopImgUrl: true,
+                    service: true, location: true, city: true, type: true,
+                })
+                .populate<{ category: { name: string } }>('category', "name")
+                .populate<{ categories: { name: string }[] }>('categories', "name")
+                .lean();
+
             for (const shop of shops) {
                 //TODO: correct this for type safety.
-                console.log(`location, ${shop.location}`);
-                if(!shop.location) {
-                    console.log(`no location stoer name ${shop.storeName} and ${shop.storeOwnerName}`);
-                    continue;
-                }
                 const validation = internalRunTimeResponseValidation<StoreDetailsResponse>(StoreDetailsSchema as any, {
                     ...shop,
                     category: shop.category?.name,
@@ -115,8 +114,19 @@ export const getFavoriteFreelancers = asyncHandler(
                 return;
             }
             let responseList: StoreDetailsResponse[] = [];
-            const freelancers = await Store.find({_id: {$in: user.favouriteFreelancers}}).populate<{ category: { name: string } }>('category', "name")
-                .populate<{ categories: { name: string }[] }>('categories', "name");
+
+            const freelancers = await Store
+                .find({_id: {$in: user.favouriteFreelancers}}).find({_id: {$in: user.favouriteFreelancers}}, {
+                    storeName: true, bio: true, address: true, storeOwnerName: true,
+                    openTime: true, closeTime: true, isDeliveryAvailable: true,
+                    instagram: true, facebook: true, whatsapp: true,
+                    phone: true, shopImgUrl: true,
+                    service: true, location: true, city: true, type: true,
+                })
+                .populate<{ category: { name: string } }>('category', "name")
+                .populate<{ categories: { name: string }[] }>('categories', "name")
+                .lean();
+
             for (const freelancer of freelancers) {
                 //TODO: correct this for type safety.
                 const validation = internalRunTimeResponseValidation<StoreDetailsResponse>(StoreDetailsSchema as any, {

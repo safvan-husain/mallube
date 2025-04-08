@@ -393,7 +393,6 @@ export const fetchStoresNearByV2 = async (req: Request, res: TypedResponse<Store
       if (response.error) {
         return res.status(500).json(response.error); // Stop execution if error occurs
       }
-      console.log(`got ${response.data.storeName}`)
       storeWithDistance.push(response.data);
     }
     res.status(200).json(storeWithDistance);
