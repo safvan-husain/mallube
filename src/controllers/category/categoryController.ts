@@ -72,13 +72,14 @@ export const getDisplayCategories = asyncHandler(
         try {
             let { businessType } = getDisplayCategorySchema.parse(req.params);
             let query: any = {};
-            if (businessType) {
-                if (businessType === 'business') {
-                    query.businessIndex = { $gte : 0 };
-                } else if (businessType === 'freelancer') {
-                    query.freelancerIndex = { $gte : 0 };
-                }
-            }
+            //TODO: uncomment below
+            // if (businessType) {
+            //     if (businessType === 'business') {
+            //         query.businessIndex = { $gte : 0 };
+            //     } else if (businessType === 'freelancer') {
+            //         query.freelancerIndex = { $gte : 0 };
+            //     }
+            // }
             let displayCategories = await DisplayCategory.find(query, {name: true, icon: true }).lean();
             res.status(200).json(displayCategories);
         } catch (e) {
