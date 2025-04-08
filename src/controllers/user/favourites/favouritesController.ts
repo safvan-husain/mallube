@@ -68,10 +68,17 @@ export const getFavoriteShops = asyncHandler(
                 return;
             }
             let responseList: StoreDetailsResponse[] = [];
-            const shops = await Store.find({_id: {$in: user.favouriteShops}}).populate<{ category: { name: string } }>('category', "name")
+            const shops = await Store.find({_id: {$in: user.favouriteShops}}, {
+                storeName: true, bio: true, address: true, storeOwnerName: true,
+                openTime: true, closeTime: true, isDeliveryAvailable: true,
+                instagram: true, facebook: true, whatsapp: true,
+                phone: true, shopImgUrl: true,
+                service: true, location: true, city: true, type: true,
+            }).populate<{ category: { name: string } }>('category', "name")
                 .populate<{ categories: { name: string }[] }>('categories', "name");
             for (const shop of shops) {
                 //TODO: correct this for type safety.
+                console.log(`location, ${shop.location}`);
                 const validation = internalRunTimeResponseValidation<StoreDetailsResponse>(StoreDetailsSchema as any, {
                     ...shop,
                     category: shop.category?.name,
