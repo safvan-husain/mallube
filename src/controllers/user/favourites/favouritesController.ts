@@ -68,10 +68,15 @@ export const getFavoriteShops = asyncHandler(
                 return;
             }
             let responseList: StoreDetailsResponse[] = [];
-            const shops = await Store.find({_id: {$in: user.favouriteShops}});
+            const shops = await Store.find({_id: {$in: user.favouriteShops}}).populate<{ category: { name: string } }>('category', "name")
+                .populate<{ categories: { name: string }[] }>('categories', "name");
             for (const shop of shops) {
                 //TODO: correct this for type safety.
-                const validation = internalRunTimeResponseValidation<StoreDetailsResponse>(StoreDetailsSchema as any, shop as any);
+                const validation = internalRunTimeResponseValidation<StoreDetailsResponse>(StoreDetailsSchema as any, {
+                    ...shop,
+                    category: shop.category?.name,
+                    categories: shop.categories?.map(e => e.name)
+                } as any);
                 if (validation.error) {
                     res.status(500).json(validation.error);
                     return;
@@ -99,10 +104,15 @@ export const getFavoriteFreelancers = asyncHandler(
                 return;
             }
             let responseList: StoreDetailsResponse[] = [];
-            const freelancers = await Store.find({_id: {$in: user.favouriteFreelancers}});
+            const freelancers = await Store.find({_id: {$in: user.favouriteFreelancers}}).populate<{ category: { name: string } }>('category', "name")
+                .populate<{ categories: { name: string }[] }>('categories', "name");
             for (const freelancer of freelancers) {
                 //TODO: correct this for type safety.
-                const validation = internalRunTimeResponseValidation<StoreDetailsResponse>(StoreDetailsSchema as any, freelancer as any);
+                const validation = internalRunTimeResponseValidation<StoreDetailsResponse>(StoreDetailsSchema as any, {
+                    ...freelancer,
+                    category: freelancer.category?.name,
+                    categories: freelancer.categories?.map(e => e.name)
+                } as any);
                 if (validation.error) {
                     res.status(500).json(validation.error);
                     return;
