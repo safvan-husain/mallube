@@ -255,6 +255,7 @@ export const StoreDetailsSchema = z.object({
     }),
     _id: z.string(),
     storeName: z.string(),
+    storeOwnerName: z.string().optional().default("Unknown"),
     category: z.string().optional().default(''),
     categories: z.array(z.string()).optional().default([]),
     city: z.string(),
