@@ -100,16 +100,8 @@ const updateData = expressAsyncHandler(
     async (req, res) => {
         // let data = paginationSchema.parse(req.query);
         try {
-           let k =  await Store.collection.updateMany(
-                {categories: {$exists: false}},
-                [{$set: {categories: ["$category"]}}] // ✅ Works in MongoDB 4.2+
-            );
-            let s= await Store.updateMany({
-                type: {$exists: false}
-            }, {
-                type: 'business'
-            });
-            res.status(200).json({s, k});
+            let s = await Store.find({ location: { exists: false }});
+            res.status(200).json({s});
         } catch (error) {
             console.log(error)
             res.status(400).json({message: error})
