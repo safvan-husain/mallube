@@ -21,7 +21,7 @@ import {
     removeProductFromCart,
     deleteUser,
     updateUserFcmToken,
-    getBookingHistory, deleteBookingHistory
+    getBookingHistory, deleteBookingHistory, cancelBooking
 } from "../controllers/user/userController";
 import { user } from "../middleware/auth";
 import { validateData } from "../middleware/zod.validation";
@@ -55,6 +55,7 @@ router.route("/time-slots/:id").get(user, fetchTimeSlot)
 router.route('/available-time-slots').get(user, getAvailableTimeSlotForStoreV2)
 router.route("/booking").post(user,slotBooking)
 router.route("/booking-v2").post(user,slotBookingV2).get(user, getBookingsV2)
+router.route("/booking-cancel").post(user, cancelBooking)
 router.route("/dr-booking").post(user,drBooking)
 router.route("/specialisations/:uniqueName").get(fetchAllSpecialisations)
 router.route("/doctors/:uniqueName").get(fetchAllDoctors)

@@ -11,7 +11,7 @@ import {locationQuerySchema} from "../schemas/localtion-schema";
 import {TypedResponse} from "../types/requestion";
 import {StoreDetailsResponse, StoreDetailsSchema} from "../controllers/user/userController";
 import {PipelineStage} from "mongoose";
-import {internalRunTimeResponseValidation, onCatchError} from "../controllers/service/serviceContoller";
+import {safeRuntimeValidation, onCatchError} from "../controllers/service/serviceContoller";
 
 const router = Router();
 
@@ -143,7 +143,7 @@ const searchStoresByProductNameV2 = asyncHandler(
                     service: tStore.service ?? false,
                     distance: (tStore.distance as number).toFixed(2),
                 };
-                const response = internalRunTimeResponseValidation<StoreDetailsResponse>(
+                const response = safeRuntimeValidation<StoreDetailsResponse>(
                     StoreDetailsSchema as any,
                     data
                 );

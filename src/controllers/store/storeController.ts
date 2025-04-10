@@ -10,19 +10,20 @@ import Product from "../../models/productModel";
 import ProductSearch from "../../models/productSearch";
 import jwt from "jsonwebtoken";
 import {TimeSlot} from "../../models/timeSlotModel";
-import Booking from "../../models/bookingModel";
+import Booking, {bookingStatusSchema} from "../../models/bookingModel";
 import {ICustomRequest, TypedResponse} from "../../types/requestion";
 import {getStoreByPhoneOrUniqueNameOrEmail} from "../../service/store/index";
 import {ISignUpStoreSchema, IUpdateStoreSchema, updateStoreSchema} from "../../schemas/store.schema";
 import {FeedBack} from "../../models/feedbackModel";
 import {toTimeOnly} from "../../utils/ist_time";
 import {BusinessAccountType, businessAccountTypeSchema, createStoreValidation} from "./validation/store_validation";
-import {internalRunTimeResponseValidation, onCatchError} from "../service/serviceContoller";
+import {safeRuntimeValidation, onCatchError} from "../service/serviceContoller";
 import {z} from "zod";
 import {ObjectIdSchema} from "../../types/validation";
 import {locationQuerySchema} from "../../schemas/localtion-schema";
 import {StoreDetailsResponse, StoreDetailsSchema} from "../user/userController";
 import {paginationSchema} from "../../schemas/commom.schema";
+import DisplayCategory from "../../models/DisplayCategory";
 
 const twilioServiceId = process.env.TWILIO_SERVICE_ID;
 
@@ -385,7 +386,7 @@ export const fetchStoresNearByV2 = async (req: Request, res: TypedResponse<Store
         service: tStore.service ?? false,
         distance,
       };
-      const response = internalRunTimeResponseValidation<StoreDetailsResponse>(
+      const response = safeRuntimeValidation<StoreDetailsResponse>(
           StoreDetailsSchema as any,
           data
       );
@@ -617,8 +618,11 @@ export const fetchStoreByCategoryV2 = async (req: Request, res: Response) => {
     }
     console.log(type);
 
+      let categoryIds = (await DisplayCategory.findById(categoryId, { categories: 1 }).lean())?.categories ?? [];
+
+      //TODO: correct , we dont need category any more, just categories.
       response = await findStores({
-        $or: [{ category: categoryId, categories: { $in: categoryId } }],
+        $or: [{ category: categoryId, categories: { $in: categoryIds } }],
         type,
         location: {
           $near: {
@@ -993,7 +997,9 @@ export const deleteTimeSlotV2 = asyncHandler(
 export const confirmBookingV2 = asyncHandler(
   async (req: ICustomRequest<any>, res: Response) => {
     try {
-      const { bookingId } = req.query;
+      const { bookingId } = z.object({
+        bookingId: ObjectIdSchema
+      }).parse(req.query);
 
       const booking = await Booking.findById(bookingId);
       if (!booking) {
@@ -1006,21 +1012,36 @@ export const confirmBookingV2 = asyncHandler(
           booking.timeSlotId,
           { $inc: { numberOfAvailableSeats: -1 } }
         );
-        booking!.isActive = true;
+        booking!.status = bookingStatusSchema.enum.confirmed;
         await booking.save();
         res.status(200).json({ message: "Booking confirmed" });
       } else {
         res.status(400).json({ message: "No available seats left" });
       }
     } catch (error) {
-      console.log(`error addTimeSlot V2 ${error}`);
-      res.status(500).json({ message: "Internal server error" })
+      onCatchError(error, res);
     }
   }
-)
+);
+
+const storeBookingResponse = z.object({
+  _id: ObjectIdSchema,
+  isActive: z.boolean(),
+  customer: z.object({
+    fullName: z.string(),
+    phone: z.string(),
+  }),
+  timeslot: z.object({
+    startTime: z.number(),
+    endTime: z.number(),
+  }),
+  status: bookingStatusSchema.default('pending')
+});
+
+type StoreBookingResponse = z.infer<typeof storeBookingResponse>;
 
 export const getBookingsV2 = asyncHandler(
-  async (req: ICustomRequest<any>, res: Response) => {
+  async (req: ICustomRequest<any>, res: TypedResponse<StoreBookingResponse[]>) => {
     try {
       const storeId = req.store?._id;
       //TODO
@@ -1068,26 +1089,25 @@ export const getBookingsV2 = asyncHandler(
             'customer.phone': 1,
             'timeslot.startTime': 1,
             'timeslot.endTime': 1,
+            status: 1,
           }
         }
       ]);
-      var bookings: any[] = [];
-      for (var { _id, isActive, customer, timeslot } of tempBookings) {
-        bookings.push({
-          _id,
-          isActive,
-          customer,
-          timeslot: {
-            startTime: timeslot.startTime.getTime(),
-            endTime: timeslot.endTime.getTime(),
-          }
-        })
+      let bookings: StoreBookingResponse[] = [];
+      for (const item of tempBookings) {
+        const k = safeRuntimeValidation(storeBookingResponse, item);
+        if (k.error) {
+          //TODO: correct on production.
+          res.status(500).json(k.error);
+          return;
+          // continue;
+        }
+        bookings.push(k.data);
       }
 
       res.status(200).json(bookings.reverse());
     } catch (error) {
-      console.log(`error addTimeSlot V2 ${error}`);
-      res.status(500).json({ message: "Internal server error" })
+      onCatchError(error, res);
     }
   }
 )

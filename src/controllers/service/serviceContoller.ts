@@ -5,6 +5,7 @@ import asyncHandler from "express-async-handler";
 import {Freelancer} from "../../models/freelancerModel";
 import {z} from "zod";
 import {
+    AppError,
     createServiceSchema,
     getServicesQuerySchema,
     updateServiceSchema
@@ -25,11 +26,15 @@ export const onCatchError = (error: any, res: Response) => {
         });
         return;
     }
+    if (error instanceof AppError) {
+        res.status(error.statusCode).json(error.toJson());
+        return;
+    }
     console.log(error);
     res.status(500).json({message: "Internal server error", error});
 }
 
-export const internalRunTimeResponseValidation = <T>(schema: z.ZodSchema<T>, data: T)
+export const safeRuntimeValidation = <T>(schema: z.ZodSchema<T>, data: T)
     : ({ data: T; error: null } | { data: null; error: { message: string; errors?: any } }) => {
     try {
         return {data: schema.parse(data), error: null};
@@ -51,6 +56,31 @@ export const internalRunTimeResponseValidation = <T>(schema: z.ZodSchema<T>, dat
         }
     }
 };
+
+// Function overloads
+export function runtimeValidation<T>(schema: z.ZodSchema<T>, data: T): T;
+export function runtimeValidation<T>(schema: z.ZodSchema<T>, data: T[]): T[];
+
+export function runtimeValidation <T>(schema: z.ZodSchema<T>, data: T | T[])
+    : T | T[]  {
+    try {
+        if (Array.isArray(data)) {
+            console.log(`${data} is array`)
+            // If it's an array, validate each item individually
+            return data.map(item => schema.parse(item));
+        } else {
+            console.log(`${data} is not array`)
+            // If it's a single object
+            return schema.parse(data);
+        }
+    } catch (e) {
+        if (e instanceof z.ZodError) {
+            throw new AppError(e.errors.length > 0 ? `${e.errors[0].path[0]}: ${e.errors[0].message} while validating response` : "Response error", 500, e.errors)
+        } else {
+            throw new AppError("Internal server error", 500)
+        }
+    }
+}
 
 export const getServiceCategory = asyncHandler(
     async (_: Request, res: Response) => {

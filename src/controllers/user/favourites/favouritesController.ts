@@ -3,7 +3,7 @@ import asyncHandler from "express-async-handler";
 import {UserFavRequestValidationSchema} from "./validation";
 import {ICustomRequest, TypedResponse} from "../../../types/requestion";
 import User from "../../../models/userModel";
-import {internalRunTimeResponseValidation, onCatchError} from "../../service/serviceContoller";
+import {safeRuntimeValidation, onCatchError} from "../../service/serviceContoller";
 import Store from "../../../models/storeModel";
 import {Freelancer} from "../../../models/freelancerModel";
 import {Types} from "mongoose";
@@ -82,7 +82,7 @@ export const getFavoriteShops = asyncHandler(
 
             for (const shop of shops) {
                 //TODO: correct this for type safety.
-                const validation = internalRunTimeResponseValidation<StoreDetailsResponse>(StoreDetailsSchema as any, {
+                const validation = safeRuntimeValidation<StoreDetailsResponse>(StoreDetailsSchema as any, {
                     ...shop,
                     category: shop.category?.name,
                     categories: shop.categories?.map(e => e.name)
@@ -129,7 +129,7 @@ export const getFavoriteFreelancers = asyncHandler(
 
             for (const freelancer of freelancers) {
                 //TODO: correct this for type safety.
-                const validation = internalRunTimeResponseValidation<StoreDetailsResponse>(StoreDetailsSchema as any, {
+                const validation = safeRuntimeValidation<StoreDetailsResponse>(StoreDetailsSchema as any, {
                     ...freelancer,
                     category: freelancer.category?.name,
                     categories: freelancer.categories?.map(e => e.name)

@@ -1,4 +1,9 @@
 import { Schema, model, Document } from "mongoose";
+import {z} from "zod";
+
+export const bookingStatusSchema = z.enum(['pending', 'confirmed', 'canceled']);
+type IBookingStatus = z.infer<typeof bookingStatusSchema>;
+
 //TODO: remove uneccessery fields later.
 export interface IBooking extends Document {
     timeSlotId: Schema.Types.ObjectId;
@@ -11,8 +16,10 @@ export interface IBooking extends Document {
     name:string;
     phone:string;
     doctor:Schema.Types.ObjectId;
+    // isActive -> isConfirm
     isActive: boolean;
     createdAt: Date;
+    status: IBookingStatus;
 }
 
 const bookingSchema = new Schema<IBooking>(
@@ -52,6 +59,11 @@ const bookingSchema = new Schema<IBooking>(
         },
         doctor:{
             type:Schema.Types.ObjectId
+        },
+        status: {
+            type: String,
+            enum: ['pending', 'confirmed', 'canceled'],
+            default: 'pending',
         }
     },
     {

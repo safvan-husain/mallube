@@ -100,7 +100,7 @@ type adminDisplayCatResponse = {
 }
 
 export const createDisplayCategory = asyncHandler(
-  async (req: Request, res: TypedResponse<adminDisplayCatResponse>) => {
+  async (req: Request, res: TypedResponse<any>) => {
     try {
       let requestData = z.object({
         isEnabledForStore: z.boolean().default(false),
@@ -109,26 +109,26 @@ export const createDisplayCategory = asyncHandler(
         icon: z.string().url(),
         categories: z.array(ObjectIdSchema).default([])
       }).parse(req.body);
-      const catExist = await DisplayCategory.findOne({ name: requestData.name }).lean();
-      if (catExist) {
-        res.status(400).json({ message: `${requestData.name} already exist` });
-        return;
-      }
-      const category = await (await DisplayCategory.create<DisplayCategoryZod>({
-        ...requestData,
-        businessIndex: requestData.isEnabledForStore ? 1 : -1,
-        freelancerIndex: requestData.isEnabledForFreelancer ? 1 : -1
-      }))
-        .populate<{
-          categories: populatedMainCat[]
-        }>('categories', 'name isActive isEnabledForStore isEnabledForStore');
+      // const catExist = await DisplayCategory.findOne({ name: requestData.name }).lean();
+      // if (catExist) {
+      //   res.status(400).json({ message: `${requestData.name} already exist` });
+      //   return;
+      // }
+      // const category = await (await DisplayCategory.create<DisplayCategoryZod>({
+      //   ...requestData,
+      //   businessIndex: requestData.isEnabledForStore ? 1 : -1,
+      //   freelancerIndex: requestData.isEnabledForFreelancer ? 1 : -1
+      // }))
+      //   .populate<{
+      //     categories: populatedMainCat[]
+      //   }>('categories', 'name isActive isEnabledForStore isEnabledForStore');
       res.status(200).json({
-        _id: category._id,
-        name: category.name,
-        icon: category.icon,
-        categories: category.categories,
-        businessIndex: category.businessIndex,
-        freelancerIndex: category.freelancerIndex
+        // _id: category._id,
+        // name: category.name,
+        // icon: category.icon,
+        // categories: category.categories,
+        // businessIndex: category.businessIndex,
+        // freelancerIndex: category.freelancerIndex
       });
     } catch (e) {
       onCatchError(e, res);

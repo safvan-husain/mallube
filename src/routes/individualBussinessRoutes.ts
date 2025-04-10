@@ -10,6 +10,7 @@ import {
 } from "../controllers/service/serviceContoller";
 import { serviceIndivdual } from "../middleware/auth";
 import { addProduct } from "../controllers/product/productController";
+import {fetchStoreByCategoryV2} from "../controllers/store/storeController";
 
 const router = Router();
 
@@ -22,7 +23,7 @@ router.route('/register').post(createServiceProfile);
 router.route('/profile').get(serviceIndivdual ,getSpecificServiceProfile);
 
 router.route('/category')
-    .get(getServiceCategory)
+    .get(fetchStoreByCategoryV2)
 
 router.route("/:id")
     .get(getSpecificServiceProfile)

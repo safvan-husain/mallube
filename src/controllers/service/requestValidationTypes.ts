@@ -1,6 +1,26 @@
 import { z } from 'zod';
 import { Types } from 'mongoose';
 
+export class AppError {
+    public readonly message: string;
+    public readonly error?: Object;
+    public readonly statusCode: number;
+
+    constructor(message: string, statusCode: number, error?: Object) {
+        this.message = message;
+        this.statusCode = statusCode;
+        this.error = error;
+    }
+
+    toJson(): object {
+        return {
+            message: this.message,
+            error: this.error
+        };
+    }
+}
+
+
 export const getServicesQuerySchema = z.object({
     categories: z.string()
         .refine(val => Types.ObjectId.isValid(val), {

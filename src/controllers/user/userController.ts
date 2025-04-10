@@ -9,16 +9,16 @@ import {IAddCartSchema} from "../../schemas/cart.schema";
 import Product from "../../models/productModel";
 import jwt, {decode} from "jsonwebtoken";
 import TimeSlot, {ITimeSlot} from "../../models/timeSlotModel";
-import Booking from "../../models/bookingModel";
+import Booking, {bookingStatusSchema} from "../../models/bookingModel";
 import TokenNumber from "../../models/tokenModel";
 import Doctor from "../../models/doctorModel";
 import Store from "../../models/storeModel";
-import mongoose, { Types } from "mongoose";
+import mongoose, {Types} from "mongoose";
 import Specialisation from "../../models/specialisationModel";
 import {calculateDistance} from "../../utils/interfaces/common";
 import {ObjectIdSchema} from "../../types/validation";
 import {z} from "zod";
-import {internalRunTimeResponseValidation, onCatchError} from "../service/serviceContoller";
+import {safeRuntimeValidation, onCatchError} from "../service/serviceContoller";
 import {BusinessAccountType, businessAccountTypeSchema} from "../store/validation/store_validation";
 import {locationQuerySchema} from "../../schemas/localtion-schema";
 
@@ -225,28 +225,6 @@ export const updateUserFcmToken = asyncHandler(
     }
 )
 
-// type StoreDetailsResponse = {
-//     type: BusinessAccountType;
-//     location: { type: string, coordinates: [number, number] };
-//     _id: string;
-//     storeName: string; //pass store owner name here for freelancer
-//     category: string;
-//     categories: string[];
-//     city: string;
-//     address: string;
-//     phone: string;
-//     whatsapp: string;
-//     bio: string;
-//     shopImgUrl: string;
-//     distance: string;
-//     service: boolean;
-//     openTime: number;
-//     closeTime: number;
-//     isDeliveryAvailable: boolean;
-//     instagram: string;
-//     facebook: string;
-// };
-
 export const StoreDetailsSchema = z.object({
     type: businessAccountTypeSchema.optional().default('business'),
     location: z.object({
@@ -312,7 +290,7 @@ export const getStoreDetails = asyncHandler(
                     service: tStore.service ?? false,
                     distance,
                 }
-            const response = internalRunTimeResponseValidation<StoreDetailsResponse>(StoreDetailsSchema as any, data);
+            const response = safeRuntimeValidation<StoreDetailsResponse>(StoreDetailsSchema as any, data);
             if (response.error) {
                 res.status(500).json(response.error);
                 return;
@@ -640,30 +618,38 @@ export const slotBooking = async (req: any, res: Response) => {
     }
 };
 
-export const getAvailableTimeSlotForStoreV2 = asyncHandler(
-    async (req: any, res: any) => {
-        try {
+type TimeSlotResponse = z.infer<typeof timeslotResponseSchema>;
 
-            const {storeId} = req.query;
-            const startOfDay = new Date();
-            startOfDay.setHours(0, 0, 0, 0);
+const timeslotResponseSchema = z.object({
+    startTime: z.number(),
+    endTime: z.number(),
+    _id: z.any()
+})
+
+export const getAvailableTimeSlotForStoreV2 = asyncHandler(
+    async (req: any, res: TypedResponse<TimeSlotResponse[]>) => {
+        try {
+            const {storeId} = z.object({
+                storeId: ObjectIdSchema
+            }).parse(req.query);
+
+            console.log("called here w")
             //TODO: remove slots later.
             const tempTimeSlots = await TimeSlot.find({
                 storeId,
-                numberOfAvailableSeats: {$gt: 0},
-                slots: {$exists: false},
-                createdAt: {$gte: startOfDay}
+                numberOfAvailableSeats: {$gt: 0}
             });
-            var timeSlots = [];
-            for (var slot of tempTimeSlots) {
+            let timeSlots = [];
+            for (const slot of tempTimeSlots) {
                 try {
                     timeSlots.push(
+                        timeslotResponseSchema.parse(
                         {
                             startTime: slot.startTime.getTime(),
                             endTime: slot.endTime.getTime(),
                             numberOfAvailableSeats: slot.numberOfAvailableSeats,
                             _id: slot._id
-                        }
+                        })
                     );
                 } catch (error) {
                     console.log("delete old times", error);
@@ -672,8 +658,7 @@ export const getAvailableTimeSlotForStoreV2 = asyncHandler(
             }
             res.status(200).json(timeSlots);
         } catch (error) {
-            console.log("getAvailableTimeSlotForStoreV2 error ", error);
-            res.status(500).json({message: "Internal server error", error});
+            onCatchError(error, res);
         }
     }
 )
@@ -681,7 +666,9 @@ export const getAvailableTimeSlotForStoreV2 = asyncHandler(
 //
 export const slotBookingV2 = async (req: any, res: Response) => {
     try {
-        const {slotId} = req.body;
+        const {slotId} = z.object({
+            slotId: ObjectIdSchema
+        }).parse(req.body);
 
         const userId = req.user._id;
         // Validate the slotData and storeId
@@ -725,26 +712,36 @@ export const slotBookingV2 = async (req: any, res: Response) => {
             booking,
         });
     } catch (error) {
-        console.log("booking error ", error);
-        res.status(500).json({message: "Internal server error", error});
+        onCatchError(error, res);
     }
 };
 
 export const getBookingHistory = async (req: any, res: any) => {
     try {
         let {storeId} = z.object({storeId: ObjectIdSchema}).parse(req.query);
-        let bookingHistory = await Booking.find({storeId, userId: req.user._id}, {
+        let bookingHistory: any[] = await Booking.find({storeId, userId: req.user._id}, {
             createdAt: true,
             startTime: true,
             endTime: true,
             isActive: true
         }).lean();
-        res.status(200).json(bookingHistory.map(e => ({
+        bookingHistory = bookingHistory.map(e => ({
             ...e,
             startTime: e.startTime?.getTime(),
             endTime: e.endTime?.getTime(),
             createdAt: e.createdAt?.getTime()
-        })));
+        }));
+        let responseList = [];
+        for (const item of bookingHistory) {
+            //TODO: correct these type safety.
+            let s = safeRuntimeValidation(userBookingResponse, item as any);
+            if (s.error) {
+                res.status(500).json(s.error);
+                return;
+            }
+            responseList.push(s.data);
+        }
+        res.status(200).json(responseList);
     } catch (e) {
         console.log(e);
         onCatchError(e, res);
@@ -755,28 +752,42 @@ export const deleteBookingHistory = async (req: any, res: any) => {
     try {
         let {storeId} = z.object({storeId: ObjectIdSchema}).parse(req.query);
         let bookingHistory = await Booking.findOneAndDelete({storeId, userId: req.user._id});
-        if(bookingHistory) {
-            res.status(200).json({ message: "Booking deleted successfully"});
+        if (bookingHistory) {
+            res.status(200).json({message: "Booking deleted successfully"});
             return;
         }
-        res.status(404).json({ message: "Booking not found"});
+        res.status(404).json({message: "Booking not found"});
     } catch (e) {
         console.log(e);
         onCatchError(e, res);
     }
 }
 
+type UserBookingResponse = z.infer<typeof userBookingResponse>;
+
+const userBookingResponse = z.object({
+    starTime: z.number(),
+    endTime: z.number(),
+    _id: z.any(),
+    date: z.number(),
+    status: bookingStatusSchema.optional().default('pending')
+});
+
+
 export const getBookingsV2 = asyncHandler(
-    async (req: any, res: any) => {
-        const {storeId} = req.query;
+    async (req: any, res: TypedResponse<UserBookingResponse[]>) => {
         try {
+            const {storeId} = z.object({
+                storeId: ObjectIdSchema
+            }).parse(req.query);
+
             const userId = req.user._id;
             // const bookings = await Booking.find({ userId }, { timeSlotId: true, isActive: true }).populate('timeSlotId');
             const bookings = await Booking.aggregate([
                 {
                     $match: {
-                        userId: new mongoose.Types.ObjectId(userId),
-                        storeId: new mongoose.Types.ObjectId(storeId),
+                        userId: mongoose.Types.ObjectId.createFromHexString(userId),
+                        storeId: mongoose.Types.ObjectId.createFromHexString(storeId),
                     },
                 },
                 {
@@ -815,6 +826,10 @@ export const getBookingsV2 = asyncHandler(
                         "store.phone": 1,
                         "timeslot.startTime": 1,
                         "timeslot.endTime": 1,
+                        createdAt: 1,
+                        startTime: 1,
+                        endTime: 1,
+                        status: 1
                     }
                 }
             ]);
@@ -827,17 +842,49 @@ export const getBookingsV2 = asyncHandler(
                     ? {
                         startTime: booking.timeslot.startTime.getTime(),
                         endTime: booking.timeslot.endTime.getTime(),
+                        _id: booking.timeslot._id,
+                        date: booking.createdAt?.getTime() ?? 0,
                     }
                     : null,
+                startTime: booking.startTime,
+                endTime: booking.endTime,
+                date: booking.createdAt?.getTime() ?? 0,
+                status: booking.status,
             }));
+            let responseList: UserBookingResponse[] = [];
+            for (const item of formattedBookings) {
+                //TODO: correct these type safety.
+                let s = safeRuntimeValidation(userBookingResponse, item as any);
+                if (s.error) {
+                    res.status(500).json(s.error);
+                    return;
+                }
+                responseList.push(s.data);
+            }
 
-            res.status(200).json(formattedBookings);
+            //TODO: correct type safety here.
+            res.status(200).json(responseList);
         } catch (error) {
-            console.log("get booking error ", error);
-            res.status(500).json({message: "Internal server error", error});
+            onCatchError(error, res);
         }
     }
 )
+
+export const cancelBooking = async (req: ICustomRequest<any>, res: TypedResponse<any>) => {
+    try {
+        const data = z.object({
+            bookingId: ObjectIdSchema
+        }).parse(req.body);
+        const booking = await Booking.findByIdAndUpdate(data.bookingId, {status: bookingStatusSchema.enum.canceled});
+        if (!booking) {
+            res.status(404).json({message: "Booking not found"});
+            return;
+        }
+        res.status(200).json({message: "Booking cancelled successfully"});
+    } catch (e) {
+        onCatchError(e, res);
+    }
+}
 
 export const fetchAllDoctors = async (req: Request, res: Response) => {
     try {

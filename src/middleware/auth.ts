@@ -1,6 +1,6 @@
 import jwt, { TokenExpiredError } from "jsonwebtoken";
 import asyncHandler from "express-async-handler";
-import { NextFunction, Response } from "express";
+import { NextFunction, Response, Request } from "express";
 import {
   RequestWithAdmin,
   RequestWithStaff,
@@ -8,6 +8,8 @@ import {
 import User from "../models/userModel";
 import { config } from "../config/vars";
 import { Freelancer } from "../models/freelancerModel";
+import {Types} from "mongoose";
+import Employee, {IEmployee, TEmployeePrivilege} from "../models/managerModel";
 
 declare global {
   namespace Express {
@@ -15,6 +17,7 @@ declare global {
       user?: {
         _id: string;
       };
+      employee?: IEmployee
     }
   }
 }
@@ -180,3 +183,37 @@ export const serviceIndivdual = asyncHandler(
     }
   }
 );
+
+export const employeeProtect = asyncHandler(
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            let token = req.headers?.authorization?.split(" ").pop();
+            if (!token) {
+                res.status(401).json({ message: "Not authorized, no token available" });
+                return;
+            }
+            const decoded = jwt.verify(token, 'managerSecret') as {
+                _id: string;
+                privilege: TEmployeePrivilege;
+            };
+
+            let employee = await Employee.findById(decoded._id).select("-password").lean();
+            if (!employee) {
+                res.status(403).json({ message: "No user found"});
+                return;
+            }
+            if(employee.resignedDate) {
+                res.status(403).json({ message: "Not valid since resignation"});
+                return;
+            }
+            req.employee = employee;
+            next();
+        } catch (error) {
+            if (error instanceof TokenExpiredError) {
+                res.status(401).json({ message: "Token expired, please log in again.", tokenExpired: true })
+            } else {
+                res.status(401).json({ message: "Not authorized, token is not valid.", error })
+            }
+        }
+    }
+)

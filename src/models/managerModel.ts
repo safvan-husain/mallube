@@ -1,14 +1,18 @@
 import {Schema, model, Document, InferSchemaType, Types} from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import {z} from "zod";
 
-interface IManager extends Document {
+export const employeePrivilegeSchema = z.enum(['manager', 'staff']);
+
+export type TEmployeePrivilege = z.infer<typeof employeePrivilegeSchema>;
+
+export interface IEmployee extends Document {
     _id?: Types.ObjectId;
     name: string;
     username: string;
-    hashedPassword?: string;
+    hashedPassword: string;
     generateAuthToken: () => string;
-    isActive: boolean;
     address: string;
     place: string;
     city: string;
@@ -19,13 +23,14 @@ interface IManager extends Document {
     workAreaName: string;
     joinedDate: Date;
     resignedDate?: Date;
+    privilege: TEmployeePrivilege;
+    manager?: Types.ObjectId;
 }
 
-export type TManager = {
+export type TEmployee = {
     name: string;
     username: string;
-    hashedPassword?: string;
-    isActive: boolean;
+    hashedPassword: string;
     address: string;
     place: string;
     city: string;
@@ -36,9 +41,11 @@ export type TManager = {
     workAreaName: string;
     joinedDate: Date;
     resignedDate?: Date;
+    privilege: TEmployeePrivilege;
+    manager?: Types.ObjectId;
 }
 
-const managerSchema = new Schema<IManager>(
+const employeeSchema = new Schema<IEmployee>(
     {
         name: {type: String, required: true,},
         username: {
@@ -46,12 +53,18 @@ const managerSchema = new Schema<IManager>(
             required: true,
             unique: true,
         },
+        privilege: {
+            type: String,
+            enum: ['manager', 'staff'],
+            required: true,
+        },
+        manager: {
+            type: Schema.Types.ObjectId,
+            ref: 'Employee',
+        },
         hashedPassword: {
             type: String,
-        },
-        isActive: {
-            type: Boolean,
-            default: true,
+            required: true
         },
         address: {
             type: String,
@@ -98,7 +111,7 @@ const managerSchema = new Schema<IManager>(
     }
 );
 
-managerSchema.pre("save", async function (next) {
+employeeSchema.pre("save", async function (next) {
     if (!this.isModified("hashedPassword") ||  !this.hashedPassword) {
         return next();
     }
@@ -108,11 +121,11 @@ managerSchema.pre("save", async function (next) {
 });
 
 // Generate auth token
-managerSchema.methods.generateAuthToken = function (): string {
+employeeSchema.methods.generateAuthToken = function (): string {
     return jwt.sign({_id: this._id}, "managerSecret", {expiresIn: "360d"});
 };
 
 
-const Manager = model<IManager>("Manager", managerSchema);
+const Employee = model<IEmployee>("Employee", employeeSchema);
 
-export default Manager;
+export default Employee;
