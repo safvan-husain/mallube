@@ -22,17 +22,26 @@ import {AppError} from "../../service/requestValidationTypes";
 import {
     AddedCountPerDate,
     addedCountPerDateSchema,
-    allRangeOfDateSchema, businessCountPerStaffSchema,
-    createEmployeeSchema, DashboardStats, DashboardStatsSchema, EmployeeWholeDataRes, employeeWholeDataResSchema,
-    MinimalManagerResponseForAdmin, minimalManagerResponseForAdminSchema,
+    allRangeOfDateSchema,
+    businessCountPerStaffSchema,
+    createEmployeeSchema,
+    EmployeeWholeDataRes,
+    employeeWholeDataResSchema,
+    FullDashboardStats, FullDashboardStatsSchema,
+    MinimalManagerResponseForAdmin,
+    minimalManagerResponseForAdminSchema,
     monthAndStaffIdSchema,
     PendingBusinessWholeRes,
-    pendingBusinessWholeResponseSchema, pendingStoreDashBoardQuerySchema,
+    pendingBusinessWholeResponseSchema,
+    pendingStoreDashBoardQuerySchema,
     PendingStoreMinimal,
-    pendingStoreMinimalSchema, pendingStoreQuerySchema,
+    pendingStoreMinimalSchema,
+    pendingStoreQuerySchema,
     pendingStoreSchema,
     StaffAndBusinessCount,
-    staffAndBusinessCountSchema, updateEmployeeSchema, updatePendingStoreSchema
+    staffAndBusinessCountSchema,
+    updateEmployeeSchema,
+    updatePendingStoreSchema
 } from "../validations";
 import {IPendingBusiness, PendingBusiness, pendingBusinessStatus} from "../../../models/PendingBusiness";
 
@@ -558,75 +567,136 @@ export const getPendingBusinessCountForStaffPerDayForMonth = async (req: Request
     }
 }
 
-export const getPendingBusinessDashBoardData = async (req: Request, res: TypedResponse<DashboardStats>) => {
+export const getPendingBusinessDashBoardData = async (req: Request, res: TypedResponse<FullDashboardStats>) => {
     try {
         if (!req.employee) {
             res.status(403).json({message: "Not authorized"})
             return;
         }
-        const query = pendingStoreDashBoardQuerySchema.parse(req.query);
+        let dbMatchQuery: FilterQuery<IPendingBusiness> = {};
+
+        if(req.employee.privilege === employeePrivilegeSchema.enum.manager) {
+            const staffIds = (await Employee.find({manager: req.employee._id}, {_id: 1}).lean()).map(e => e._id)
+            dbMatchQuery.createdBy = {$in: staffIds}
+        } else if (req.employee.privilege === employeePrivilegeSchema.enum.staff) {
+            dbMatchQuery.createdBy = req.employee._id;
+        } else {
+            throw new AppError("Should be manager or staff", 400);
+        }
+        // const query = pendingStoreDashBoardQuerySchema.parse(req.query);
         const now = new Date();
 
-// Run in JS to get current date in IST
-        const istNow = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+        // Run in JS to get current date in IST
+        const istNow = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
 
-// Start of today in IST
+        // Start of today in IST
         const istStartOfToday = new Date(istNow);
         istStartOfToday.setHours(0, 0, 0, 0);
 
-// Start of this month in IST
+        // Start of this month in IST
         const istStartOfMonth = new Date(istNow.getFullYear(), istNow.getMonth(), 1);
 
-// Convert both to UTC before querying MongoDB (since MongoDB stores dates in UTC)
+        // Convert both to UTC before querying MongoDB (since MongoDB stores dates in UTC)
         const startOfTodayUTC = new Date(istStartOfToday.toISOString());
         const startOfMonthUTC = new Date(istStartOfMonth.toISOString());
 
         const data = await PendingBusiness.aggregate([
             {
-                $match: {
-                    businessType: query.businessType
-                }
+                $match: dbMatchQuery
             },
             {
                 $facet: {
-                    today: [
+                    storeToday: [
                         {
                             $match: {
-                                createdAt: { $gte: startOfTodayUTC }
-                            }
+                                businessType: "store",
+                                createdAt: {$gte: startOfTodayUTC},
+                            },
                         },
-                        { $count: "count" }
+                        {$count: "count"},
                     ],
-                    thisMonth: [
+                    storeMonth: [
                         {
                             $match: {
-                                createdAt: { $gte: startOfMonthUTC }
-                            }
+                                businessType: "store",
+                                createdAt: {$gte: startOfMonthUTC},
+                            },
                         },
-                        { $count: "count" }
+                        {$count: "count"},
                     ],
-                    total: [
-                        { $count: "count" }
-                    ]
-                }
+                    storeTotal: [
+                        {
+                            $match: {
+                                businessType: "store",
+                            },
+                        },
+                        {$count: "count"},
+                    ],
+                    freelancerToday: [
+                        {
+                            $match: {
+                                businessType: "freelancer",
+                                createdAt: {$gte: startOfTodayUTC},
+                            },
+                        },
+                        {$count: "count"},
+                    ],
+                    freelancerMonth: [
+                        {
+                            $match: {
+                                businessType: "freelancer",
+                                createdAt: {$gte: startOfMonthUTC},
+                            },
+                        },
+                        {$count: "count"},
+                    ],
+                    freelancerTotal: [
+                        {
+                            $match: {
+                                businessType: "freelancer",
+                            },
+                        },
+                        {$count: "count"},
+                    ],
+                },
             },
             {
                 $project: {
-                    today: { $ifNull: [{ $arrayElemAt: ["$today.count", 0] }, 0] },
-                    thisMonth: { $ifNull: [{ $arrayElemAt: ["$thisMonth.count", 0] }, 0] },
-                    total: { $ifNull: [{ $arrayElemAt: ["$total.count", 0] }, 0] }
-                }
-            }
+                    store: {
+                        today: {
+                            $ifNull: [{$arrayElemAt: ["$storeToday.count", 0]}, 0],
+                        },
+                        thisMonth: {
+                            $ifNull: [{$arrayElemAt: ["$storeMonth.count", 0]}, 0],
+                        },
+                        total: {
+                            $ifNull: [{$arrayElemAt: ["$storeTotal.count", 0]}, 0],
+                        },
+                    },
+                    freelancer: {
+                        today: {
+                            $ifNull: [{$arrayElemAt: ["$freelancerToday.count", 0]}, 0],
+                        },
+                        thisMonth: {
+                            $ifNull: [{$arrayElemAt: ["$freelancerMonth.count", 0]}, 0],
+                        },
+                        total: {
+                            $ifNull: [{$arrayElemAt: ["$freelancerTotal.count", 0]}, 0],
+                        },
+                    },
+                },
+            },
         ]);
         if (data.length === 0) {
-            res.status(200).json({today: 0, thisMonth: 0, total: 0});
+            res.status(200).json(FullDashboardStatsSchema.parse({}));
             return
         }
-        res.status(200).json(runtimeValidation(DashboardStatsSchema, data[0]))
+        res.status(200).json(runtimeValidation(FullDashboardStatsSchema, data[0]))
     } catch (e) {
         onCatchError(e, res);
     }
 }
+
 async function buildQueryByPrivilege(employee: IEmployee): Promise<FilterQuery<IPendingBusiness>> {
     const {privilege, _id} = employee;
 

@@ -3,7 +3,7 @@ import {
     createEmployee,
     createPendingStore,
     getAllEmployeesOfPrivilege,
-    getPendingBusinessCountForStaffPerDayForMonth,
+    getPendingBusinessCountForStaffPerDayForMonth, getPendingBusinessDashBoardData,
     getPendingStores,
     getSpecificPendingBusiness, getStaffAndBusinessCount,
     loginEmployee,
@@ -39,5 +39,8 @@ router.route('/pending-business-per-day')
 
 router.route('/pending-business-per-staff')
     .get(employeeProtect, getStaffAndBusinessCount)
+
+router.route('/dashboard')
+    .get(employeeProtect, getPendingBusinessDashBoardData)
 
 export {router as employeeRouter};

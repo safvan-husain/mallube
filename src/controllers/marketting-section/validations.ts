@@ -175,14 +175,20 @@ export const pendingStoreQuerySchema = z.object({
     .merge(allRangeOfDateSchema)
 
 export const pendingStoreDashBoardQuerySchema = z.object({
-    businessType: z.enum(['freelancer', 'store']),
+
 })
 
 export const DashboardStatsSchema = z.object({
-    today: z.number().nonnegative(),
-    thisMonth: z.number().nonnegative(),
-    total: z.number().nonnegative(),
+    today: z.number().nonnegative().optional().default(0),
+    thisMonth: z.number().nonnegative().default(0),
+    total: z.number().nonnegative().default(0),
 });
 
+export const FullDashboardStatsSchema = z.object({
+    store: DashboardStatsSchema.default({}),
+    freelancer: DashboardStatsSchema.default({}),
+});
+
+
 // Usage:
-export type DashboardStats = z.infer<typeof DashboardStatsSchema>;
+export type FullDashboardStats = z.infer<typeof FullDashboardStatsSchema>;
