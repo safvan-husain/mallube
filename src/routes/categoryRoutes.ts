@@ -31,7 +31,7 @@ router
   .delete(admin, deleteCategoryPermenently);
 
 router.route('/v2').get(getCategoriesV2);
-router.route('/sub-v2').get(getSubCategoriesV2);
+router.route('/sub-v2').post(getSubCategoriesV2);
 router.route('/product/v2').get(store, getProductCategoriesV2);
 router.route('/display').get(getDisplayCategories);
 

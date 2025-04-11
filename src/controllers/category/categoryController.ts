@@ -70,7 +70,7 @@ export const getCategoriesV2 = asyncHandler(
 
 export const getSubCategoriesV2 = asyncHandler(
     async (req: Request, res: TypedResponse<{ _id: string, name: string}[]>) => {
-        const {businessType, isActive, isPending, selectedCategories} = getCategoriesSchemaV2.parse(req.query);
+        const {businessType, isActive, isPending, selectedCategories} = getCategoriesSchemaV2.parse(req.body);
         let query = {};
         if (businessType) {
             query = businessType === "business" ?
