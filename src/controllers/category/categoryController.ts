@@ -57,8 +57,32 @@ export const getCategoriesV2 = asyncHandler(
             const categories = await Category.find({
                 ...query,
                 isActive,
-                subCategoryType: {$ne: 'product'},
                 isPending,
+                parentId: { $exists: false }
+            }, {name: true}).lean();
+            res.status(200).json(categories);
+        } catch (e) {
+            onCatchError(e, res);
+        }
+    }
+);
+
+
+export const getSubCategoriesV2 = asyncHandler(
+    async (req: Request, res: TypedResponse<{ _id: string, name: string}[]>) => {
+        const {businessType, isActive, isPending, selectedCategories} = getCategoriesSchemaV2.parse(req.query);
+        let query = {};
+        if (businessType) {
+            query = businessType === "business" ?
+                {isEnabledForStore: true} :
+                {isEnabledForIndividual: true}
+        }
+        try {
+            const categories = await Category.find({
+                ...query,
+                isActive : true,
+                isPending : false,
+                parentId: { $in: selectedCategories }
             }, {name: true}).lean();
             res.status(200).json(categories);
         } catch (e) {

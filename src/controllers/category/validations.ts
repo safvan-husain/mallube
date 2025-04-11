@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { Types } from 'mongoose';
 import { isParentCategory } from "../../service/category";
+import { ObjectIdSchema } from "../../schemas/commom.schema";
 
 export const addCategorySchema = z
     .object({
@@ -73,6 +74,7 @@ const getCategoriesSchema = z.object({
 export const getCategoriesSchemaV2 = z.object({
     isActive: z.boolean().default(true),
     businessType: z.enum(['business', 'freelancer']).optional(),
+    selectedCategories: z.array(ObjectIdSchema).default([]),
     isPending: z.boolean().default(false)
 })
 
