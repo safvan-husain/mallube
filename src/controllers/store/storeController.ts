@@ -25,7 +25,7 @@ import {toTimeOnly} from "../../utils/ist_time";
 import {
   BusinessAccountType,
   businessAccountTypeSchema,
-  createStoreValidation, savedStoreResponseSchema,
+  createStoreValidation, savedStoreResponseSchema, updateProfileSchema,
   ZStore
 } from "./validation/store_validation";
 import {safeRuntimeValidation, onCatchError, runtimeValidation} from "../service/serviceContoller";
@@ -852,56 +852,25 @@ export const updatePassword = async (req: Request, res: Response) => {
   }
 };
 
-export const updateStoreProfile = async (req: any, res: Response) => {
+export const updateStoreProfile = async (req: any, res: TypedResponse<{ message: string, data: ZStore}>) => {
   try {
     const storeId = req.store?._id;
     if(!storeId) {
       return res.status(400).json({ message: "Store id is required" });
     }
     console.log(req.body);
-    let updatedFields = z.object({
-      plainPassword: z.string().min(6, { message: "password should have at least 6 chat"}).optional()
-    }).merge(updateStoreSchema).parse(req.body);
-    console.log(updatedFields);
-    if(updatedFields.plainPassword) {
-      (updatedFields as any).password = await bcrypt.hash(updatedFields.plainPassword, 10);
-    }
-
-    const store = await Store.findById(storeId);
-
-    if (!store) {
-      return res.status(404).json({ message: "No store found" });
-    }
-
-    //TODO: return name of category requested by anshif.
-    var response = await (await Store.findByIdAndUpdate(storeId, updatedFields, {
-      new: true,
-    }))?.populate({ path: 'category' });
-
-    if (!response) {
-      return res.status(404).json({ message: "Update failed" });
-    }
-    //TODO: remove the belows.
-    (response as any).category_name = response?.category;
-
-    (response as any).category = (response?.category as any)?._id;
+    let updateData = updateProfileSchema.parse(req.body);
+    const data = await updateStore({ storeId, updateData})
 
     res.status(200).json({
       message: "Store profile updated successfully",
-      response,
+      data,
     });
   } catch (error: any) {
-    console.log("error at edit profile", error);
-    if (error.code === 11000) {
-      return res.status(400).json({
-        message: "Duplicate key error",
-        error: error.errmsg,
-      });
-    } else {
       onCatchError(error, res);
-    }
   }
 };
+
 //TODO: write a function to delte all time slote and booking to be deleted.
 export const addTimeSlotV2 = asyncHandler(
   async (req: ICustomRequest<any>, res: Response) => {
@@ -1298,5 +1267,47 @@ export const createAndSaveStore = async (rawBody: IReusableCreateStoreSchema) : 
     dbStore: savedStore,
     validatedData,
   };
+};
+
+
+export const updateStore =
+    async ({
+             storeId,
+             updateData,
+           }: {
+      storeId: string;
+      updateData: unknown;
+    }): Promise<ZStore> => {
+  if (!storeId) {
+    throw new AppError("storeId is required", 400);
+  }
+
+  let parsedFields: any = updateProfileSchema
+      .parse(updateData);
+
+  if (parsedFields.plainPassword) {
+    parsedFields.password = await bcrypt.hash(parsedFields.plainPassword, 10);
+    delete parsedFields.plainPassword;
+  }
+
+  const existingStore = await Store.findById(storeId);
+  if (!existingStore) {
+    throw new AppError("Store not found", 400);
+  }
+
+  const updatedStore = await Store.findByIdAndUpdate(storeId, parsedFields, {
+    new: true,
+  });
+
+  if (!updatedStore) {
+    throw new AppError("Failed to update store", 500);
+  }
+
+  return runtimeValidation<ZStore>(savedStoreResponseSchema as any, {
+    ...updatedStore.toObject(),
+    categories: updatedStore.categories.map(e => e.toString()),
+    category: updatedStore.category?.toString(),
+    subCategories: updatedStore.subCategories?.map(e => e.toString()),
+  } as any);
 };
 

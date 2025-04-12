@@ -1,5 +1,6 @@
 import {z} from "zod";
 import {Schema, Types} from "mongoose";
+import {updateStoreSchema} from "../../../schemas/store.schema";
 
 export const businessAccountTypeSchema = z.enum(['business', 'freelancer']);
 export type BusinessAccountType = z.infer<typeof businessAccountTypeSchema>;
@@ -10,15 +11,15 @@ export const createStoreValidation = z.object({
     deliveryRadius: z.number().optional(),
 });
 
-//TODO: add rest later.
-export const updateProfileSchema = z.object({
-    password: z.string().min(6, { message: "password should be at least 6 char long"}).optional()
-});
-
-interface Location {
-    coordinates: number[];
-    type: string;
-}
+export const updateProfileSchema =
+    z
+        .object({
+            plainPassword: z
+                .string()
+                .min(6, {message: "Password should have at least 6 characters"})
+                .optional(),
+        })
+        .merge(updateStoreSchema)
 
 export const locationSchema = z.object({
     type: z.literal("Point"),
