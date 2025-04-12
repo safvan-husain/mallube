@@ -16,6 +16,7 @@ export const addStoreSchema = z.object({
       "Shop name can only contain lowercase letters, numbers, hyphens, and underscores"
     ),
   category: z.string().optional(),
+  categories: z.array(ObjectIdSchema).default([]),
   subCategories: z.array(z.string()).default([]),
   retail: z.boolean().default(false),
   wholesale: z.boolean().default(false),
@@ -45,63 +46,16 @@ export const addStoreSchema = z.object({
   openTime: z.number(),
   closeTime: z.number(),
   workingDays: z.array(z.string()),
-  categories: z.array(ObjectIdSchema).optional(),
   isAvailable: z.boolean().default(true),
   serviceType: z.array(z.enum(['salon, beauty parlour & spa' , 'other']).default('other')),
   serviceTypeSuggestion: z.string().optional()
 });
 
-export type IAddStoreSchema = z.infer<typeof addStoreSchema>;
-
-const signUpStoreSchema = z.object({
-  storeName: z.string().trim().optional(),
-  serviceTypeSuggestion: z.string().optional(),
-  uniqueName: z
-    .string()
-    .trim()
-    .min(1, "unique name cannot be empty")
-    .max(30, "unique name cannot be longer than 30 characters")
-    .toLowerCase()
-    .regex(
-      /^[a-z0-9-_]+$/,
-      "Shop name can only contain lowercase letters, numbers, hyphens, and underscores"
-    ),
-  category: z.string().optional(),
-  subCategories: z.array(z.string()).default([]),
-  retail: z.boolean().default(false),
-  wholesale: z.boolean().default(false),
-  service: z.boolean().default(false),
-  latitude: z.number(),
-  longitude: z.number(),
-  district: z.string(), //enum set here
-  city: z.string().trim().min(1, "city cannot be empty"),
-  address: z.string().trim().optional(),
-  storeOwnerName: z.string().trim().min(1, "shop owner name cannot be empty"),
-  phone: z
-    .string()
-    .trim()
-    .min(1, "phone number cannot be empty")
-    .regex(numericRegex, "enter a valid phone number"),
-  whatsapp: z
-    .string()
-    .min(10, "enter a valid whatsapp number")
-    .regex(numericRegex, "enter a valid phone number"),
-  email: z.string().max(0).or(z.string().email()),
-  bio: z.string().optional(),
-  shopImgUrl: z.string(),
+export const signUpStoreSchema = addStoreSchema.extend({
   password: z.string().min(6, "password must be atleast 6 characters long"),
-  facebook: z.string().optional(),
-  instagram: z.string().optional(),
-  storeProviding: z.enum(['productBased', 'serviceBased']).default("productBased"),
-  isDeliveryAvailable: z.boolean().default(false),
-  deliveryRadius: z.number().optional(),
-  openTime: z.number(),
-  closeTime: z.number(),
-  workingDays: z.array(z.string()),
-  categories: z.array(ObjectIdSchema).optional(),
-  isAvailable: z.boolean().optional(),
 });
 
+export type IAddStoreSchema = z.infer<typeof addStoreSchema>;
 export type ISignUpStoreSchema = z.infer<typeof signUpStoreSchema>;
 
 export const checkDetailsAndSendOtp = addStoreSchema.pick({
@@ -123,3 +77,9 @@ export const updateStoreSchema = addStoreSchema
   .partial();
 
 export type IUpdateStoreSchema = z.infer<typeof updateStoreSchema>;
+
+export const reusableCreateStoreSchema = addStoreSchema.extend({
+  plainPassword: z.string()
+})
+
+export type IReusableCreateStoreSchema = z.infer<typeof reusableCreateStoreSchema>

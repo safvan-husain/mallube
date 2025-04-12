@@ -13,17 +13,29 @@ import {TimeSlot} from "../../models/timeSlotModel";
 import Booking, {bookingStatusSchema} from "../../models/bookingModel";
 import {ICustomRequest, TypedResponse} from "../../types/requestion";
 import {getStoreByPhoneOrUniqueNameOrEmail} from "../../service/store/index";
-import {ISignUpStoreSchema, IUpdateStoreSchema, updateStoreSchema} from "../../schemas/store.schema";
+import {
+  addStoreSchema, IReusableCreateStoreSchema,
+  ISignUpStoreSchema,
+  IUpdateStoreSchema,
+  reusableCreateStoreSchema, signUpStoreSchema,
+  updateStoreSchema
+} from "../../schemas/store.schema";
 import {FeedBack} from "../../models/feedbackModel";
 import {toTimeOnly} from "../../utils/ist_time";
-import {BusinessAccountType, businessAccountTypeSchema, createStoreValidation} from "./validation/store_validation";
-import {safeRuntimeValidation, onCatchError} from "../service/serviceContoller";
+import {
+  BusinessAccountType,
+  businessAccountTypeSchema,
+  createStoreValidation, savedStoreResponseSchema,
+  ZStore
+} from "./validation/store_validation";
+import {safeRuntimeValidation, onCatchError, runtimeValidation} from "../service/serviceContoller";
 import {z} from "zod";
 import {ObjectIdSchema} from "../../types/validation";
 import {locationQuerySchema} from "../../schemas/localtion-schema";
 import {StoreDetailsResponse, StoreDetailsSchema} from "../user/userController";
 import {paginationSchema} from "../../schemas/commom.schema";
 import DisplayCategory from "../../models/DisplayCategory";
+import {AppError} from "../service/requestValidationTypes";
 
 const twilioServiceId = process.env.TWILIO_SERVICE_ID;
 
@@ -225,40 +237,20 @@ export const signup = async (req: ICustomRequest<ISignUpStoreSchema>, res: Respo
     onCatchError(error, res);
   }
 };
-//TODO: delete duplication.
-export const editStore = async (req: any, res: Response) => {
-  //TODO: add validation
 
-  // const {
-  //   name, email, storeName, uniqueName, category, phone,
-  //   location, shopImageUrl, bio,
-  //   isAvailable, subscription, ...rest
-  // } = req.body;
-
-  const storeId: any = req?.store._id;
+export const testSignUp = async (req: Request, res: Response) => {
   try {
-    const store = await Store.findByIdAndUpdate(storeId, req.body);
-    if (!store) {
-      return res.status(404).json({ message: "Store not found" });
-    }
-    // store.storeOwnerName = name || store.storeOwnerName;
-    // store.email = email || store.email;
-    // store.storeName = storeName || store.storeName;
-    // store.uniqueName = uniqueName || store.uniqueName;
-    // store.category = category || store.category;
-    // store.phone = phone || store.phone;
-    // store.location = location || store.location;
-    // store.shopImgUrl = shopImageUrl || store.shopImgUrl;
-    // store.bio = bio || store.bio;
-    // store.isAvailable = isAvailable || store.isAvailable;
-    // store.subscription = subscription || store.subscription;
-    // await store.save();
-    res.status(200).json({ message: "Store updated successfully" });
-  } catch (error) {
-    console.log("error while edit store", error);
-    res.status(500).json({ message: "Internal server error" });
+    const body = signUpStoreSchema.parse(req.body);
+    let savedData = await createAndSaveStore({
+      ...body,
+      plainPassword: body.password
+    });
+    const token = savedData.dbStore.generateAuthToken();
+    res.status(201).json({ message: "Store created", authToken: token });
+  } catch (e) {
+    onCatchError(e, res);
   }
-};
+}
 
 export const fetchStore = asyncHandler(
   async (req: any, res: Response, next: NextFunction): Promise<void> => {
@@ -1249,4 +1241,59 @@ export const addKeyWords = asyncHandler(
       }
     }
 )
+
+//TODO: may not need validate response here.
+export const createAndSaveStore = async (rawBody: IReusableCreateStoreSchema) : Promise<{ dbStore: IStore, validatedData: ZStore}> => {
+  const data = reusableCreateStoreSchema.parse(rawBody);
+
+  const { shopImgUrl, latitude, longitude, plainPassword, phone, uniqueName, email, ...rest } = data;
+
+  const existingStore = await getStoreByPhoneOrUniqueNameOrEmail(phone, uniqueName, email);
+  if (existingStore) {
+    const message = existingStore.phone === phone ? "Phone number already exists" : "Unique name already exists";
+    throw new AppError( message, 209);
+  }
+
+  const hashedPassword = await bcrypt.hash(plainPassword, 10);
+
+  const location = {
+    type: "Point",
+    coordinates: [latitude, longitude],
+  };
+
+  const subscriptionExpireDate = new Date();
+  subscriptionExpireDate.setFullYear(subscriptionExpireDate.getFullYear() + 1);
+
+  const storeDetails = {
+    uniqueName,
+    phone,
+    password: hashedPassword,
+    shopImgUrl,
+    email,
+    location,
+    subscriptionExpireDate,
+    ...rest,
+  };
+
+  const newStore = new Store(storeDetails);
+  const savedStore = await newStore.save();
+
+  if (rest.serviceTypeSuggestion) {
+    try {
+      await new FeedBack({
+        storeId: savedStore._id,
+        ourQuestion: "Describe your service for store",
+        answer: rest.serviceTypeSuggestion
+      }).save();
+    } catch (e) {
+      console.error("Error saving feedback during store creation:", e);
+    }
+  }
+
+  const validatedData = runtimeValidation<ZStore>(savedStoreResponseSchema as any, savedStore as any)
+  return {
+    dbStore: savedStore,
+    validatedData,
+  };
+};
 

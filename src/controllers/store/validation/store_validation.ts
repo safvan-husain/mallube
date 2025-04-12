@@ -1,4 +1,5 @@
 import {z} from "zod";
+import {Schema, Types} from "mongoose";
 
 export const businessAccountTypeSchema = z.enum(['business', 'freelancer']);
 export type BusinessAccountType = z.infer<typeof businessAccountTypeSchema>;
@@ -19,37 +20,46 @@ interface Location {
     type: string;
 }
 
-interface Store {
-    _id: string;
-    address: string;
-    bio: string;
-    categories: string[];
-    category: string;
-    city: string;
-    closeTime: number;
-    createdAt: string;
-    district: string;
-    email: string;
-    facebook: string;
-    instagram: string;
-    isAvailable: boolean;
-    isDeliveryAvailable: boolean;
-    keyWords: string;
-    location: Location;
-    openTime: number;
-    phone: string;
-    retail: boolean;
-    service: boolean;
-    serviceType: string[];
-    serviceTypeSuggestion: string;
-    shopImgUrl: string;
-    storeName: string;
-    storeOwnerName: string;
-    storeProviding: string;
-    type: string;
-    uniqueName: string;
-    visitors: number;
-    whatsapp: string;
-    wholesale: boolean;
-    workingDays: string[];
-}
+export const locationSchema = z.object({
+    type: z.literal("Point"),
+    coordinates: z.tuple([z.number(), z.number()]),
+});
+
+export const ObjectIdOrStringSchema = z.union([z.string(), z.instanceof(Types.ObjectId)]);
+
+export const savedStoreResponseSchema = z.object({
+    _id: ObjectIdOrStringSchema,
+    categories: z.union([z.array(z.instanceof(Schema.Types.ObjectId)), z.array(z.string())]),
+    keyWords: z.string().optional(),
+    deliveryRadius: z.number().optional(),
+    subscriptionExpireDate: z.date().transform(e => e.getTime()), // Timestamp (converted in Flutter)
+    serviceType: z.array(z.string()),
+    serviceTypeSuggestion: z.string(),
+    storeName: z.string(),
+    uniqueName: z.string(),
+    retail: z.boolean().default(false),
+    isDeliveryAvailable: z.boolean().default(false),
+    wholesale: z.boolean().default(false),
+    service: z.boolean().default(false),
+    location: locationSchema,
+    city: z.string(),
+    district: z.string(),
+    address: z.string(),
+    storeOwnerName: z.string(),
+    phone: z.string(),
+    whatsapp: z.string(),
+    email: z.string(),
+    instagram: z.string(),
+    facebook: z.string(),
+    bio: z.string(),
+    shopImgUrl: z.string(),
+    isAvailable: z.boolean(),
+    visitors: z.number(),
+    workingDays: z.array(z.string()).default([]),
+    openTime: z.number(),
+    closeTime: z.number(),
+    type: z.enum(["freelancer", "business"]),
+    isPushNotificationEnabled: z.boolean().default(false),
+});
+
+export type ZStore = z.infer<typeof savedStoreResponseSchema>;

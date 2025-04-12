@@ -27,7 +27,7 @@ import {
   getTimeSlotV2,
   deleteTimeSlotV2,
   fetchStoresNearByV2,
-  fetchStoreByCategoryV2, addKeyWords
+  fetchStoreByCategoryV2, addKeyWords, testSignUp
 } from "../controllers/store/storeController";
 import { store } from "../middleware/auth";
 import { addSpecialisation, fetchAllSpecialisation } from "../controllers/specialisation/specialisationController";
@@ -46,7 +46,7 @@ import {changeStorePasswordV2, changeStorePushNotificationStatus} from "../contr
 const router = express.Router();
 
 router.route("/login").post(login);
-router.route("/signup").post(signup);
+router.route("/signup").post(testSignUp);
 router.route("/profile").get(store, getProfile);
 router.route("/fcm-token").put(store, updateFcmToken);
 // router.route("/edit-profile").put(store, updateStoreProfile);
