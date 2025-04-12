@@ -67,11 +67,9 @@ export function runtimeValidation <T>(schema: z.ZodSchema<T>, data: T | T[])
     : T | T[]  {
     try {
         if (Array.isArray(data)) {
-            console.log(`${data} is array`)
             // If it's an array, validate each item individually
             return data.map(item => schema.parse(item));
         } else {
-            console.log(`${data} is not array`)
             // If it's a single object
             return schema.parse(data);
         }
