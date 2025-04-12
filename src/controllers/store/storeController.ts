@@ -118,7 +118,7 @@ export const login = async (req: Request, res: Response) => {
 };
 
 //TODO: correct this, no need for category or aggregate.
-export const getProfile = async (req: any, res: Response) => {
+export const getProfile = async (req: any, res: TypedResponse<ZStore>) => {
   let storeId = req.store._id;
   try {
     const store: any[] = await Store.aggregate([
@@ -152,14 +152,9 @@ export const getProfile = async (req: any, res: Response) => {
     if (store.length === 0) {
       return res.status(404).json({ message: "Store not found" });
     }
-    res.status(200).json({
-      ...store[0],
-      isDeliveryAvailable: store[0]?.isDeliveryAvailable ?? false,
-      subscriptionExpireDate: store[0]?.subscriptionExpireDate.getTime() ?? 0,
-    });
+    res.status(200).json(runtimeValidation(savedStoreResponseSchema, store[0]));
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Internal server error" });
+    onCatchError(error, res);
   }
 }
 
@@ -1188,9 +1183,8 @@ export const deleteTimeSlots = async (req: any, res: Response) => {
 
 export const stockUpdate = async (req: Request, res: Response) => {
   try {
-    const { proId } = req.body;
-    if (!proId)
-      return res.status(400).json({ message: "Product id is required." });
+    //TODO: extract zod object.
+    const { proId } = z.object({ proId: ObjectIdSchema }).parse(req.body);
 
     const product = await Product.findById(proId);
     if (!product)
@@ -1201,8 +1195,7 @@ export const stockUpdate = async (req: Request, res: Response) => {
     await product.save();
     res.status(200).json({ message: "Stock updated successfully." });
   } catch (error) {
-    console.log("error while updating stock ", error);
-    res.status(500).json({ message: "Internal server error", error });
+    onCatchError(error, res);
   }
 };
 
