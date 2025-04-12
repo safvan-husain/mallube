@@ -1290,7 +1290,12 @@ export const createAndSaveStore = async (rawBody: IReusableCreateStoreSchema) : 
     }
   }
 
-  const validatedData = runtimeValidation<ZStore>(savedStoreResponseSchema as any, savedStore as any)
+  const validatedData = runtimeValidation<ZStore>(savedStoreResponseSchema as any, {
+    ...savedStore,
+    categories: savedStore.categories.map(e => e.toString()),
+    category: savedStore.category?.toString(),
+    subCategories: savedStore.subCategories?.map(e => e.toString()),
+  } as any)
   return {
     dbStore: savedStore,
     validatedData,
