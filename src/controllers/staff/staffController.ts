@@ -94,7 +94,7 @@ export const addOrUpdateStore = async (
   // Check if storeId exists to determine whether it's an update or add operation
   const isUpdate = !!storeId;
 
-  const { shopImgUrl, subscriptionPlan, latitude, longitude, ...rest } =
+  const { shopImgUrl, latitude, longitude, ...rest } =
     req.body;
     
 
@@ -112,7 +112,6 @@ export const addOrUpdateStore = async (
   } else {
     // Add new store logic
     uniqueName = (req.body as IAddStoreSchema).uniqueName;
-    otp = (req.body as IAddStoreSchema).otp;
     phone = (req.body as IAddStoreSchema).phone;
 
 
@@ -152,15 +151,6 @@ export const addOrUpdateStore = async (
     addedBy: staffId,
     ...rest,
   };
-
-  // Update subscription details if the plan has changed or if adding a new store
-  if (!isUpdate || subscriptionPlan !== currentSubscriptionPlan) {
-    storeDetails.subscription = {
-      plan: subscriptionPlan,
-      activatedAt: Date.now(),
-      expiresAt: getNextYearSameDateMinusOneDay(),
-    };
-  }
 
   // If updating, ensure the store is updated and not added
   if (isUpdate) {
