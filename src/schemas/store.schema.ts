@@ -43,7 +43,7 @@ export const addStoreSchema = z.object({
   deliveryRadius: z.number().optional(),
   openTime: z.number(),
   closeTime: z.number(),
-  workingDays: z.array(z.string()),
+  workingDays: z.array(z.string()).default([]),
   isAvailable: z.boolean().default(true),
   serviceType: z.array(z.enum(['salon, beauty parlour & spa' , 'other']).default('other')),
   serviceTypeSuggestion: z.string().optional()

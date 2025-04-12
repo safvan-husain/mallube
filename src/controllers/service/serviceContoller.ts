@@ -20,6 +20,7 @@ import {TypedResponse} from "../../types/requestion";
 
 export const onCatchError = (error: any, res: Response) => {
     if (error instanceof z.ZodError) {
+        console.log(error);
         res.status(400).json({
             message: error.errors.length > 0 ? `${error.errors[0].path[0]}: ${error.errors[0].message}` : "Validation error",
             errors: error.errors
@@ -27,6 +28,7 @@ export const onCatchError = (error: any, res: Response) => {
         return;
     }
     if (error instanceof AppError) {
+        console.log(error);
         res.status(error.statusCode).json(error.toJson());
         return;
     }
