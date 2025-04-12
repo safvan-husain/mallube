@@ -153,7 +153,7 @@ export const getProfile = async (req: any, res: TypedResponse<ZStore>) => {
       return res.status(404).json({ message: "Store not found" });
     }
     res.status(200).json(runtimeValidation(savedStoreResponseSchema, {
-      ...store[0].toObject(),
+      ...store[0],
       category: store[0].category?.toString(),
       categories: store[0].categories?.map((e: any) => e.toString()),
       subCategories: store[0].subCategories?.map((e: any) => e.toString())
