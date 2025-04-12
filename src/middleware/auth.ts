@@ -89,13 +89,7 @@ export const staff = asyncHandler(
 
 export const store = asyncHandler(
   async (req: any | any, res: Response, next: NextFunction) => {
-    // req.store = {
-    //   _id: "679885303439aafbc2626e1b"
-    // };
-    // next();
-    // return;
     let token = req.headers.authorization;
-
 
     if (!token) {
       res.status(401).json({ message: "Not authorized, no token available" });
@@ -113,10 +107,8 @@ export const store = asyncHandler(
       req.store = decoded;
       next();
     } catch (error) {
-      req.store = { _id: "67c9a1c7a987140c59f6e820" }
-      next();
-      // res.status(401).json({ message: "Not authorized as store, You cant access this resource" });
-      console.log("Error decoding", error);
+      res.status(401).json({ message: "Not authorized as store, You cant access this resource" });
+      console.log(`Error decoding for ${req.originalUrl}`, error);
       // throw new Error("Not authorized as staff, You cant access this resource");
     }
   }
