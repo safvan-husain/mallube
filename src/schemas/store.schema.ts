@@ -36,10 +36,8 @@ export const addStoreSchema = z.object({
     .min(10, "enter a valid whatsapp number")
     .regex(numericRegex, "enter a valid phone number"),
   email: z.string().max(0).or(z.string().email()).optional(),
-  subscriptionPlan: z.string(), //enum set here
   bio: z.string().optional(),
   shopImgUrl: z.string(),
-  otp: z.string().min(6, "invalid otp").max(6, "invalid otp"),
   service: z.boolean().default(false),
   isDeliveryAvailable: z.boolean().default(false),
   deliveryRadius: z.number().optional(),
@@ -70,7 +68,6 @@ export const updateStoreSchema = addStoreSchema
   .omit({
     uniqueName: true,
     category: true,
-    otp: true,
     phone: true
   })
   //   .omit({  : true })
