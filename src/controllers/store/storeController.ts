@@ -852,7 +852,7 @@ export const updatePassword = async (req: Request, res: Response) => {
   }
 };
 
-export const updateStoreProfile = async (req: any, res: TypedResponse<{ message: string, data: ZStore}>) => {
+export const updateStoreProfile = async (req: any, res: TypedResponse<{ message: string, response: ZStore}>) => {
   try {
     const storeId = req.store?._id;
     if(!storeId) {
@@ -864,7 +864,7 @@ export const updateStoreProfile = async (req: any, res: TypedResponse<{ message:
 
     res.status(200).json({
       message: "Store profile updated successfully",
-      data,
+      response: data,
     });
   } catch (error: any) {
       onCatchError(error, res);
