@@ -12,9 +12,14 @@ import jwt from "jsonwebtoken";
 import {TimeSlot} from "../../models/timeSlotModel";
 import Booking, {bookingStatusSchema} from "../../models/bookingModel";
 import {ICustomRequest, TypedResponse} from "../../types/requestion";
-import {getStoreByPhoneOrUniqueNameOrEmail} from "../../service/store/index";
 import {
-  addStoreSchema, IReusableCreateStoreSchema,
+  createAndSaveStore,
+  getBusinessDataById,
+  getStoreByPhoneOrUniqueNameOrEmail,
+  updateStore
+} from "../../service/store/index";
+import {
+  addStoreSchema, BusinessAccountType, businessAccountTypeSchema, IReusableCreateStoreSchema,
   ISignUpStoreSchema,
   IUpdateStoreSchema,
   reusableCreateStoreSchema, signUpStoreSchema,
@@ -23,8 +28,6 @@ import {
 import {FeedBack} from "../../models/feedbackModel";
 import {toTimeOnly} from "../../utils/ist_time";
 import {
-  BusinessAccountType,
-  businessAccountTypeSchema,
   createStoreValidation, savedStoreResponseSchema, updateProfileSchema,
   ZStore
 } from "./validation/store_validation";
@@ -121,43 +124,10 @@ export const login = async (req: Request, res: Response) => {
 export const getProfile = async (req: any, res: TypedResponse<ZStore>) => {
   let storeId = req.store._id;
   try {
-    const store: any[] = await Store.aggregate([
-      {
-        $match: {
-          _id: mongoose.Types.ObjectId.createFromHexString(storeId),
-        },
-      },
-      {
-        $lookup: {
-          from: "categories",
-          localField: "category",
-          foreignField: "_id",
-          as: "category_name",
-        },
-
-
-      },
-      {
-        $unwind: {
-          path: "$category_name",
-          preserveNullAndEmptyArrays: true
-        },
-      },
-      {
-        $addFields: {
-          category_name: { $ifNull: ["$category_name", null] }
-        }
-      }
-    ]);
-    if (store.length === 0) {
-      return res.status(404).json({ message: "Store not found" });
+    if(!storeId) {
+      return res.status(400).json({ message: "Store id is required" });
     }
-    res.status(200).json(runtimeValidation(savedStoreResponseSchema, {
-      ...store[0],
-      category: store[0].category?.toString(),
-      categories: store[0].categories?.map((e: any) => e.toString()),
-      subCategories: store[0].subCategories?.map((e: any) => e.toString())
-    }));
+    res.status(200).json(await getBusinessDataById(storeId));
   } catch (error) {
     onCatchError(error, res);
   }
@@ -241,10 +211,12 @@ export const signup = async (req: ICustomRequest<ISignUpStoreSchema>, res: Respo
 export const testSignUp = async (req: Request, res: Response) => {
   try {
     const body = signUpStoreSchema.parse(req.body);
-    let savedData = await createAndSaveStore({
-      ...body,
-      plainPassword: body.password
-    });
+      let savedData = await createAndSaveStore({
+          rawBody: {
+              ...body,
+              plainPassword: body.password
+          }
+      });
     const token = savedData.dbStore.generateAuthToken();
     res.status(201).json({ message: "Store created", authToken: token });
   } catch (e) {
@@ -322,7 +294,6 @@ export const deleteAdvertisement = asyncHandler(
     }
   }
 );
-
 
 export const fetchStoresNearByV2 = async (req: Request, res: TypedResponse<StoreDetailsResponse[]>) => {
   try {
@@ -731,7 +702,6 @@ export const searchStoresByProductName = asyncHandler(
 export const changePassword = async (
   req: any,
   res: Response,
-  next: NextFunction
 ) => {
   try {
     const { password, newPassword, reEnterPassword } = req.body;
@@ -1209,105 +1179,8 @@ export const addKeyWords = asyncHandler(
     }
 )
 
-//TODO: may not need validate response here.
-export const createAndSaveStore = async (rawBody: IReusableCreateStoreSchema) : Promise<{ dbStore: IStore, validatedData: ZStore}> => {
-  const data = reusableCreateStoreSchema.parse(rawBody);
-
-  const { shopImgUrl, latitude, longitude, plainPassword, phone, uniqueName, email, ...rest } = data;
-
-  const existingStore = await getStoreByPhoneOrUniqueNameOrEmail(phone, uniqueName, email);
-  if (existingStore) {
-    const message = existingStore.phone === phone ? "Phone number already exists" : "Unique name already exists";
-    throw new AppError( message, 209);
-  }
-
-  const hashedPassword = await bcrypt.hash(plainPassword, 10);
-
-  const location = {
-    type: "Point",
-    coordinates: [latitude, longitude],
-  };
-
-  const subscriptionExpireDate = new Date();
-  subscriptionExpireDate.setFullYear(subscriptionExpireDate.getFullYear() + 1);
-
-  const storeDetails = {
-    uniqueName,
-    phone,
-    password: hashedPassword,
-    shopImgUrl,
-    email,
-    location,
-    subscriptionExpireDate,
-    ...rest,
-  };
-
-  const newStore = new Store(storeDetails);
-  const savedStore = await newStore.save();
-
-  if (rest.serviceTypeSuggestion) {
-    try {
-      await new FeedBack({
-        storeId: savedStore._id,
-        ourQuestion: "Describe your service for store",
-        answer: rest.serviceTypeSuggestion
-      }).save();
-    } catch (e) {
-      console.error("Error saving feedback during store creation:", e);
-    }
-  }
-
-  const validatedData = runtimeValidation<ZStore>(savedStoreResponseSchema as any, {
-    ...savedStore.toObject(),
-    categories: savedStore.categories.map(e => e.toString()),
-    category: savedStore.category?.toString(),
-    subCategories: savedStore.subCategories?.map(e => e.toString()),
-  } as any)
-  return {
-    dbStore: savedStore,
-    validatedData,
-  };
-};
 
 
-export const updateStore =
-    async ({
-             storeId,
-             updateData,
-           }: {
-      storeId: string;
-      updateData: unknown;
-    }): Promise<ZStore> => {
-  if (!storeId) {
-    throw new AppError("storeId is required", 400);
-  }
 
-  let parsedFields: any = updateProfileSchema
-      .parse(updateData);
 
-  if (parsedFields.plainPassword) {
-    parsedFields.password = await bcrypt.hash(parsedFields.plainPassword, 10);
-    delete parsedFields.plainPassword;
-  }
-
-  const existingStore = await Store.findById(storeId);
-  if (!existingStore) {
-    throw new AppError("Store not found", 400);
-  }
-
-  const updatedStore = await Store.findByIdAndUpdate(storeId, parsedFields, {
-    new: true,
-  });
-
-  if (!updatedStore) {
-    throw new AppError("Failed to update store", 500);
-  }
-
-  return runtimeValidation<ZStore>(savedStoreResponseSchema as any, {
-    ...updatedStore.toObject(),
-    categories: updatedStore.categories.map(e => e.toString()),
-    category: updatedStore.category?.toString(),
-    subCategories: updatedStore.subCategories?.map(e => e.toString()),
-  } as any);
-};
 

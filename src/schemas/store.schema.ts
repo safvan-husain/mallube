@@ -1,6 +1,8 @@
 import * as z from "zod";
 import {ObjectIdSchema} from "../types/validation";
 
+export const businessAccountTypeSchema = z.enum(['business', 'freelancer']);
+export type BusinessAccountType = z.infer<typeof businessAccountTypeSchema>;
 const numericRegex = /^\d+$/;
 
 export const addStoreSchema = z.object({
@@ -46,7 +48,8 @@ export const addStoreSchema = z.object({
   workingDays: z.array(z.string()).default([]),
   isAvailable: z.boolean().default(true),
   serviceType: z.array(z.enum(['salon, beauty parlour & spa' , 'other']).default('other')),
-  serviceTypeSuggestion: z.string().optional()
+  serviceTypeSuggestion: z.string().optional(),
+  type: businessAccountTypeSchema.optional().default('business'),
 });
 
 export const signUpStoreSchema = addStoreSchema.extend({

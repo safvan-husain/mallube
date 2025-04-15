@@ -4,6 +4,7 @@ const router = express.Router();
 import  path from 'path';
 import fs from 'fs' ;
 
+//TODO: compress file before upload.
 router.route("/upload").post(function (request, response) {
     const file = (request?.files?.file as fileUpload.UploadedFile) || null;
     // Return if the request doesn't contain the file

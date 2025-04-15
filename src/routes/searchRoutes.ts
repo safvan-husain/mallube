@@ -4,7 +4,6 @@ import ProductSearch from "../models/productSearch";
 import Product from "../models/productModel";
 import Category from "../models/categoryModel";
 import Store from "../models/storeModel";
-import {BusinessAccountType} from "../controllers/store/validation/store_validation";
 import {z} from "zod";
 import {paginationSchema} from "../schemas/commom.schema";
 import {locationQuerySchema} from "../schemas/localtion-schema";
@@ -12,6 +11,7 @@ import {TypedResponse} from "../types/requestion";
 import {StoreDetailsResponse, StoreDetailsSchema} from "../controllers/user/userController";
 import {PipelineStage} from "mongoose";
 import {safeRuntimeValidation, onCatchError} from "../controllers/service/serviceContoller";
+import {BusinessAccountType} from "../schemas/store.schema";
 
 const router = Router();
 

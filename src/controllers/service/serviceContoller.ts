@@ -15,8 +15,8 @@ import bcrypt from "bcryptjs";
 import Product from "../../models/productModel";
 import Category from "../../models/categoryModel";
 import Store from "../../models/storeModel";
-import {businessAccountTypeSchema} from "../store/validation/store_validation";
 import {TypedResponse} from "../../types/requestion";
+import {businessAccountTypeSchema} from "../../schemas/store.schema";
 
 export const onCatchError = (error: any, res: Response) => {
     if (error instanceof z.ZodError) {

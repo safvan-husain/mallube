@@ -9,8 +9,8 @@ import {ICustomRequest, TypedResponse} from "../../types/requestion";
 import {onCatchError} from "../service/serviceContoller";
 import {z} from "zod";
 import {ObjectIdSchema} from "../../types/validation";
-import {BusinessAccountType, businessAccountTypeSchema} from "../store/validation/store_validation";
 import {locationQuerySchema} from "../../schemas/localtion-schema";
+import {BusinessAccountType, businessAccountTypeSchema} from "../../schemas/store.schema";
 
 
 interface StoreAdvertisementResponse {

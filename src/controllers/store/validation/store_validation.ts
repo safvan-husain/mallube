@@ -1,9 +1,6 @@
 import {z} from "zod";
 import {Schema, Types} from "mongoose";
-import {updateStoreSchema} from "../../../schemas/store.schema";
-
-export const businessAccountTypeSchema = z.enum(['business', 'freelancer']);
-export type BusinessAccountType = z.infer<typeof businessAccountTypeSchema>;
+import {businessAccountTypeSchema, updateStoreSchema} from "../../../schemas/store.schema";
 
 export const createStoreValidation = z.object({
     type: businessAccountTypeSchema.default('business'),

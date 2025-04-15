@@ -5,7 +5,7 @@ import {allRangeOfDateSchema} from "../controllers/marketting-section/validation
 export const phoneZodValidation = z.string().min(10, {message: "phone should exactly 10 numbers"}).regex(/^\d+$/, {message: "phone should contain only numbers"});
 export const ObjectIdSchema = z
     .string()
-    .refine((v) => Types.ObjectId.isValid(v), {message: "Invalid ObjectId"}).transform(e => e ? Types.ObjectId.createFromHexString(e) : undefined);
+    .refine((v) => Types.ObjectId.isValid(v), {message: "Invalid ObjectId"}).transform(e => Types.ObjectId.createFromHexString(e));
 
 export const paginationSchema = z.object({
     skip: z.string().optional().transform(val => val ? parseInt(val) : 0),
@@ -38,6 +38,10 @@ export const optionalDateFiltersSchema = z.object({
         endOfDay.setUTCHours(23, 59, 59, 999);
         return endOfDay;
     }),
+});
+
+export const zodObjectForMDObjectId = z.object({
+    id: ObjectIdSchema
 });
 
 export function getMonthRangeFromISTDate(istDate: Date): { start: Date; end: Date } {

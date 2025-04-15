@@ -19,8 +19,8 @@ import {calculateDistance} from "../../utils/interfaces/common";
 import {ObjectIdSchema} from "../../types/validation";
 import {z} from "zod";
 import {safeRuntimeValidation, onCatchError} from "../service/serviceContoller";
-import {BusinessAccountType, businessAccountTypeSchema} from "../store/validation/store_validation";
 import {locationQuerySchema} from "../../schemas/localtion-schema";
+import {businessAccountTypeSchema} from "../../schemas/store.schema";
 
 const {TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN} = process.env;
 // const twilioclient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN, {
