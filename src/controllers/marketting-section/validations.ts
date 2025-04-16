@@ -5,7 +5,7 @@ import {Types} from "mongoose";
 import {employeePrivilegeSchema} from "../../models/managerModel";
 
 const tempSchema = z.object({
-    businessType: z.enum(['freelancer', 'store']),
+    businessType: z.enum(['freelancer', 'business']),
     provides: z.enum(['service', 'product']),
     workingDays: z.array(z.enum(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'])),
     ownerName: z.string(),
@@ -27,7 +27,7 @@ const tempSchema = z.object({
 });
 
 export const pendingStoreSchema = z.object({
-    businessType: z.enum(['freelancer', 'store']),
+    businessType: z.enum(['freelancer', 'business']),
     name: z.string(),
     category: ObjectIdSchema,
     note: z.string(),
@@ -47,7 +47,7 @@ export const updatePendingStoreSchema = pendingStoreSchema.omit({
 
 export const pendingBusinessWholeResponseSchema = z.object({
     _id: z.union([z.instanceof(Types.ObjectId), z.string()]),
-    businessType: z.enum(['freelancer', 'store']),
+    businessType: z.enum(['freelancer', 'business']),
     name: z.string(),
     category: z.instanceof(Types.ObjectId),
     note: z.string(),
@@ -104,9 +104,8 @@ export const allRangeOfDateSchema = z.object({
 
 export const monthAndStaffIdSchema = z.object({
     staffId: ObjectIdSchema.optional(),
-    businessType: z.enum(['freelancer', 'store']),
+    businessType: z.enum(['freelancer', 'business']),
 }).merge(allRangeOfDateSchema);
-
 
 
 export const createEmployeeSchema = z.object({
@@ -163,14 +162,14 @@ export const minimalManagerResponseForAdminSchema = z.object({
 export type MinimalManagerResponseForAdmin = z.infer<typeof minimalManagerResponseForAdminSchema>;
 
 export const businessCountPerStaffSchema = z.object({
-    businessType: z.enum(['freelancer', 'store']),
+    businessType: z.enum(['freelancer', 'business']),
 }).merge(allRangeOfDateSchema);
 
 export const pendingStoreQuerySchema = z.object({
     status: pendingBusinessStatus.optional(),
     createdBy: ObjectIdSchema.optional(),
     searchTerm: z.string().optional(),
-    businessType: z.enum(['freelancer', 'store']),
+    businessType: z.enum(['freelancer', 'business']),
 })
     .merge(allRangeOfDateSchema)
 
@@ -188,6 +187,13 @@ export const FullDashboardStatsSchema = z.object({
     store: DashboardStatsSchema.default({}),
     freelancer: DashboardStatsSchema.default({}),
 });
+
+export const getEmployeeStoreQuerySchema = z.object({
+    addedBy: ObjectIdSchema.optional(),
+    searchTerm: z.string().optional(),
+    businessType: z.enum(['freelancer', 'business']),
+})
+    .merge(allRangeOfDateSchema)
 
 
 // Usage:

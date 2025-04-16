@@ -1,4 +1,19 @@
-import Store from "../../models/storeModel";
+import Store, {IStore} from "../../models/storeModel";
+import {
+  businessAccountTypeSchema,
+  IReusableCreateStoreSchema,
+  reusableCreateStoreSchema
+} from "../../schemas/store.schema";
+import {AppError} from "../../controllers/service/requestValidationTypes";
+import bcrypt from "bcryptjs";
+import {
+  savedStoreResponseSchema,
+  updateProfileSchema,
+  ZStore
+} from "../../controllers/store/validation/store_validation";
+import {FeedBack} from "../../models/feedbackModel";
+import {runtimeValidation} from "../../controllers/service/serviceContoller";
+import {ObjectId, Types} from "mongoose";
 
 export async function getStoreByPhoneOrUniqueNameOrEmail(
   phone: string,
@@ -6,95 +21,140 @@ export async function getStoreByPhoneOrUniqueNameOrEmail(
   email: string | undefined
 ) {
   if (email) {
-    return await Store.findOne({
-      $or: [{ phone }, { uniqueName }, { email }],
+    return Store.findOne({
+      $or: [{phone}, {uniqueName}, {email}],
     });
   }
-  return await Store.findOne({
-    $or: [{ phone }, { uniqueName }],
+  return Store.findOne({
+    $or: [{phone}, {uniqueName}],
   });
 }
+//TODO: may not need validate response here.
+export const createAndSaveStore = async ({ rawBody, addedBy } : {rawBody: IReusableCreateStoreSchema, addedBy?: Types.ObjectId}) : Promise<{ dbStore: IStore, validatedData: ZStore}> => {
+  const data = reusableCreateStoreSchema.parse(rawBody);
 
-//   export const addStore = async (
-//     req: ICustomRequest<IAddStoreSchema>,
-//     res: Response
-//   ) => {
-//     const staffId = req?.user?._id;
-//     const {
-//       subscriptionPlan,
-//       whatsapp,
-//       city,
-//       storeName,
-//       uniqueName,
-//       storeOwnerName,
-//       shopImgUrl,
-//       district,
-//       address,
-//       latitude,
-//       longitude,
-//       phone,
-//       category,
-//       bio,
-//       wholesale,
-//       retail,
-//       email,
-//       otp,
-//     } = req.body;
+  const { latitude, longitude, plainPassword, phone, uniqueName, email, ...rest } = data;
 
-//     await verifyOtp(phone, otp);
+  const existingStore = await getStoreByPhoneOrUniqueNameOrEmail(phone, uniqueName, email);
+  if (existingStore) {
+    let message: string;
+    if (existingStore.email === email) {
+      message = "Email already exists";
+    } else if (existingStore.phone === phone) {
+      message = "Phone number already exists";
+    } else {
+      message = "Unique name already exists";
+    }
 
-//     const phoneExistAndVerified = await Store.findOne({
-//       phone,
-//       isVerified: true,
-//     }).countDocuments();
+    throw new AppError( message, 400);
+  }
 
-//     if (phoneExistAndVerified > 0) {
-//       return res.status(409).json({ message: "Phone number already exist" });
-//     }
+  const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
-//     const uniqueNameExist = await Store.findOne({
-//       uniqueName,
-//       isVerified: true,
-//     }).countDocuments();
-//     if (uniqueNameExist > 0)
-//       return res.status(409).json({ message: "Unique name already exist" });
+  const location = {
+    type: "Point",
+    coordinates: [latitude, longitude],
+  };
 
-//     const location = {
-//       type: "Point",
-//       coordinates: [longitude, latitude],
-//     };
+  const subscriptionExpireDate = new Date();
+  subscriptionExpireDate.setFullYear(subscriptionExpireDate.getFullYear() + 1);
+  let serviceType = data.serviceType;
 
-//     const salt = await bcrypt.genSalt(10);
-//     const password = await bcrypt.hash(phone, salt);
+  if(data.type === businessAccountTypeSchema.enum.freelancer) {
+    //freelancer don't have booking feature ["which is in parlor type"]
+      serviceType = ['other'];
+  }
 
-//     const store = {
-//       storeName,
-//       uniqueName,
-//       storeOwnerName,
-//       city,
-//       address,
-//       location,
-//       phone,
-//       whatsapp,
-//       email,
-//       password,
-//       shopImgUrl,
-//       category,
-//       addedBy: staffId,
-//       bio,
-//       subscriptionPlan,
-//       district,
-//       subscription: {
-//         plan: subscriptionPlan,
-//         activatedAt: Date.now(),
-//         expiresAt: getNextYearSameDateMinusOneDay(),
-//       },
-//       wholesale,
-//       retail,
-//       isVerified: false,
-//     };
+  const storeDetails = {
+    ...rest,
+    uniqueName,
+    phone,
+    password: hashedPassword,
+    addedBy,
+    email,
+    location,
+    subscriptionExpireDate,
+    serviceType
+  };
 
-//     await Store.create(store);
 
-//     res.status(201).json({ message: "Store created" });
-//   };
+  const newStore = new Store(storeDetails);
+  const savedStore = await newStore.save();
+
+  if (rest.serviceTypeSuggestion) {
+    try {
+      await new FeedBack({
+        storeId: savedStore._id,
+        ourQuestion: "Describe your service for store",
+        answer: rest.serviceTypeSuggestion
+      }).save();
+    } catch (e) {
+      console.error("Error saving feedback during store creation:", e);
+    }
+  }
+
+  const validatedData = runtimeValidation<ZStore>(savedStoreResponseSchema as any, {
+    ...savedStore.toObject(),
+    categories: savedStore.categories.map(e => e.toString()),
+    category: savedStore.category?.toString(),
+    subCategories: savedStore.subCategories?.map(e => e.toString()),
+  } as any)
+  return {
+    dbStore: savedStore,
+    validatedData,
+  };
+};
+
+export const getBusinessDataById = async (id: string | Types.ObjectId ): Promise<ZStore> => {
+  const store = await Store.findById(id).lean();
+  if (!store) {
+    throw new AppError("Store not found", 404);
+  }
+  return runtimeValidation(savedStoreResponseSchema, {
+    ...store,
+    category: store.category?.toString(),
+    categories: store.categories?.map((e: any) => e.toString()),
+    subCategories: store.subCategories?.map((e: any) => e.toString())
+  } as any);
+}
+
+export const updateStore =
+    async ({
+             storeId,
+             updateData,
+           }: {
+      storeId: string;
+      updateData: unknown;
+    }): Promise<ZStore> => {
+      if (!storeId) {
+        throw new AppError("storeId is required", 400);
+      }
+
+      let parsedFields: any = updateProfileSchema
+          .parse(updateData);
+
+      if (parsedFields.plainPassword) {
+        parsedFields.password = await bcrypt.hash(parsedFields.plainPassword, 10);
+        delete parsedFields.plainPassword;
+      }
+
+      const existingStore = await Store.findById(storeId);
+      if (!existingStore) {
+        throw new AppError("Store not found", 400);
+      }
+
+      const updatedStore = await Store.findByIdAndUpdate(storeId, parsedFields, {
+        new: true,
+      });
+
+      if (!updatedStore) {
+        throw new AppError("Failed to update store", 500);
+      }
+
+      return runtimeValidation<ZStore>(savedStoreResponseSchema as any, {
+        ...updatedStore.toObject(),
+        categories: updatedStore.categories.map(e => e.toString()),
+        category: updatedStore.category?.toString(),
+        subCategories: updatedStore.subCategories?.map(e => e.toString()),
+      } as any);
+    };

@@ -1,16 +1,23 @@
 import {Router} from 'express';
 import {
     createEmployee,
-    createPendingStore,
     getAllEmployeesOfPrivilege,
-    getPendingBusinessCountForStaffPerDayForMonth, getPendingBusinessDashBoardData,
-    getPendingStores,
-    getSpecificPendingBusiness, getStaffAndBusinessCount,
     loginEmployee,
     updateEmployee,
-    updateSpecificPendingBusiness
-} from "../controllers/marketting-section/manager/auth-manager-controller";
+} from "../controllers/marketting-section/employee/staff-manager-controller";
 import {employeeProtect} from "../middleware/auth";
+import {
+    createPendingStore,
+    getPendingBusinessCountForStaffPerDayForMonth,
+    getPendingBusinessDashBoardData, getPendingStores, getSpecificPendingBusiness,
+    getStaffAndPendingBusinessCount,
+    updateSpecificPendingBusiness
+} from "../controllers/marketting-section/employee/pending-business-controller";
+import {
+    businessCountAddedByStaffPerManager,
+    createBusiness, getBusinessCountForStaffPerDayForMonth, getBusinessesPerEmployee,
+    getBusinessProfile, updateBusinessProfile
+} from "../controllers/marketting-section/employee/business-manage-controller";
 
 const router = Router();
 
@@ -38,9 +45,25 @@ router.route('/pending-business-per-day')
     .get(employeeProtect, getPendingBusinessCountForStaffPerDayForMonth)
 
 router.route('/pending-business-per-staff')
-    .get(employeeProtect, getStaffAndBusinessCount)
+    .get(employeeProtect, getStaffAndPendingBusinessCount)
 
-router.route('/dashboard')
+router.route('/pending-dashboard')
     .get(employeeProtect, getPendingBusinessDashBoardData)
+
+router.route('/business')
+    .post(employeeProtect, createBusiness)
+
+router.route('/business/:id')
+    .get(employeeProtect, getBusinessProfile)
+    .put(employeeProtect, updateBusinessProfile)
+
+router.route('/business-per-day')
+    .get(employeeProtect, getBusinessCountForStaffPerDayForMonth)
+
+router.route('/business-count-per-staff')
+    .get(employeeProtect, businessCountAddedByStaffPerManager)
+
+router.route('/business-per-staff')
+    .get(employeeProtect, getBusinessesPerEmployee)
 
 export {router as employeeRouter};

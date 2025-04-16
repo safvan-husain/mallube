@@ -242,6 +242,10 @@ storeSchema.methods.generateAuthToken = function (): string {
     return jwt.sign({_id: this._id}, config.jwtSecret);
 };
 
+storeSchema.index({ addedBy: 1 });
+storeSchema.index({ categories: 1 });
+storeSchema.index({ type: 1 });
+
 storeSchema.index({location: "2dsphere"});
 
 const Store = model<IStore>("stores", storeSchema);

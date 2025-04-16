@@ -61,3 +61,15 @@ export const savedStoreResponseSchema = z.object({
 });
 
 export type ZStore = z.infer<typeof savedStoreResponseSchema>;
+
+export const EmployeeBusinessListItemSchema = z.object({
+    _id: z.string(),
+    storeName: z.string(),
+    storeOwnerName: z.string(),
+    categoriesName: z.string(),
+    place: z.string(),
+    district: z.string(),
+});
+
+// If you need the inferred TypeScript type
+export type EmployeeBusinessListItem = z.infer<typeof EmployeeBusinessListItemSchema>;

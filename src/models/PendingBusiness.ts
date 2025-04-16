@@ -7,7 +7,7 @@ export type PendingBusinessStatus = z.infer<typeof pendingBusinessStatus>;
 
 export interface IPendingBusiness extends Document {
     _id: Types.ObjectId;
-    businessType: 'freelancer' | 'store';
+    businessType: 'freelancer' | 'business';
     name: string;
     category: Types.ObjectId;
     note: string;
@@ -24,7 +24,7 @@ export interface IPendingBusiness extends Document {
 const PendingStoreSchema: Schema<IPendingBusiness> = new Schema({
     businessType: {
         type: String,
-        enum: ['freelancer', 'store'],
+        enum: ['freelancer', 'business'],
         required: true,
     },
     name: {type: String, required: true},

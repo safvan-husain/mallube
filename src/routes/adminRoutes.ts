@@ -35,7 +35,7 @@ import {
   createEmployee, deleteManager,
   getAllEmployeesOfPrivilege,
   getSpecificEmployee, updateEmployee
-} from "../controllers/marketting-section/manager/auth-manager-controller";
+} from "../controllers/marketting-section/employee/staff-manager-controller";
 const router = express.Router();
 
 router.route("/login").post(login);
