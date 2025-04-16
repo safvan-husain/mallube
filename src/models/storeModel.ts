@@ -7,6 +7,8 @@ export type WorkingDay = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 //TODO: suggest the feature to dynamiclly showing the available service type in the front-end.
 type ServiceType = 'salon, beauty parlour & spa' | 'other';
 
+//TODO: delete image if not default when delete store.
+
 export interface IStore extends Document {
     type: BusinessAccountType;
     fcmToken?: string;
