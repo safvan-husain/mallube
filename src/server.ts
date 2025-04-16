@@ -111,8 +111,15 @@ const updateData = expressAsyncHandler(
     async (req, res) => {
         // let data = paginationSchema.parse(req.query);
         try {
-            let d = await Product.deleteMany({});
-            res.status(200).json(d);
+
+            let searchTerm = "https://sin1.contabostorage.com"; // whatever you want to search
+            let stores = await Store.find({
+                shopImgUrl: {
+                    $regex: searchTerm, // This can be a string or a RegExp object
+                    $options: 'i' // optional: 'i' for case-insensitive
+                }
+            });
+            res.status(200).json(stores);
         } catch (error) {
             console.log(error)
             res.status(400).json({message: error})
