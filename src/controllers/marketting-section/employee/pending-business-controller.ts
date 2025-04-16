@@ -218,12 +218,12 @@ export const getPendingStores = async (req: Request, res: TypedResponse<PendingS
 
         const businesses = await PendingBusiness
             .find(dbQuery)
-            .populate<{ category: { name: string } }>('category', 'name')
+            .populate<{ category?: { name: string } }>('category', 'name')
             .lean();
 
         const validatedData = runtimeValidation(pendingStoreMinimalSchema, businesses.map(e => ({
             ...e,
-            categoryName: e.category.name,
+            categoryName: e.category?.name ?? "N/A",
             lastContacted: e.lastContacted?.getTime()
         })));
         res.status(200).json(validatedData);
@@ -286,14 +286,14 @@ export const updateSpecificPendingBusiness = async (req: Request, res: TypedResp
 
         Object.assign(pendingStore, data);
         const updatedStore = await (await pendingStore.save()).populate<{
-            category: { name: string }
+            category?: { name: string }
         }>('category', 'name');
 
 
         const validatedData = runtimeValidation(pendingStoreMinimalSchema, {
             ...updatedStore.toObject(),
             lastContacted: updatedStore.lastContacted?.getTime(),
-            categoryName: updatedStore.category.name
+            categoryName: updatedStore.category?.name ?? "N/A"
         });
 
         res.status(200).json(validatedData);
