@@ -184,7 +184,7 @@ export const DashboardStatsSchema = z.object({
 });
 
 export const FullDashboardStatsSchema = z.object({
-    store: DashboardStatsSchema.default({}),
+    business: DashboardStatsSchema.default({}),
     freelancer: DashboardStatsSchema.default({}),
 });
 

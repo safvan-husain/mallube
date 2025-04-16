@@ -59,7 +59,7 @@ export const getPendingBusinessDashBoardData = async (req: Request, res: TypedRe
                     storeToday: [
                         {
                             $match: {
-                                businessType: "store",
+                                businessType: "business",
                                 createdAt: {$gte: startOfTodayUTC},
                             },
                         },
@@ -68,7 +68,7 @@ export const getPendingBusinessDashBoardData = async (req: Request, res: TypedRe
                     storeMonth: [
                         {
                             $match: {
-                                businessType: "store",
+                                businessType: "business",
                                 createdAt: {$gte: startOfMonthUTC},
                             },
                         },
@@ -77,7 +77,7 @@ export const getPendingBusinessDashBoardData = async (req: Request, res: TypedRe
                     storeTotal: [
                         {
                             $match: {
-                                businessType: "store",
+                                businessType: "business",
                             },
                         },
                         {$count: "count"},
@@ -112,7 +112,7 @@ export const getPendingBusinessDashBoardData = async (req: Request, res: TypedRe
             },
             {
                 $project: {
-                    store: {
+                    business: {
                         today: {
                             $ifNull: [{$arrayElemAt: ["$storeToday.count", 0]}, 0],
                         },
