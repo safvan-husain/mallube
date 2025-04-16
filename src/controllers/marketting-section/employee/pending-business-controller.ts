@@ -166,8 +166,7 @@ export const createPendingStore = async (req: Request, res: TypedResponse<Pendin
         });
         const savedData = (await (await pending.save()).populate<{ category: { name: string } }>('category'));
 
-        let s = {...savedData.toObject(), categoryName: savedData.category.name, lastContacted: undefined};
-        console.log(s)
+        let s = {...savedData.toObject(), categoryName: savedData.category?.name ?? "N/A", lastContacted: undefined};
         let validated = runtimeValidation(pendingStoreMinimalSchema, s)
         res.status(201).json(validated);
     } catch (err: any) {
