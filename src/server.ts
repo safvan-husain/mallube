@@ -112,18 +112,21 @@ const updateData = expressAsyncHandler(
         // let data = paginationSchema.parse(req.query);
         try {
 
-            let searchTerm = "https://sin1.contabostorage.com"; // whatever you want to search
-            const replaceImageUrl = "https://static.vendroo.in/1744795695974_410_default-store-vendroo.jpg";
+            let searchTerm = "https"; // whatever you want to search
+            // const replaceImageUrl = "https://static.vendroo.in/1744795695974_410_default-store-vendroo.jpg";
             let stores = await Store.find({
                 shopImgUrl: {
-                    $regex: searchTerm, // This can be a string or a RegExp object
-                    $options: 'i' // optional: 'i' for case-insensitive
+                    $not: {
+                        $regex: searchTerm, // This can be a string or a RegExp object
+                        $options: 'i' // optional: 'i' for case-insensitive
+                    }
+
                 }
             });
-            for (const s of stores) {
-                s.shopImgUrl = replaceImageUrl;
-                await s.save();
-            }
+            // for (const s of stores) {
+            //     s.shopImgUrl = replaceImageUrl;
+            //     await s.save();
+            // }
             res.status(200).json(stores);
         } catch (error) {
             console.log(error)
