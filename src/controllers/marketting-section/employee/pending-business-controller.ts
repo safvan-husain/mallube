@@ -445,7 +445,7 @@ export function getStaffAndBusinessCountsFromData(
 ): StaffAndBusinessCount[] {
     let responseList: StaffAndBusinessCount[] = [];
     for (let item of data) {
-        const staff = staffs.find(e => e._id = item._id);
+        const staff = staffs.find(e => e._id.toString() === item._id.toString());
 
         responseList.push({
             businessCount: item.businessCount,
