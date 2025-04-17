@@ -432,7 +432,9 @@ type StaffNameAndU = {
     username: string,
     place: string,
     city: string,
-    district: string
+    district: string,
+    dayTarget?: number;
+    monthTarget?: number;
 }
 
 export function getStaffAndBusinessCountsFromData(
@@ -448,6 +450,10 @@ export function getStaffAndBusinessCountsFromData(
 
         responseList.push({
             businessCount: item.businessCount,
+            target: {
+                day: staff?.dayTarget ?? 0,
+                month: staff?.monthTarget ?? 0
+            },
             staffUserName: staff?.username ?? "Unknown Error",
             staffName: staff?.name ?? "Unknown Error",
             place: staff?.place ?? "Unknown Error",

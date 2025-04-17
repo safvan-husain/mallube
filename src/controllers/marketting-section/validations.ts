@@ -83,6 +83,10 @@ export const staffAndBusinessCountSchema = z.object({
     place: z.string(),
     city: z.string(),
     district: z.string(),
+    target: z.object({
+        day: z.number(),
+        month: z.number()
+    })
 })
 
 export type StaffAndBusinessCount = z.infer<typeof staffAndBusinessCountSchema>
@@ -122,7 +126,9 @@ export const createEmployeeSchema = z.object({
     joinedDate: istFromStringOrNumberSchema,
     privilege: employeePrivilegeSchema.optional().default('staff'),
     manager: ObjectIdSchema.optional(),
-    password: z.string().min(3, {message: "Password should be at least 3 characters long"})
+    password: z.string().min(3, {message: "Password should be at least 3 characters long"}),
+    dayTarget: z.number(),
+    monthTarget: z.number(),
 });
 
 export const updateEmployeeSchema = z.object({

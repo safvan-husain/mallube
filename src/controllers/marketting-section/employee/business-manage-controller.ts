@@ -97,8 +97,8 @@ export const businessCountAddedByStaffPerManager = async (req: Request, res: Typ
 
         const staffs = await Employee
             .find({manager: req.employee?._id},
-                {_id: 1, name: 1, username: 1, place: 1, city: 1, district: 1})
-            .lean<{ _id: Types.ObjectId, name: string, username: string, place: string, city: string, district: string }[]>();
+                {_id: 1, name: 1, username: 1, place: 1, city: 1, district: 1, dayTarget: 1, monthTarget: 1})
+            .lean<{ _id: Types.ObjectId, name: string, username: string, place: string, city: string, district: string, dayTarget: number, monthTarget: number }[]>();
         const staffIds = staffs.map(e => e._id);
 
         let dbQuery: FilterQuery<IStore> = {}
@@ -151,6 +151,7 @@ export const getBusinessCountForStaffPerDayForMonth = async (req: Request, res: 
             {
                 $match: dbQuery
             },
+            //Grouping with created at date, converting IST to get accurate day calculation.
             {
                 $group: {
                     _id: {

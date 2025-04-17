@@ -25,6 +25,8 @@ export interface IEmployee extends Document {
     resignedDate?: Date;
     privilege: TEmployeePrivilege;
     manager?: Types.ObjectId;
+    dayTarget: number;
+    monthTarget: number;
 }
 
 export type TEmployee = {
@@ -43,6 +45,8 @@ export type TEmployee = {
     resignedDate?: Date;
     privilege: TEmployeePrivilege;
     manager?: Types.ObjectId;
+    dayTarget: number;
+    monthTarget: number;
 }
 
 const employeeSchema = new Schema<IEmployee>(
@@ -53,58 +57,21 @@ const employeeSchema = new Schema<IEmployee>(
             required: true,
             unique: true,
         },
-        privilege: {
-            type: String,
-            enum: ['manager', 'staff'],
-            required: true,
-        },
-        manager: {
-            type: Schema.Types.ObjectId,
-            ref: 'Employee',
-        },
-        hashedPassword: {
-            type: String,
-            required: true
-        },
-        address: {
-            type: String,
-            required: true,
-        },
-        place: {
-            type: String,
-            required: true,
-        },
-        city: {
-            type: String,
-            required: true,
-        },
-        district: {
-            type: String,
-            required: true,
-        },
-        phone: {
-            type: String,
-            required: true,
-        },
-        aadharNumber: {
-            type: String,
-            required: true,
-        },
-        companyPhone: {
-            type: String,
-            required: true,
-        },
-        workAreaName: {
-            type: String,
-            required: true,
-        },
-        joinedDate: {
-            type: Date,
-            required: true,
-        },
-        resignedDate: {
-            type: Date,
-        },
+        privilege: {type: String, enum: ['manager', 'staff'], required: true,},
+        manager: {type: Schema.Types.ObjectId, ref: 'Employee',},
+        hashedPassword: {type: String, required: true},
+        address: {type: String, required: true,},
+        place: {type: String, required: true,},
+        city: {type: String, required: true,},
+        district: {type: String, required: true,},
+        phone: {type: String, required: true,},
+        aadharNumber: {type: String, required: true,},
+        companyPhone: {type: String, required: true,},
+        workAreaName: {type: String, required: true,},
+        joinedDate: {type: Date, required: true,},
+        resignedDate: {type: Date,},
+        dayTarget: {type: Number, default: 0},
+        monthTarget: {type: Number, default: 0},
     },
     {
         timestamps: true,
@@ -112,7 +79,7 @@ const employeeSchema = new Schema<IEmployee>(
 );
 
 employeeSchema.pre("save", async function (next) {
-    if (!this.isModified("hashedPassword") ||  !this.hashedPassword) {
+    if (!this.isModified("hashedPassword") || !this.hashedPassword) {
         return next();
     }
     const salt = await bcrypt.genSalt(10);
