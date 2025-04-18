@@ -1,43 +1,57 @@
 import {TypedResponse} from "../../../types/requestion";
 import {onCatchError, runtimeValidation} from "../../service/serviceContoller";
 import {addStoreSchema} from "../../../schemas/store.schema";
-import {createAndSaveStore, getBusinessDataById, updateStore } from "../../../service/store";
+import {createAndSaveStore, getBusinessDataById, updateStore} from "../../../service/store";
 import Category from "../../../models/categoryModel";
-import {getCreatedAtFilterFromDateRange, zodObjectForMDObjectId} from "../../../schemas/commom.schema";
-import { Request } from 'express';
+import {
+    getCreatedAtFilterFromDateRange,
+    getUTCMonthRangeFromISTDate,
+    zodObjectForMDObjectId
+} from "../../../schemas/commom.schema";
+import {Request} from 'express';
 import {
     EmployeeBusinessListItem,
     EmployeeBusinessListItemSchema,
     ZStore
 } from "../../store/validation/store_validation";
 import {FilterQuery, ObjectId, Types} from "mongoose";
-import Employee, {employeePrivilegeSchema} from "../../../models/managerModel";
+import Employee, {employeePrivilegeSchema, IEmployee} from "../../../models/managerModel";
 import {
-    determineStaffId,
+    determineStaffIdWithQueryData,
     ensureRequesterIsManager,
     getStaffAndBusinessCountsFromData
 } from "./pending-business-controller";
 import {
-    AddedCountPerDate, addedCountPerDateSchema,
-    businessCountPerStaffSchema, getEmployeeStoreQuerySchema, monthAndStaffIdSchema, pendingStoreQuerySchema,
+    AddedCountPerDate,
+    addedCountPerDateSchema,
+    allRangeOfDateSchema,
+    businessCountPerStaffSchema,
+    getEmployeeStoreQuerySchema, graphResultSchema,
+    monthAndBusinessTypeSchema,
+    monthAndStaffIdSchema,
+    pendingStoreQuerySchema,
     StaffAndBusinessCount,
     staffAndBusinessCountSchema
 } from "../validations";
 import Store, {IStore} from "../../../models/storeModel";
 import {IPendingBusiness, PendingBusiness} from "../../../models/PendingBusiness";
+import {AppError} from "../../service/requestValidationTypes";
 
 export const createBusiness = async (req: Request, res: TypedResponse<EmployeeBusinessListItem>) => {
     try {
-        if(!req.employee) {
-            res.status(403).json({ message: "Not authorized"});
+        if (!req.employee) {
+            res.status(403).json({message: "Not authorized"});
             return;
         }
-        if(req.employee?.privilege !== employeePrivilegeSchema.enum.staff) {
-            res.status(403).json({ message: "Not authorized to create store"});
+        if (req.employee?.privilege !== employeePrivilegeSchema.enum.staff) {
+            res.status(403).json({message: "Not authorized to create store"});
             return;
         }
         const data = addStoreSchema.parse(req.body);
-        const { validatedData } = await createAndSaveStore({ rawBody: {...data, plainPassword: data.phone}, addedBy: req.employee._id});
+        const {validatedData} = await createAndSaveStore({
+            rawBody: {...data, plainPassword: data.phone},
+            addedBy: req.employee._id
+        });
 
         res.status(201).json({
             _id: validatedData._id.toString(),
@@ -54,7 +68,7 @@ export const createBusiness = async (req: Request, res: TypedResponse<EmployeeBu
 
 export const getBusinessProfile = async (req: Request, res: TypedResponse<ZStore>) => {
     try {
-        const { id } = zodObjectForMDObjectId.parse(req.params);
+        const {id} = zodObjectForMDObjectId.parse(req.params);
         const store = await getBusinessDataById(id);
         res.status(200).json(store);
     } catch (e) {
@@ -64,7 +78,7 @@ export const getBusinessProfile = async (req: Request, res: TypedResponse<ZStore
 
 export const updateBusinessProfile = async (req: Request, res: TypedResponse<EmployeeBusinessListItem>) => {
     try {
-        const { id } = zodObjectForMDObjectId.parse(req.params);
+        const {id} = zodObjectForMDObjectId.parse(req.params);
         const validatedData = await updateStore({
             storeId: id.toString(),
             updateData: req.body
@@ -82,10 +96,10 @@ export const updateBusinessProfile = async (req: Request, res: TypedResponse<Emp
     }
 }
 
-async function getCommaSeparatedCategoryNames(ids: ObjectId[] | string[]) : Promise<string> {
-   return await Category
-        .find({ _id: { $in: ids }}, { name: true })
-        .lean<{name: string}[]>().then(e => e.map(k => k.name).join(", "));
+async function getCommaSeparatedCategoryNames(ids: ObjectId[] | string[]): Promise<string> {
+    return await Category
+        .find({_id: {$in: ids}}, {name: true})
+        .lean<{ name: string }[]>().then(e => e.map(k => k.name).join(", "));
 }
 
 export const businessCountAddedByStaffPerManager = async (req: Request, res: TypedResponse<StaffAndBusinessCount[]>) => {
@@ -98,7 +112,16 @@ export const businessCountAddedByStaffPerManager = async (req: Request, res: Typ
         const staffs = await Employee
             .find({manager: req.employee?._id},
                 {_id: 1, name: 1, username: 1, place: 1, city: 1, district: 1, dayTarget: 1, monthTarget: 1})
-            .lean<{ _id: Types.ObjectId, name: string, username: string, place: string, city: string, district: string, dayTarget: number, monthTarget: number }[]>();
+            .lean<{
+                _id: Types.ObjectId,
+                name: string,
+                username: string,
+                place: string,
+                city: string,
+                district: string,
+                dayTarget: number,
+                monthTarget: number
+            }[]>();
         const staffIds = staffs.map(e => e._id);
 
         let dbQuery: FilterQuery<IStore> = {}
@@ -121,8 +144,6 @@ export const businessCountAddedByStaffPerManager = async (req: Request, res: Typ
             }
         ]);
 
-        console.log(data);
-
         res.status(200).json(runtimeValidation(staffAndBusinessCountSchema, getStaffAndBusinessCountsFromData(data, staffs)));
     } catch (e) {
         onCatchError(e, res);
@@ -133,13 +154,13 @@ export const getBusinessCountForStaffPerDayForMonth = async (req: Request, res: 
     try {
         const query = monthAndStaffIdSchema.parse(req.query);
 
-        let staffId = determineStaffId(req.employee, query);
+        let staffId = determineStaffIdWithQueryData(req.employee, query);
 
         let dbQuery: FilterQuery<IStore> = {};
         dbQuery.addedBy = staffId;
 
         const createdAt = getCreatedAtFilterFromDateRange(query);
-        if(createdAt) dbQuery.createdAt = createdAt;
+        if (createdAt) dbQuery.createdAt = createdAt;
 
         dbQuery.type = query.businessType;
 
@@ -198,7 +219,7 @@ export const getBusinessesPerEmployee = async (req: Request, res: TypedResponse<
         dbQuery.type = query.businessType;
 
         const createdAt = getCreatedAtFilterFromDateRange(query);
-        if(createdAt) dbQuery.createdAt = createdAt;
+        if (createdAt) dbQuery.createdAt = createdAt;
 
         if (query.searchTerm) {
             const regex = {$regex: query.searchTerm.trim(), $options: "i"}
@@ -212,8 +233,8 @@ export const getBusinessesPerEmployee = async (req: Request, res: TypedResponse<
         if (req.employee!.privilege === employeePrivilegeSchema.enum.staff) {
             dbQuery.addedBy = req.employee!._id;
         } else if (req.employee!.privilege === employeePrivilegeSchema.enum.manager) {
-            if(!query.addedBy) {
-                res.status(400).json({ message: "addedBy is required for manager"})
+            if (!query.addedBy) {
+                res.status(400).json({message: "addedBy is required for manager"})
                 return;
             }
             dbQuery.addedBy = query.addedBy;
@@ -245,4 +266,66 @@ export const getBusinessesPerEmployee = async (req: Request, res: TypedResponse<
     } catch (e) {
         onCatchError(e, res);
     }
+}
+
+export const getGraphDataForMonth = async (req: Request, res: TypedResponse<any>) => {
+    try {
+        const {month, businessType } = monthAndBusinessTypeSchema.parse(req.query);
+        let dbQuery: FilterQuery<IStore> = {
+            type: businessType
+        }
+        const range = getUTCMonthRangeFromISTDate(month)
+        dbQuery.createdAt = {$gte: range.start, $lt: range.end};
+        dbQuery.addedBy = await buildAddedByQuery(req.employee!).then(e => e.addedBy);
+
+        const data = await Store.aggregate([
+            {
+                $match: dbQuery
+            },
+            {
+                $project: {
+                    createdDay: {
+                        $dateToString: {
+                            date: "$createdAt",
+                            format: "%d",
+                            timezone: "Asia/Kolkata"
+                        }
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: "$createdDay",
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $project: {
+                    day: "$_id",
+                    count: 1
+                }
+            }
+        ]);
+        res.status(200).json(runtimeValidation(graphResultSchema, data));
+    } catch (e) {
+        onCatchError(e, res);
+    }
+}
+
+/**
+ * Builds a query filter based on employee privilege to restrict access to relevant records
+ * @param employee - The employee object from the request (middleware [protectedEmployee])
+ * @returns A MongoDB query filter for the 'addedBy' field
+ */
+export async function buildAddedByQuery(employee: IEmployee): Promise<{ addedBy: Types.ObjectId | { $in: Types.ObjectId[] } }> {
+    if (employee.privilege === employeePrivilegeSchema.enum.staff) {
+        return { addedBy: employee._id! };
+    } else if (employee.privilege === employeePrivilegeSchema.enum.manager) {
+        const staffIds = await Employee
+            .find({ manager: employee._id }, { _id: 1 })
+            .lean<{ _id: Types.ObjectId }[]>()
+            .then(e => e.map(e => e._id));
+        return { addedBy: { $in: staffIds } };
+    }
+    throw new AppError("Not authorized to access these records", 403);
 }

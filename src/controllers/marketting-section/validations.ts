@@ -106,6 +106,11 @@ export const allRangeOfDateSchema = z.object({
     endDate: istFromStringOrNumberSchema.optional(),
 })
 
+export const monthAndBusinessTypeSchema = z.object({
+    month: istFromStringOrNumberSchema,
+    businessType: z.enum(['freelancer', 'business']),
+})
+
 export const monthAndStaffIdSchema = z.object({
     staffId: ObjectIdSchema.optional(),
     businessType: z.enum(['freelancer', 'business']),
@@ -204,3 +209,8 @@ export const getEmployeeStoreQuerySchema = z.object({
 
 // Usage:
 export type FullDashboardStats = z.infer<typeof FullDashboardStatsSchema>;
+
+export const graphResultSchema = z.object({
+    day: z.string(),
+    count: z.number()
+})

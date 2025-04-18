@@ -3,7 +3,7 @@ import {ICustomRequest, TypedResponse} from "../../../types/requestion";
 import {onCatchError, runtimeValidation, safeRuntimeValidation} from "../../service/serviceContoller";
 import {
     getCreatedAtFilterFromDateRange,
-    getMonthRangeFromISTDate,
+    getUTCMonthRangeFromISTDate,
     istFromStringOrNumberSchema,
     ObjectIdSchema,
     optionalDateFiltersSchema,
@@ -272,32 +272,5 @@ export const loginEmployee = async (req: Request, res: TypedResponse<{
         }
     } catch (e) {
         onCatchError(e, res);
-    }
-}
-
-async function buildQueryByPrivilege(employee: IEmployee): Promise<FilterQuery<IPendingBusiness>> {
-    const {privilege, _id} = employee;
-
-    switch (privilege) {
-        // case employeePrivilegeSchema.enum.admin:
-        //     // Admins can see all pending businesses
-        //     return {};
-
-        case employeePrivilegeSchema.enum.manager:
-            // Managers can see their staff's pending businesses
-            const staffIds: Types.ObjectId[] = await Employee.find(
-                {manager: _id},
-                {_id: 1}
-            ).lean().then(staff => staff.map(e => e._id));
-            let ids: Types.ObjectId[] = [_id as Types.ObjectId, ...staffIds];
-            return {createdBy: {$in: ids}}; // Include employee's own submissions
-
-        case employeePrivilegeSchema.enum.staff:
-            // Staff can only see their own pending businesses
-            return {createdBy: _id};
-
-        default:
-            // Default case for type safety
-            return {createdBy: _id};
     }
 }

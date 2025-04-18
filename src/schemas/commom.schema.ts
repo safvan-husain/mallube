@@ -44,41 +44,44 @@ export const zodObjectForMDObjectId = z.object({
     id: ObjectIdSchema
 });
 
-export function getMonthRangeFromISTDate(istDate: Date): { start: Date; end: Date } {
-    // Convert IST to UTC manually (IST is UTC+5:30)
-    const utcDate = new Date(istDate.getTime() - (5.5 * 60 * 60 * 1000));
+export function getUTCMonthRangeFromISTDate(istDate: Date): { start: Date; end: Date } {
+    // Convert IST to UTC (IST = UTC + 5:30, so subtract offset to get UTC)
+    const utcTime = istDate.getTime() - (5.5 * 60 * 60 * 1000);
+    const utcDate = new Date(utcTime);
 
-    // First day of the month in UTC
+    // Start of month in UTC (first day, 00:00:00)
     const utcStart = new Date(Date.UTC(utcDate.getUTCFullYear(), utcDate.getUTCMonth(), 1));
 
-    // First day of next month in UTC
-    const utcEnd = new Date(Date.UTC(utcDate.getUTCFullYear(), utcDate.getUTCMonth() + 1, 1));
+    // End of month in UTC (last day, 23:59:59.999)
+    const utcEnd = new Date(Date.UTC(utcDate.getUTCFullYear(), utcDate.getUTCMonth() + 1, 0, 23, 59, 59, 999));
 
-    return {start: utcStart, end: utcEnd};
+    return { start: utcStart, end: utcEnd };
 }
 
-export function getDayRangeFromISTDate(istDate: Date): { start: Date; end: Date } {
-    // Convert IST to UTC (IST = UTC + 5:30)
-    const utcDate = new Date(istDate.getTime() - (5.5 * 60 * 60 * 1000));
 
-    // Extract UTC Y/M/D from adjusted UTC date
+export function getUTCDayRangeFromISTDate(istDate: Date): { start: Date; end: Date } {
+    // Add 5.5 hours to convert IST to UTC (since IST is UTC+5:30)
+    const utcTime = istDate.getTime() + (5.5 * 60 * 60 * 1000);
+
+    // Extract UTC Y/M/D
+    const utcDate = new Date(utcTime);
     const year = utcDate.getUTCFullYear();
     const month = utcDate.getUTCMonth();
-    const date = utcDate.getUTCDate();
+    const day = utcDate.getUTCDate();
 
     // Start of day in UTC
-    const utcStart = new Date(Date.UTC(year, month, date));
+    const utcStart = new Date(Date.UTC(year, month, day));
 
-    // Start of next day in UTC
-    const utcEnd = new Date(Date.UTC(year, month, date + 1));
+    // End of day in UTC (last millisecond)
+    const utcEnd = new Date(Date.UTC(year, month, day, 23, 59, 59, 999));
 
-    return {start: utcStart, end: utcEnd};
+    return { start: utcStart, end: utcEnd };
 }
 
 export function getCreatedAtFilterFromDateRange(input: z.infer<typeof allRangeOfDateSchema>) {
 
     if (input.month) {
-        const {start, end} = getMonthRangeFromISTDate(input.month);
+        const {start, end} = getUTCMonthRangeFromISTDate(input.month);
         return {
             $gte: start,
             $lt: end,
@@ -87,7 +90,7 @@ export function getCreatedAtFilterFromDateRange(input: z.infer<typeof allRangeOf
 
     if (input.day) {
         console.log(`today : ${new Date(input.day)}`);
-        const {start, end} = getDayRangeFromISTDate(input.day);
+        const {start, end} = getUTCDayRangeFromISTDate(input.day);
         return {
             $gte: start,
             $lt: end,

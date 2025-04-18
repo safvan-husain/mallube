@@ -16,7 +16,7 @@ import {
 import {
     businessCountAddedByStaffPerManager,
     createBusiness, getBusinessCountForStaffPerDayForMonth, getBusinessesPerEmployee,
-    getBusinessProfile, updateBusinessProfile
+    getBusinessProfile, getGraphDataForMonth, updateBusinessProfile
 } from "../controllers/marketting-section/employee/business-manage-controller";
 
 const router = Router();
@@ -65,5 +65,8 @@ router.route('/business-count-per-staff')
 
 router.route('/business-per-staff')
     .get(employeeProtect, getBusinessesPerEmployee)
+
+router.route('/business-graph')
+    .get(employeeProtect, getGraphDataForMonth)
 
 export {router as employeeRouter};

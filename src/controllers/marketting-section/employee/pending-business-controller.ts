@@ -354,7 +354,7 @@ export const getPendingBusinessCountForStaffPerDayForMonth = async (req: Request
     try {
         const query = monthAndStaffIdSchema.parse(req.query);
 
-        let staffId = determineStaffId(req.employee, query);
+        let staffId = determineStaffIdWithQueryData(req.employee, query);
 
         let dbQuery: FilterQuery<IPendingBusiness> = {};
         dbQuery.createdBy = staffId;
@@ -471,7 +471,7 @@ export function getStaffAndBusinessCountsFromData(
  * @returns The staff ID
  * @throw AppError
  */
-export function determineStaffId(
+export function determineStaffIdWithQueryData(
     employee: IEmployee | undefined,
     query: { staffId?: Types.ObjectId }
 ): Types.ObjectId {
