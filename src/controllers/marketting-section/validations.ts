@@ -114,7 +114,7 @@ export const monthAndStaffIdSchema = z.object({
 
 export const createEmployeeSchema = z.object({
     name: z.string(),
-    username: z.string(),
+    username: z.string().transform(e => e.trim()),
     address: z.string(),
     place: z.string(),
     city: z.string(),
