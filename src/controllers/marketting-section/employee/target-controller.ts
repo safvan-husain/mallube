@@ -84,9 +84,69 @@ type EmployeeDayStatus = z.infer<typeof employeeDayAttendanceStatus>;
 export const getAttendanceOfSpecificEmployeeSpecificMonth = async (req: Request, res: TypedResponse<EmployeeDayStatus[]>) => {
     try {
         const data = employeeIdAndMonth.parse(req.query);
-        let resulList: EmployeeDayStatus[] = [];
-        //TODO: implement logic to retarive the history from Attendance model
-        res.status(200).json(runtimeValidation(employeeDayAttendanceStatus, resulList));
+        const dateRange = getUTCMonthRangeFromISTDate(data.month);
+        
+        // Generate all dates in the month
+        const allDates: Date[] = [];
+        const currentDate = new Date(dateRange.start);
+        while (currentDate <= dateRange.end) {
+            allDates.push(new Date(currentDate));
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        // Get attendance records for the month
+        const attendanceRecords = await Attendance.aggregate([
+            {
+                $match: {
+                    assigned: new mongoose.Types.ObjectId(data.employeeId),
+                    punchIn: {
+                        $gte: dateRange.start,
+                        $lte: dateRange.end
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    date: {
+                        $dateToString: {
+                            format: "%Y-%m-%d",
+                            date: "$punchIn",
+                            timezone: "Asia/Kolkata"
+                        }
+                    },
+                    punchIn: { $toLong: "$punchIn" },
+                    punchOut: { 
+                        $cond: {
+                            if: { $eq: ["$punchOut", null] },
+                            then: null,
+                            else: { $toLong: "$punchOut" }
+                        }
+                    }
+                }
+            }
+        ]);
+
+        // Create attendance map for quick lookup
+        const attendanceMap = new Map(
+            attendanceRecords.map(record => [record.date, {
+                punchIn: record.punchIn,
+                punchOut: record.punchOut
+            }])
+        );
+
+        // Create final result with all days
+        const resultList: EmployeeDayStatus[] = allDates.map(date => {
+            const dateStr = date.toISOString().split('T')[0];
+            const attendance = attendanceMap.get(dateStr);
+            
+            return {
+                date: date.getTime(),
+                attendance: attendance || null
+            };
+        });
+
+        res.status(200).json(runtimeValidation(employeeDayAttendanceStatus, resultList));
     } catch (e) {
         onCatchError(e, res);
     }
