@@ -2,7 +2,7 @@ import {Request} from 'express';
 import {Router} from 'express';
 import {TypedResponse} from "../../../types/requestion";
 import {onCatchError, runtimeValidation} from "../../service/serviceContoller";
-import {employeeIdAndMonth, monthSchema} from "../validations";
+import {employeeIdAndDay, employeeIdAndMonth, monthSchema} from "../validations";
 import {z} from "zod";
 import {AppError} from "../../service/requestValidationTypes";
 import {getUTCMonthRangeFromISTDate} from "../../../schemas/commom.schema";
@@ -148,6 +148,32 @@ export const getAttendanceOfSpecificEmployeeSpecificMonth = async (req: Request,
         });
 
         res.status(200).json(runtimeValidation(employeeDayAttendanceStatus, resultList));
+    } catch (e) {
+        onCatchError(e, res);
+    }
+}
+
+const attendanceRecordWithTimeOFAStaff = z.object({
+    username: z.string(),
+    name: z.string(),
+    city: z.string(),
+    district: z.string(),
+    //when it is null, it means staff was absent that day
+    attendance: z.object({
+        punchIn: z.number(),
+        //when it is null, it means staff is not punched out yet
+        punchOut: z.number().nullable(),
+    }).nullable()
+});
+
+type AttendanceRecordWithTimeOFAStaff = z.infer<typeof attendanceRecordWithTimeOFAStaff>;
+
+export const getAllStaffAttendanceForThisDay = async (req: Request, res: TypedResponse<AttendanceRecordWithTimeOFAStaff[]>) => {
+    try {
+        const data = employeeIdAndDay.parse(req.query);
+        let resultList: AttendanceRecordWithTimeOFAStaff[] = []
+        //TODO: impletement the logic for retriving all staff under this manager, with there this day stautus
+        res.status(200).json(runtimeValidation(attendanceRecordWithTimeOFAStaff, resultList))
     } catch (e) {
         onCatchError(e, res);
     }

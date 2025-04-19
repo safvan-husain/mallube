@@ -223,3 +223,8 @@ export const monthSchema = z.object({
 export const employeeIdAndMonth = z.object({
     id: ObjectIdSchema
 }).merge(monthSchema);
+
+export const employeeIdAndDay = z.object({
+    id: ObjectIdSchema,
+    day: istFromStringOrNumberSchema
+})
