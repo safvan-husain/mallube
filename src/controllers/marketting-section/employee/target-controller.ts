@@ -171,9 +171,76 @@ type AttendanceRecordWithTimeOFAStaff = z.infer<typeof attendanceRecordWithTimeO
 export const getAllStaffAttendanceForThisDay = async (req: Request, res: TypedResponse<AttendanceRecordWithTimeOFAStaff[]>) => {
     try {
         const data = employeeIdAndDay.parse(req.query);
-        let resultList: AttendanceRecordWithTimeOFAStaff[] = []
-        //TODO: impletement the logic for retriving all staff under this manager, with there this day stautus
-        res.status(200).json(runtimeValidation(attendanceRecordWithTimeOFAStaff, resultList))
+        const startOfDay = new Date(data.day);
+        startOfDay.setHours(0, 0, 0, 0);
+        
+        const endOfDay = new Date(data.day);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        // Get all staff IDs under the manager
+        const staffIds = await getStaffIdsByManagerId(req.employee?._id);
+
+        // Get staff details with their attendance status using aggregation
+        const staffWithAttendance = await Staff.aggregate([
+            {
+                $match: {
+                    _id: { $in: staffIds }
+                }
+            },
+            {
+                $lookup: {
+                    from: 'attendances',
+                    let: { staffId: '$_id' },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $and: [
+                                        { $eq: ['$assigned', '$$staffId'] },
+                                        { $gte: ['$punchIn', startOfDay] },
+                                        { $lte: ['$punchIn', endOfDay] }
+                                    ]
+                                }
+                            }
+                        }
+                    ],
+                    as: 'attendance'
+                }
+            },
+            {
+                $project: {
+                    username: 1,
+                    name: 1,
+                    city: 1,
+                    district: 1,
+                    attendance: {
+                        $cond: {
+                            if: { $gt: [{ $size: '$attendance' }, 0] },
+                            then: {
+                                punchIn: { $toLong: { $arrayElemAt: ['$attendance.punchIn', 0] } },
+                                punchOut: {
+                                    $let: {
+                                        vars: {
+                                            punchOut: { $arrayElemAt: ['$attendance.punchOut', 0] }
+                                        },
+                                        in: {
+                                            $cond: {
+                                                if: { $eq: ['$$punchOut', null] },
+                                                then: null,
+                                                else: { $toLong: '$$punchOut' }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            else: null
+                        }
+                    }
+                }
+            }
+        ]);
+
+        res.status(200).json(runtimeValidation(attendanceRecordWithTimeOFAStaff, staffWithAttendance));
     } catch (e) {
         onCatchError(e, res);
     }
