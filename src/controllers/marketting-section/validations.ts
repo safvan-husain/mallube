@@ -215,3 +215,7 @@ export const graphResultSchema = z.object({
     day: z.string(),
     count: z.number()
 })
+
+export const monthSchema = z.object({
+    month: istFromStringOrNumberSchema
+})
