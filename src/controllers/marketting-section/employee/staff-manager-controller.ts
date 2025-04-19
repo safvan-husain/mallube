@@ -45,6 +45,7 @@ import {
 } from "../validations";
 import {IPendingBusiness, PendingBusiness, pendingBusinessStatus} from "../../../models/PendingBusiness";
 import Target from "../../../models/Target";
+import Attendance from "../../../models/EmployeeAttendance";
 
 export const createEmployee = async (req: Request, res: TypedResponse<MinimalManagerResponseForAdmin>) => {
     try {
