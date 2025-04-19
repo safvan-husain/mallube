@@ -44,6 +44,7 @@ import {
     updatePendingStoreSchema
 } from "../validations";
 import {IPendingBusiness, PendingBusiness, pendingBusinessStatus} from "../../../models/PendingBusiness";
+import Target from "../../../models/Target";
 
 export const createEmployee = async (req: Request, res: TypedResponse<MinimalManagerResponseForAdmin>) => {
     try {
@@ -74,6 +75,9 @@ export const createEmployee = async (req: Request, res: TypedResponse<MinimalMan
             ...data,
             hashedPassword: data.password,
         });
+        await Target.setTarget(manager._id, 'day', data.dayTarget);
+        await Target.setTarget(manager._id, 'month', data.monthTarget);
+
         let response = safeRuntimeValidation(minimalManagerResponseForAdminSchema, manager);
         if (response.error != null) {
             res.status(500).json(response.error)
@@ -88,19 +92,17 @@ export const createEmployee = async (req: Request, res: TypedResponse<MinimalMan
 export const updateEmployee = async (req: Request, res: TypedResponse<MinimalManagerResponseForAdmin>) => {
     try {
         //TODO: correct this when handling admin.
-
-        // if(!req.employee) {
-        //     res.status(403).json({message: "Not authorized"})
-        //     return;
-        // }
-        // if (req.employee.privilege !== employeePrivilegeSchema.enum.employee) {
-        //     res.status(403).json({message: "Not authorized, only valid for employee"})
-        //     return;
-        // }
         const data = updateEmployeeSchema.parse(req.body);
         const employeeId = z.object({
             id: ObjectIdSchema
         }).parse(req.params).id;
+
+        if (data.monthTarget) {
+            await Target.setTarget(employeeId, 'month', data.monthTarget);
+        }
+        if (data.dayTarget) {
+            await Target.setTarget(employeeId, 'day', data.dayTarget);
+        }
 
         const employeeToUpdate = await Employee.findById(employeeId);
         if (!employeeToUpdate) {
@@ -270,6 +272,25 @@ export const loginEmployee = async (req: Request, res: TypedResponse<{
             res.status(200).json({token, username: employee.username, privilege: employee.privilege});
             return;
         }
+    } catch (e) {
+        onCatchError(e, res);
+    }
+}
+
+export const markAttendance = async (req: Request, res: TypedResponse<any>) => {
+    try {
+        switch (req.path) {
+            case "punch-in":
+                await Attendance.punchIn(req.employee!._id!);
+                break;
+            case "punch-out":
+                await Attendance.punchOut(req.employee!._id!);
+                break;
+            default:
+                res.status(400).json({ message: "Cannot identify action"});
+                return;
+        }
+        res.status(200).json({ message: `Successfully ${req.path.replace("-", " ")}`});
     } catch (e) {
         onCatchError(e, res);
     }

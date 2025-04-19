@@ -93,7 +93,8 @@ export type StaffAndBusinessCount = z.infer<typeof staffAndBusinessCountSchema>
 
 export const addedCountPerDateSchema = z.object({
     date: z.number(),
-    count: z.number()
+    count: z.number(),
+    target: z.number()
 });
 
 export type AddedCountPerDate = z.infer<typeof addedCountPerDateSchema>;

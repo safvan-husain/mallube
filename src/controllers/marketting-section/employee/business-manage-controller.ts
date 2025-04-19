@@ -36,22 +36,20 @@ import {
 import Store, {IStore} from "../../../models/storeModel";
 import {IPendingBusiness, PendingBusiness} from "../../../models/PendingBusiness";
 import {AppError} from "../../service/requestValidationTypes";
+import Target from "../../../models/Target";
 
 export const createBusiness = async (req: Request, res: TypedResponse<EmployeeBusinessListItem>) => {
     try {
-        if (!req.employee) {
-            res.status(403).json({message: "Not authorized"});
-            return;
-        }
-        if (req.employee?.privilege !== employeePrivilegeSchema.enum.staff) {
+        if (req.employee!.privilege !== employeePrivilegeSchema.enum.staff) {
             res.status(403).json({message: "Not authorized to create store"});
             return;
         }
         const data = addStoreSchema.parse(req.body);
         const {validatedData} = await createAndSaveStore({
             rawBody: {...data, plainPassword: data.phone},
-            addedBy: req.employee._id
+            addedBy: req.employee!._id
         });
+        await Target.achieveTarget(req.employee!._id!);
 
         res.status(201).json({
             _id: validatedData._id.toString(),
@@ -203,7 +201,11 @@ export const getBusinessCountForStaffPerDayForMonth = async (req: Request, res: 
                 }
             }
         ])
-        res.status(200).json(runtimeValidation(addedCountPerDateSchema, data.map(e => ({...e, date: e.dateMillis}))))
+        //TODO: add target.
+        let s: AddedCountPerDate[] = data.map(e => {
+            return {date: e.dateMillis, count : e.count, target: 0 }
+        });
+        res.status(200).json(runtimeValidation<AddedCountPerDate>(addedCountPerDateSchema,  s));
     } catch (e) {
         onCatchError(e, res);
     }
