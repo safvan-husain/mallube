@@ -18,6 +18,10 @@ import {
     createBusiness, getBusinessCountForStaffPerDayForMonth, getBusinessesPerEmployee,
     getBusinessProfile, getGraphDataForMonth, updateBusinessProfile
 } from "../controllers/marketting-section/employee/business-manage-controller";
+import {
+    getAttendanceListForMonth,
+    getAttendanceOfSpecificEmployeeSpecificMonth
+} from "../controllers/marketting-section/employee/target-controller";
 
 const router = Router();
 
@@ -68,5 +72,11 @@ router.route('/business-per-staff')
 
 router.route('/business-graph')
     .get(employeeProtect, getGraphDataForMonth)
+
+router.route('/attendance-per-month-all-staff')
+    .get(employeeProtect, getAttendanceListForMonth)
+
+router.route('/staff-attendance-history')
+    .get(employeeProtect, getAttendanceOfSpecificEmployeeSpecificMonth)
 
 export {router as employeeRouter};

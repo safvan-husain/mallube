@@ -1,9 +1,13 @@
-import { Request} from 'express';
+import {Request} from 'express';
 import {Router} from 'express';
 import {TypedResponse} from "../../../types/requestion";
-import {onCatchError} from "../../service/serviceContoller";
-import {monthSchema} from "../validations";
+import {onCatchError, runtimeValidation} from "../../service/serviceContoller";
+import {employeeIdAndMonth, monthSchema} from "../validations";
 import {z} from "zod";
+import {AppError} from "../../service/requestValidationTypes";
+import {getUTCMonthRangeFromISTDate} from "../../../schemas/commom.schema";
+import Attendance from "../../../models/EmployeeAttendance";
+import {getStaffIdsByManagerId} from "./pending-business-controller";
 
 const attendanceRecord = z.object({
     date: z.number(),
@@ -13,9 +17,7 @@ const attendanceRecord = z.object({
 
 type AttendanceRecord = z.infer<typeof attendanceRecord>;
 
-const router = Router();
-
-const getAttendanceListForMonth = async (req: Request, res: TypedResponse<AttendanceRecord[]>) => {
+export const getAttendanceListForMonth = async (req: Request, res: TypedResponse<AttendanceRecord[]>) => {
     try {
         if (!req.employee?._id) {
             throw new AppError("Not authorized", 403);
@@ -31,7 +33,7 @@ const getAttendanceListForMonth = async (req: Request, res: TypedResponse<Attend
         const attendanceCounts = await Attendance.aggregate([
             {
                 $match: {
-                    assigned: { $in: staffIds },
+                    assigned: {$in: staffIds},
                     punchIn: {
                         $gte: dateRange.start,
                         $lte: dateRange.end
@@ -47,19 +49,19 @@ const getAttendanceListForMonth = async (req: Request, res: TypedResponse<Attend
                             timezone: "Asia/Kolkata"
                         }
                     },
-                    present: { $addToSet: "$assigned" }
+                    present: {$addToSet: "$assigned"}
                 }
             },
             {
                 $project: {
                     _id: 0,
-                    date: { $toLong: { $toDate: "$_id" } },
-                    present: { $size: "$present" },
-                    absent: { $subtract: [{ $size: staffIds }, { $size: "$present" }] }
+                    date: {$toLong: {$toDate: "$_id"}},
+                    present: {$size: "$present"},
+                    absent: {$subtract: [{$size: staffIds}, {$size: "$present"}]}
                 }
             },
             {
-                $sort: { date: 1 }
+                $sort: {date: 1}
             }
         ]);
 
@@ -68,3 +70,25 @@ const getAttendanceListForMonth = async (req: Request, res: TypedResponse<Attend
         onCatchError(e, res);
     }
 }
+
+const employeeDayAttendanceStatus = z.object({
+    date: z.number(),
+    //when it is null, it means staff was absent that day
+    attendance: z.object({
+        punchIn: z.number(),
+        punchOut: z.number(),
+    }).nullable()
+})
+type EmployeeDayStatus = z.infer<typeof employeeDayAttendanceStatus>;
+
+export const getAttendanceOfSpecificEmployeeSpecificMonth = async (req: Request, res: TypedResponse<EmployeeDayStatus[]>) => {
+    try {
+        const data = employeeIdAndMonth.parse(req.query);
+        let resulList: EmployeeDayStatus[] = [];
+        //TODO: implement logic to retarive the history from Attendance model
+        res.status(200).json(runtimeValidation(employeeDayAttendanceStatus, resulList));
+    } catch (e) {
+        onCatchError(e, res);
+    }
+}
+
