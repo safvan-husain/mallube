@@ -8,6 +8,7 @@ import {AppError} from "../../service/requestValidationTypes";
 import {getUTCMonthRangeFromISTDate} from "../../../schemas/commom.schema";
 import Attendance from "../../../models/EmployeeAttendance";
 import {getStaffIdsByManagerId} from "./pending-business-controller";
+import {Types} from "mongoose";
 
 const attendanceRecord = z.object({
     date: z.number(),
@@ -98,7 +99,7 @@ export const getAttendanceOfSpecificEmployeeSpecificMonth = async (req: Request,
         const attendanceRecords = await Attendance.aggregate([
             {
                 $match: {
-                    assigned: new mongoose.Types.ObjectId(data.employeeId),
+                    assigned: data.id,
                     punchIn: {
                         $gte: dateRange.start,
                         $lte: dateRange.end
