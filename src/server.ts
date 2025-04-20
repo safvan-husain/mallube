@@ -41,6 +41,7 @@ import User from "./models/userModel";
 import TimeSlot from "./models/timeSlotModel";
 import {employeeRouter} from "./routes/employee-router";
 import Employee from "./models/managerModel";
+import { testRouter } from './routes/test-router';
 
 const serviceAccount = require('./secrets/serviceAccountKey.json');
 
@@ -211,6 +212,7 @@ app.use('/api/freelancer', individualBussinessRoutes);
 app.use('/api/bas', buyAndSellRouter);
 app.use('/api/chats', chatRoutes);
 app.use('/api/employee', employeeRouter)
+app.use('/api/v1/test', testRouter);
 
 app.use(notFound);
 app.use(errorHandler);
@@ -239,4 +241,3 @@ setInterval(() => {
         console.error(error)
     }
 }, 24 * 60 * 60 * 1000);
-
