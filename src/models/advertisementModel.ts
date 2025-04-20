@@ -6,6 +6,7 @@ export type AdvertisementStatus = z.infer<typeof advertisementStatusSchema>
 
 //using generic args, so that when populating, we can still have type safety.
 export interface IAdvertisement<T = Types.ObjectId, S = Types.ObjectId> extends Document {
+    _id: Types.ObjectId;
     image: string;
     isActive: boolean;
     status: AdvertisementStatus;

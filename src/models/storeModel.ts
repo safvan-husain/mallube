@@ -10,6 +10,7 @@ type ServiceType = 'salon, beauty parlour & spa' | 'other';
 //TODO: delete image if not default when delete store.
 
 export interface IStore extends Document {
+    _id: Types.ObjectId;
     type: BusinessAccountType;
     fcmToken?: string;
     storeName: string;

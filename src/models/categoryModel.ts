@@ -1,7 +1,8 @@
-import { Schema, model, Document } from "mongoose";
+import {Schema, model, Document, Types} from "mongoose";
 
 type SubCategoryType = "product" | "store";
 export interface ICategory extends Document {
+    _id: Types.ObjectId;
   name: string;
   parentId: Schema.Types.ObjectId;
   isActive: boolean;

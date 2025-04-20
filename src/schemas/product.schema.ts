@@ -1,6 +1,5 @@
 // src/schemas/userSchemas.ts
 import { z } from "zod";
-import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE } from "../config/s3";
 
 export const addProductSchema = z
   .object({
@@ -55,12 +54,11 @@ export const uploadProdutImagesSchema = z.object({
       z.object({
         name: z.string(),
         size: z
-          .number()
-          .max(MAX_IMAGE_SIZE, `File size must be less than ${MAX_IMAGE_SIZE}`),
+          .number(),
         mimetype: z
           .string()
           .refine(
-            (type) => ALLOWED_IMAGE_TYPES.includes(type),
+            (type) => ['png', 'jpg', 'jpeg', 'webp'].includes(type),
             "File type must match allowed types"
           ),
       })

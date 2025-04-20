@@ -66,7 +66,7 @@ export const AddAdvertisement = async (req: any, res: TypedResponse<{
     });
     let ad = await newAdvertisement.save();
     res.status(201).json({ message: "Advertisement added successfully", advertisement: {
-      _id: ad._id,
+      _id: ad._id.toString(),
       image: ad.image,
       store: storeId as unknown as Types.ObjectId,
       expireAt: ad.expireAt?.getTime() ?? 0,
@@ -87,7 +87,8 @@ export const fetchAllStoreAdvertisement = async (req: ICustomRequest<any>, res: 
       return;
     }
 
-    const advertisements: IAdvertisement<IStore, IAdvertisementPlan>[] = await Advertisement.find({ store: storeId })
+    const advertisements  = await Advertisement.find({ store: storeId })
+        .populate<{ adPlan?: { name: string }}>('adPlan', 'name')
         .lean();
 
     const processedAds: StoreAdvertisementResponse[] = advertisements.map((ad) : StoreAdvertisementResponse => ({

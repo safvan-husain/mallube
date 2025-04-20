@@ -59,7 +59,7 @@ export const getCategoriesV2 = asyncHandler(
                 isActive,
                 isPending,
                 parentId: { $exists: false }
-            }, {name: true}).lean();
+            }, {name: true, _id: true }).lean<{ name: string, _id: string }[]>();
             res.status(200).json(categories);
         } catch (e) {
             onCatchError(e, res);
@@ -83,7 +83,7 @@ export const getSubCategoriesV2 = asyncHandler(
                 isActive : true,
                 isPending : false,
                 parentId: { $in: selectedCategories }
-            }, {name: true}).lean();
+            }, {name: true, _id: true }).lean<{ _id: string, name: string}[]>();
             res.status(200).json(categories);
         } catch (e) {
             onCatchError(e, res);
@@ -104,7 +104,7 @@ export const getDisplayCategories = asyncHandler(
             //         query.freelancerIndex = { $gte : 0 };
             //     }
             // }
-            let displayCategories = await DisplayCategory.find(query, {name: true, icon: true }).lean();
+            let displayCategories = await DisplayCategory.find(query, {name: true, icon: true }).lean<{ name: string, icon: string, _id: string}[]>();
             res.status(200).json(displayCategories);
         } catch (e) {
             onCatchError(e, res);
@@ -164,7 +164,7 @@ export  const getAdminDisplayCategories = async (req: Request, res: TypedRespons
     try {
         let categories = await DisplayCategory.find({}, {name: true, icon: true, categories: true, businessIndex: true, freelancerIndex: true })
             .populate<{ categories: populatedMainCat[]}>('categories', 'name isActive isEnabledForStore isEnabledForFreelancer').lean();
-        res.status(200).json(categories);
+        res.status(200).json(categories.map(e => ({...e, _id: e._id.toString()})));
     } catch (e) {
        onCatchError(e, res);
     }
@@ -190,7 +190,7 @@ export const getProductCategoriesV2 = asyncHandler(
                     isActive: true,
                     subCategoryType: {$eq: 'product'},
                     parentId: {$in: categories}
-                }, {name: true}).lean();
+                }, {name: true, _id: true }).lean<{ name: string, _id: string }[]>();
             res.status(200).json(productCategories);
         } catch (e) {
             onCatchError(e, res);

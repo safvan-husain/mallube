@@ -354,7 +354,7 @@ export const getFreelancers = asyncHandler(
                     distance,
                     phone: e.phone,
                     shopImgUrl: e.shopImgUrl,
-                    _id: e._id,
+                    _id: e._id.toString(),
                     storeOwnerName: e.storeOwnerName
                 }
             })

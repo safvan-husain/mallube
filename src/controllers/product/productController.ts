@@ -1,10 +1,8 @@
 import { Request, Response } from "express";
 import { UploadedFile } from "express-fileupload";
 import asyncHandler from "express-async-handler";
-import mongoose, { Types, Schema } from "mongoose";
 
 import {
-  IAddProductSchema,
   IUploadProdutImagesSchema,
 } from "../../schemas/product.schema";
 
@@ -12,7 +10,6 @@ import { ICustomRequest } from "../../types/requestion";
 
 import {
   isDuplicateCategory,
-  listActiveSubCategories,
   listAllSubCategories,
 } from "../../service/category";
 
@@ -21,10 +18,7 @@ import Category from "../../models/categoryModel";
 import Store from "../../models/storeModel";
 import ProductSearch from "../../models/productSearch";
 
-import { s3 } from "../../config/s3";
-import { config } from "../../config/vars";
 import User from "../../models/userModel";
-import { store } from "../../middleware/auth";
 import { addProductSchema } from "./validators";
 import { onCatchError } from "../service/serviceContoller";
 import { Freelancer } from "../../models/freelancerModel";
@@ -105,7 +99,7 @@ export const addProduct = asyncHandler(
           isPending: true,
           isShowOnHomePage: false,
         });
-        rest.category = categoryId._id;
+        rest.category = categoryId._id.toString();
       }
       //TODO: correct on the flutter app.
       if (rest.offerPrice == null) {

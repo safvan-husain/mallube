@@ -1,6 +1,5 @@
 import { Schema, model, Document } from "mongoose";
 import { createdAtIST, getIST } from "../utils/ist_time";
-import { deleteFile } from "../controllers/upload/fileUploadController";
 
 export interface UserProductResponse {
     id: string;
@@ -113,7 +112,8 @@ productSchema.methods.deleteImagesFromBucket = async function () {
 
     const deletePromises = this.images.map(image => {
         const filename = image.split("/").pop();
-        return deleteFile(filename);
+        //TODO: implement the logic to delete
+        // return deleteFile(filename);
     });
 
     await Promise.all(deletePromises);

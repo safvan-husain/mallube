@@ -149,7 +149,12 @@ export const createBillForCustomer = asyncHandler(
                 billPhotoUrl,
             });
             new_bill = await new_bill.save();
-            res.status(201).json(new_bill.toObject());
+            res.status(201).json({
+                ...new_bill.toObject(),
+                _id: new_bill._id.toString(),
+                customerId: new_bill.customerId.toString(),
+                date: new_bill.date.getTime()
+            });
         } catch (error) {
             onCatchError(error, res);
         }
@@ -225,7 +230,8 @@ export const getSpecificBill = asyncHandler(
                 totalAmount: true,
                 customerId: true,
                 billPhotoUrl: true
-            })
+            }).lean()
+
             if (!bill) {
                 res.status(404).json({message: "Bill not found"});
                 return;
@@ -256,7 +262,8 @@ export const updateSpecificBill = asyncHandler(
                 totalAmount: true,
                 customerId: true,
                 billPhotoUrl: true
-            })
+            }).lean();
+
             if(!bill) {
                 res.status(404).json({message: "Bill not found"});
                 return;

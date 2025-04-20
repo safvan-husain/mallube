@@ -189,7 +189,7 @@ export const employeeProtect = asyncHandler(
                 privilege: TEmployeePrivilege;
             };
 
-            let employee = await Employee.findById(decoded._id).select("-password").lean();
+            let employee = await Employee.findById(decoded._id);
             if (!employee) {
                 res.status(403).json({ message: "No user found"});
                 return;

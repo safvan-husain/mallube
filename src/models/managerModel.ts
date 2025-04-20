@@ -8,7 +8,7 @@ export const employeePrivilegeSchema = z.enum(['manager', 'staff']);
 export type TEmployeePrivilege = z.infer<typeof employeePrivilegeSchema>;
 
 export interface IEmployee extends Document {
-    _id?: Types.ObjectId;
+    _id: Types.ObjectId;
     name: string;
     username: string;
     hashedPassword: string;
