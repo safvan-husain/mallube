@@ -83,10 +83,7 @@ export const staffAndBusinessCountSchema = z.object({
     place: z.string(),
     city: z.string(),
     district: z.string(),
-    target: z.object({
-        day: z.number(),
-        month: z.number()
-    })
+    target: z.number().nullable()
 })
 
 export type StaffAndBusinessCount = z.infer<typeof staffAndBusinessCountSchema>

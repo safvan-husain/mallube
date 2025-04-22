@@ -102,9 +102,7 @@ async function getCommaSeparatedCategoryNames(ids: ObjectId[] | string[]): Promi
 
 export const businessCountAddedByStaffPerManager = async (req: Request, res: TypedResponse<StaffAndBusinessCount[]>) => {
     try {
-
         await ensureRequesterIsManager(req.employee);
-
         const query = businessCountPerStaffSchema.parse(req.query);
 
         const staffs = await Employee
@@ -122,9 +120,19 @@ export const businessCountAddedByStaffPerManager = async (req: Request, res: Typ
             }[]>();
         const staffIds = staffs.map(e => e._id);
 
+        const allStaffs = new Map(staffs.map(e => [e._id.toString(), e]));
+
         let dbQuery: FilterQuery<IStore> = {}
         dbQuery.addedBy = {$in: staffIds};
-        // dbQuery.createdAt = getCreatedAtFilterFromDateRange(query);
+        const createdAt = getCreatedAtFilterFromDateRange(query);
+        if (createdAt) {
+            //I want to know the duration between created at and lt, how many days
+            const durationMs = createdAt.$lt.getTime() - createdAt.$gte.getTime();
+            const durationInDays = Math.ceil(durationMs / (1000 * 60 * 60 * 24));
+            console.log(`Duration: ${durationInDays} days`);
+
+            dbQuery.createdAt = createdAt;
+        }
         dbQuery.type = query.businessType;
         console.log(dbQuery);
         const data: {
@@ -141,6 +149,8 @@ export const businessCountAddedByStaffPerManager = async (req: Request, res: Typ
                 }
             }
         ]);
+
+        const finalResult = Array.from(allStaffs.entries()).map(e => ({}));
 
         res.status(200).json(runtimeValidation(staffAndBusinessCountSchema, getStaffAndBusinessCountsFromData(data, staffs)));
     } catch (e) {
