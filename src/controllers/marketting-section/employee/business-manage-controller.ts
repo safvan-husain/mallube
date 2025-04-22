@@ -282,43 +282,38 @@ export const getBusinessesPerEmployee = async (req: Request, res: TypedResponse<
 
 export const getGraphDataForMonth = async (req: Request, res: TypedResponse<any>) => {
     try {
-        const {month, businessType } = monthAndBusinessTypeSchema.parse(req.query);
-        let dbQuery: FilterQuery<IStore> = {
-            type: businessType
+        const {month} = monthAndBusinessTypeSchema.parse(req.query);
+        const range = getUTCMonthRangeFromISTDate(month);
+        
+        // Get all days in the month
+        const allDays = [];
+        let currentDate = new Date(range.start);
+        while (currentDate < range.end) {
+            allDays.push(new Date(currentDate));
+            currentDate.setDate(currentDate.getDate() + 1);
         }
-        const range = getUTCMonthRangeFromISTDate(month)
-        dbQuery.createdAt = {$gte: range.start, $lt: range.end};
-        dbQuery.addedBy = await buildAddedByQuery(req.employee!).then(e => e.addedBy);
 
-        const data = await Store.aggregate([
-            {
-                $match: dbQuery
-            },
-            {
-                $project: {
-                    createdDay: {
-                        $dateToString: {
-                            date: "$createdAt",
-                            format: "%d",
-                            timezone: "Asia/Kolkata"
-                        }
-                    }
-                }
-            },
-            {
-                $group: {
-                    _id: "$createdDay",
-                    count: { $sum: 1 }
-                }
-            },
-            {
-                $project: {
-                    day: "$_id",
-                    count: 1
-                }
-            }
-        ]);
-        res.status(200).json(runtimeValidation(graphResultSchema, data));
+        // Get staff IDs based on requester's role
+        let staffIds: Types.ObjectId[];
+        if (req.employee!.privilege === employeePrivilegeSchema.enum.manager) {
+            staffIds = await getStaffIdsByManagerId(req.employee!._id!);
+        } else {
+            staffIds = [req.employee!._id!];
+        }
+
+        // Get daily targets and achievements
+        const dailyData = await Promise.all(
+            allDays.map(date => Target.getTargetsByDateAndRange(date, "day", staffIds))
+        );
+
+        // Format response
+        const response = allDays.map((date, index) => ({
+            day: date.getDate().toString().padStart(2, '0'),
+            count: dailyData[index][0]?.count || 0,
+            target: dailyData[index][0]?.target || 0
+        }));
+
+        res.status(200).json(runtimeValidation(graphResultSchema, response));
     } catch (e) {
         onCatchError(e, res);
     }
