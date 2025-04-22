@@ -1,7 +1,7 @@
 import {Router} from 'express';
 import {
     createEmployee,
-    getAllEmployeesOfPrivilege,
+    getAllEmployeesOfPrivilege, getSpecificEmployee,
     loginEmployee,
     updateEmployee,
 } from "../controllers/marketting-section/employee/staff-manager-controller";
@@ -22,7 +22,7 @@ import {
     getAllStaffAttendanceForThisDay,
     getAttendanceListForMonth,
     getAttendanceOfSpecificEmployeeSpecificMonth
-} from "../controllers/marketting-section/employee/target-controller";
+} from "../controllers/marketting-section/employee/attendance-controller";
 
 const router = Router();
 
@@ -31,6 +31,7 @@ router.route('/staff')
 
 router.route('/staff/:id')
     .put(employeeProtect, updateEmployee)
+    .get(employeeProtect, getSpecificEmployee)
 
 router.route('/login')
     .post(loginEmployee);
