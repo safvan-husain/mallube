@@ -301,17 +301,42 @@ export const getGraphDataForMonth = async (req: Request, res: TypedResponse<any>
             staffIds = [req.employee!._id!];
         }
 
-        // Get daily targets and achievements
-        const dailyData = await Promise.all(
-            allDays.map(date => Target.getTargetsByDateAndRange(date, "day", staffIds))
-        );
+        // Get all daily targets in one query
+        const dailyData = await Target.aggregate([
+            {
+                $match: {
+                    assigned: { $in: staffIds },
+                    day: { $gte: range.start, $lt: range.end }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        $dateToString: {
+                            date: "$day",
+                            format: "%d",
+                            timezone: "Asia/Kolkata"
+                        }
+                    },
+                    totalTarget: { $sum: "$total" },
+                    achieved: { $sum: "$achieved" }
+                }
+            }
+        ]);
 
-        // Format response
-        const response = allDays.map((date, index) => ({
-            day: date.getDate().toString().padStart(2, '0'),
-            count: dailyData[index][0]?.count || 0,
-            target: dailyData[index][0]?.target || 0
-        }));
+        // Create a map for quick lookup
+        const dataMap = new Map(dailyData.map(d => [d._id, d]));
+        
+        // Format response including all days
+        const response = allDays.map(date => {
+            const dayStr = date.getDate().toString().padStart(2, '0');
+            const dayData = dataMap.get(dayStr);
+            return {
+                day: dayStr,
+                count: dayData?.achieved || 0,
+                target: dayData?.totalTarget || 0
+            };
+        });
 
         res.status(200).json(runtimeValidation(graphResultSchema, response));
     } catch (e) {
