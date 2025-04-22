@@ -99,6 +99,7 @@ async function getCommaSeparatedCategoryNames(ids: ObjectId[] | string[]): Promi
         .lean<{ name: string }[]>().then(e => e.map(k => k.name).join(", "));
 }
 
+//for manager, see staff details and added count / target
 export const businessCountAddedByStaffPerManager = async (req: Request, res: TypedResponse<StaffAndBusinessCount[]>) => {
     try {
         await ensureRequesterIsManager(req.employee);
