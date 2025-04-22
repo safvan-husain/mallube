@@ -173,6 +173,13 @@ export const getAllStaffAttendanceForThisDay = async (req: Request, res: TypedRe
 
         const staffIds = await getStaffIdsByManagerId(req.employee?._id!);
 
+        // Get all employees first
+        const allEmployees = await Employee.find(
+            { _id: { $in: staffIds } },
+            { username: 1, name: 1, city: 1, district: 1 }
+        ).lean();
+
+        // Get attendance data
         const attendanceData = await Attendance.aggregate([
             {
                 $match: {
@@ -184,38 +191,38 @@ export const getAllStaffAttendanceForThisDay = async (req: Request, res: TypedRe
                 }
             },
             {
-                $lookup: {
-                    from: 'employees',
-                    localField: 'assigned',
-                    foreignField: '_id',
-                    as: 'staff'
-                }
-            },
-            {
-                $unwind: '$staff'
-            },
-            {
                 $project: {
-                    username: "$staff.username",
-                    name: "$staff.name",
-                    city: "$staff.city",
-                    district: "$staff.district",
+                    assigned: 1,
                     punchIn: { $toLong: "$punchIn" },
                     punchOut: {
                         $cond: {
                             if: { $eq: ["$punchOut", null] },
                             then: null,
-                            else: {
-                                $toLong: "$punchOut"
-                            }
+                            else: { $toLong: "$punchOut" }
                         }
-
                     }
                 }
             }
         ]);
 
-        res.status(200).json(runtimeValidation(attendanceRecordWithTimeOFAStaff, attendanceData));
+        // Create attendance map for quick lookup
+        const attendanceMap = new Map(
+            attendanceData.map(record => [
+                record.assigned.toString(),
+                { punchIn: record.punchIn, punchOut: record.punchOut }
+            ])
+        );
+
+        // Combine employee data with attendance
+        const finalData = allEmployees.map(employee => ({
+            username: employee.username,
+            name: employee.name,
+            city: employee.city,
+            district: employee.district,
+            attendance: attendanceMap.get(employee._id.toString()) || null
+        }));
+
+        res.status(200).json(runtimeValidation(attendanceRecordWithTimeOFAStaff, finalData));
     } catch (e) {
         onCatchError(e, res);
     }
