@@ -113,7 +113,53 @@ interface TargetModel extends mongoose.Model<ITarget> {
     achieveTarget(
         employeeId: mongoose.Types.ObjectId,
     ): Promise<ITarget>;
+    
+    getTargetsByDateAndRange(
+        date: Date,
+        range: "day" | "month",
+        staffIds: mongoose.Types.ObjectId[]
+    ): Promise<{ date: number; count: number; target: number; }[]>;
 }
+
+// Static method to get targets for specific date range and staff
+TargetSchema.statics.getTargetsByDateAndRange = async function(
+    date: Date,
+    range: "day" | "month",
+    staffIds: mongoose.Types.ObjectId[]
+) {
+    const startDate = new Date(date.getFullYear(), date.getMonth(), range === "day" ? date.getDate() : 1);
+    const endDate = new Date(startDate);
+    if (range === "month") {
+        endDate.setMonth(endDate.getMonth() + 1);
+    } else {
+        endDate.setDate(endDate.getDate() + 1);
+    }
+
+    const targets = await this.aggregate([
+        {
+            $match: {
+                assigned: { $in: staffIds },
+                [range]: {
+                    $gte: startDate,
+                    $lt: endDate
+                }
+            }
+        },
+        {
+            $group: {
+                _id: "$assigned",
+                totalTarget: { $sum: "$total" },
+                achieved: { $sum: "$achieved" }
+            }
+        }
+    ]);
+
+    return [{
+        date: startDate.getTime(),
+        count: targets.reduce((sum, curr) => sum + curr.achieved, 0),
+        target: targets.reduce((sum, curr) => sum + curr.totalTarget, 0)
+    }];
+};
 
 const Target = mongoose.model<ITarget, TargetModel>('Target', TargetSchema);
 
