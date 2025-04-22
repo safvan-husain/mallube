@@ -152,7 +152,7 @@ export const businessCountAddedByStaffPerManager = async (req: Request, res: Typ
 
         const finalResult = Array.from(allStaffs.entries()).map(e => ({}));
 
-        res.status(200).json(runtimeValidation(staffAndBusinessCountSchema, getStaffAndBusinessCountsFromData(data, staffs)));
+        res.status(200).json(runtimeValidation(staffAndBusinessCountSchema, getStaffAndBusinessCountsFromData(data, staffs, query)));
     } catch (e) {
         onCatchError(e, res);
     }
@@ -341,3 +341,60 @@ export async function buildAddedByQuery(employee: IEmployee): Promise<{ addedBy:
     }
     throw new AppError("Not authorized to access these records", 403);
 }
+
+export function getStaffAndBusinessCountsFromData(
+    data: {
+        _id: Types.ObjectId,
+        businessCount: number
+    }[],
+    staffs: StaffNameAndU[],
+    query?: { startDate?: Date, endDate?: Date }
+): StaffAndBusinessCount[] {
+    let responseList: StaffAndBusinessCount[] = [];
+
+    // Determine if we're looking at a day or month range
+    let targetType: 'day' | 'month' | null = null;
+    if (query?.startDate && query?.endDate) {
+        const diffTime = Math.abs(query.endDate.getTime() - query.startDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 1) {
+            targetType = 'day';
+        } else if (diffDays >= 28 && diffDays <= 31) {
+            targetType = 'month';
+        }
+    }
+
+    for (let item of data) {
+        const staff = staffs.find(e => e._id.toString() === item._id.toString());
+
+        let target = null;
+        if (targetType === 'day') {
+            target = staff?.dayTarget ?? 0;
+        } else if (targetType === 'month') {
+            target = staff?.monthTarget ?? 0;
+        }
+
+        responseList.push({
+            businessCount: item.businessCount,
+            target,
+            staffUserName: staff?.username ?? "Unknown Error",
+            staffName: staff?.name ?? "Unknown Error",
+            place: staff?.place ?? "Unknown Error",
+            city: staff?.city ?? "Unknown Error",
+            district: staff?.district ?? "Unknown Error",
+        })
+    }
+    return responseList;
+}
+
+type StaffNameAndU = {
+    _id: Types.ObjectId;
+    name: string;
+    username: string;
+    place: string;
+    city: string;
+    district: string;
+    dayTarget: number;
+    monthTarget: number;
+};
