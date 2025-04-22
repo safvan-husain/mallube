@@ -344,7 +344,7 @@ export const getStaffAndPendingBusinessCount = async (req: Request, res: TypedRe
                 }
             }
         ]);
-        res.status(200).json(runtimeValidation(staffAndBusinessCountSchema, getStaffAndBusinessCountsFromData(data, staffs)));
+        res.status(200).json(runtimeValidation(staffAndBusinessCountSchema, staffAndPendingBusinessCount(data, staffs)));
     } catch (e) {
         onCatchError(e, res);
     }
@@ -437,7 +437,7 @@ type StaffNameAndU = {
     monthTarget?: number;
 }
 
-export function getStaffAndBusinessCountsFromData(
+export function staffAndPendingBusinessCount(
     data: {
         _id: Types.ObjectId,
         businessCount: number
@@ -450,10 +450,6 @@ export function getStaffAndBusinessCountsFromData(
 
         responseList.push({
             businessCount: item.businessCount,
-            target: {
-                day: staff?.dayTarget ?? 0,
-                month: staff?.monthTarget ?? 0
-            },
             staffUserName: staff?.username ?? "Unknown Error",
             staffName: staff?.name ?? "Unknown Error",
             place: staff?.place ?? "Unknown Error",
