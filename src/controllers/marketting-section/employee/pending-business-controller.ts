@@ -402,7 +402,7 @@ export const getPendingBusinessCountForStaffPerDayForMonth = async (req: Request
                 }
             }
         ])
-        res.status(200).json(runtimeValidation(addedCountPerDateSchema, data.map(e => ({...e, date: e.dateMillis}))))
+        res.status(200).json(runtimeValidation(addedCountPerDateSchema, data.map(e => ({...e, date: e.dateMillis, target: 0}))))
     } catch (e) {
         onCatchError(e, res);
     }

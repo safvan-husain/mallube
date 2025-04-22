@@ -1,4 +1,4 @@
-import {Schema, model, Document} from "mongoose";
+import {Schema, model, Document, Types} from "mongoose";
 import jwt from "jsonwebtoken";
 import {config} from "../config/vars";
 import {BusinessAccountType} from "../schemas/store.schema";
@@ -190,6 +190,7 @@ const storeSchema = new Schema<IStore>(
             type: String,
         },
         addedBy: {
+            //TODO: check refer.
             type: Schema.Types.ObjectId,
             ref: "staffs",
         },

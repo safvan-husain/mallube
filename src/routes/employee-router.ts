@@ -19,6 +19,7 @@ import {
     getBusinessProfile, getGraphDataForMonth, updateBusinessProfile
 } from "../controllers/marketting-section/employee/business-manage-controller";
 import {
+    getAllStaffAttendanceForThisDay,
     getAttendanceListForMonth,
     getAttendanceOfSpecificEmployeeSpecificMonth
 } from "../controllers/marketting-section/employee/target-controller";
@@ -74,9 +75,12 @@ router.route('/business-graph')
     .get(employeeProtect, getGraphDataForMonth)
 
 router.route('/attendance-per-month-all-staff')
-    .get(employeeProtect, getAttendanceListForMonth)
+    .get(employeeProtect, getAttendanceListForMonth);
 
 router.route('/staff-attendance-history')
-    .get(employeeProtect, getAttendanceOfSpecificEmployeeSpecificMonth)
+    .get(employeeProtect, getAttendanceOfSpecificEmployeeSpecificMonth);
+
+router.route('/all-staff-attendance-for-this-day')
+    .get(employeeProtect, getAllStaffAttendanceForThisDay);
 
 export {router as employeeRouter};

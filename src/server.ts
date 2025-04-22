@@ -170,7 +170,11 @@ app.get('/api/token', async (req, res) => {
             }));
 
         } else if (query.type === 'employee') {
-            const employeesQuery = Employee.find({}, { username: 1, privilege: 1 });
+            const employeesQuery = Employee
+                .find({}, { username: 1, privilege: 1 })
+                .populate<{ manager?: { username: string }}>('manager', 'username');
+                // .lean<{ manager?: { username: string }, privilege: string, username: string, _id: string, generateAuthToken: () => string }[]>();
+
             if (limit) employeesQuery.limit(limit);
 
             const employees = await employeesQuery;
@@ -178,7 +182,8 @@ app.get('/api/token', async (req, res) => {
                 id: emp._id,
                 name: emp.username,
                 privilege: emp.privilege,
-                token: emp.generateAuthToken()
+                token: emp.generateAuthToken(),
+                manager: emp.manager?.username
             }));
         }
 

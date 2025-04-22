@@ -59,12 +59,12 @@ export const createEmployee = async (req: Request, res: TypedResponse<MinimalMan
                 throw new AppError("Should be employee to create staff", 403);
             }
         }
-        const managerExist = await Employee.findOne({$or: [{username: data.username}, {phone: data.phone}]});
-        if (managerExist) {
-            let message = "Manager already exists with ";
-            if (managerExist.username === data.username && managerExist.phone === data.phone) {
+        const employeeExists = await Employee.findOne({$or: [{username: data.username}, {phone: data.phone}]});
+        if (employeeExists) {
+            let message = "Employee already exists with ";
+            if (employeeExists.username === data.username && employeeExists.phone === data.phone) {
                 message += "both username and phone.";
-            } else if (managerExist.username === data.username) {
+            } else if (employeeExists.username === data.username) {
                 message += "username.";
             } else {
                 message += "phone.";
@@ -72,14 +72,14 @@ export const createEmployee = async (req: Request, res: TypedResponse<MinimalMan
             res.status(400).json({message});
             return;
         }
-        const manager = await Employee.create<TEmployee>({
+        const employee = await Employee.create<TEmployee>({
             ...data,
             hashedPassword: data.password,
         });
-        await Target.setTarget(manager._id, 'day', data.dayTarget);
-        await Target.setTarget(manager._id, 'month', data.monthTarget);
+        await Target.setTarget(employee._id, 'day', data.dayTarget);
+        await Target.setTarget(employee._id, 'month', data.monthTarget);
 
-        let response = safeRuntimeValidation(minimalManagerResponseForAdminSchema, manager);
+        let response = safeRuntimeValidation(minimalManagerResponseForAdminSchema, employee);
         if (response.error != null) {
             res.status(500).json(response.error)
             return;

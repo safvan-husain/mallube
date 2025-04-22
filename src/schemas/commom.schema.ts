@@ -110,3 +110,7 @@ export function getCreatedAtFilterFromDateRange(input: z.infer<typeof allRangeOf
     return undefined; // No filter
 }
 
+export const daySchema = z.object({
+    day: istFromStringOrNumberSchema
+})
+

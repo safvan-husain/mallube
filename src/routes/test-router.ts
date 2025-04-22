@@ -5,6 +5,6 @@ import { employeeProtect } from '../middleware/auth';
 
 const router = Router();
 
-router.post('/generate-attendance', employeeProtect, generateRandomAttendance);
+router.post('/generate-attendance', generateRandomAttendance);
 
 export { router as testRouter };
