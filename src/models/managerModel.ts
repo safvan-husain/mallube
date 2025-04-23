@@ -93,6 +93,6 @@ employeeSchema.methods.generateAuthToken = function (): string {
 };
 
 
-const Employee = model<IEmployee>("employees", employeeSchema);
+const Employee = model<IEmployee>("Employee", employeeSchema);
 
 export default Employee;

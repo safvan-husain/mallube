@@ -14,7 +14,7 @@ export const generateRandomStores = async (req: Request, res: Response) => {
     const type = (req.query.type as string) || 'both';
     const employeeId = req.employee!._id;
 
-    const startDate = new Date('2023-01-01');
+    const startDate = new Date('2025-04-01');
     const endDate = new Date();
     
     const stores: IStore[] = [];
