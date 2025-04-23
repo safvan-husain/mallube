@@ -114,6 +114,7 @@ productSchema.methods.deleteImagesFromBucket = async function () {
         const filename = image.split("/").pop();
         //TODO: implement the logic to delete
         // return deleteFile(filename);
+        return Promise.resolve(true);
     });
 
     await Promise.all(deletePromises);
