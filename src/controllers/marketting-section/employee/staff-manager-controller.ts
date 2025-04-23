@@ -29,7 +29,7 @@ import {
     employeeWholeDataResSchema,
     FullDashboardStats, FullDashboardStatsSchema,
     MinimalManagerResponseForAdmin,
-    minimalManagerResponseForAdminSchema,
+    employeeMinimalData,
     monthAndStaffIdSchema,
     PendingBusinessWholeRes,
     pendingBusinessWholeResponseSchema,
@@ -41,8 +41,8 @@ import {
     StaffAndBusinessCount,
     staffAndBusinessCountSchema,
     updateEmployeeSchema,
-    updatePendingStoreSchema
-} from "../validations";
+    updatePendingStoreSchema, nestedEmployeeData
+} from '../validations';
 import {IPendingBusiness, PendingBusiness, pendingBusinessStatus} from "../../../models/PendingBusiness";
 import Target from "../../../models/Target";
 import Attendance from "../../../models/EmployeeAttendance";
@@ -79,7 +79,7 @@ export const createEmployee = async (req: Request, res: TypedResponse<MinimalMan
         await Target.setTarget(employee._id, 'day', data.dayTarget);
         await Target.setTarget(employee._id, 'month', data.monthTarget);
 
-        let response = safeRuntimeValidation(minimalManagerResponseForAdminSchema, employee);
+        let response = safeRuntimeValidation(employeeMinimalData, employee);
         if (response.error != null) {
             res.status(500).json(response.error)
             return;
@@ -144,7 +144,7 @@ export const updateEmployee = async (req: Request, res: TypedResponse<MinimalMan
         Object.assign(employeeToUpdate, data);
         await employeeToUpdate.save();
 
-        const response = safeRuntimeValidation(minimalManagerResponseForAdminSchema, employeeToUpdate);
+        const response = safeRuntimeValidation(employeeMinimalData, employeeToUpdate);
         if (response.error != null) {
             res.status(500).json(response.error);
             return;
@@ -190,7 +190,7 @@ export const getAllEmployeesOfPrivilege = async (req: ICustomRequest<any>, res: 
 
         let responseList = [];
         for (let manager of managers) {
-            let response = safeRuntimeValidation(minimalManagerResponseForAdminSchema, manager);
+            let response = safeRuntimeValidation(employeeMinimalData, manager);
             if (response.error != null) {
                 res.status(500).json(response.error)
                 return;
@@ -199,6 +199,102 @@ export const getAllEmployeesOfPrivilege = async (req: ICustomRequest<any>, res: 
         }
 
         res.status(200).json(responseList);
+    } catch (e) {
+        onCatchError(e, res);
+    }
+}
+
+//return in a format where, each staff will be under his manager. for admin use.
+export const getAllStructuredEmployees = async (req: ICustomRequest<any>, res: TypedResponse<typeof nestedEmployeeData[]>) => {
+    try {
+        const data = await Employee.aggregate([
+            {
+                $project: {
+                    _id: 1,
+                    name: 1,
+                    username: 1,
+                    phone: 1,
+                    city: 1,
+                    district: 1,
+                    manager: 1,
+                    privilege: 1,
+                }
+            },
+            {
+                $facet: {
+                    managerWithStaffs: [
+                        { $match: {  manager: { $ne: null } }},
+                        {
+                            $group: {
+                                _id: "$manager",
+                                staffs: {
+                                    $push: "$$ROOT"
+                                },
+                            }
+                        },
+                        {
+                            $lookup: {
+                                from: "employees",
+                                localField: "_id",
+                                foreignField: "_id",
+                                as: "manager"
+                            }
+                        },
+                        {
+                            $unwind: "$manager"
+                        },
+                        {
+                            $project: {
+                                _id: "$manager._id",
+                                name: "$manager.name",
+                                username: "$manager.username",
+                                phone: "$manager.phone",
+                                city: "$manager.city",
+                                district: "$manager.district",
+                                staffs: 1
+                            }
+                        }
+                    ],
+                    managers: [
+                        {
+                            $match: {
+                                privilege: "manager"
+                            }
+                        },
+                        {
+                            $project: {
+                                _id: 1,
+                                name: 1,
+                                username: 1,
+                                phone: 1,
+                                city: 1,
+                                district: 1,
+                                staffs: []
+                            }
+                        }
+                    ]
+                },
+            },
+            {
+                $project: {
+                    combined: {
+                        $concatArrays: ["$managerWithStaffs", "$managers"]
+                    }
+                }
+            },
+            { $unwind: "$combined" },
+
+            // Remove duplicate managers (those who already have staff)
+            { $group: {
+                    _id: "$combined._id",
+                    managerData: { $first: "$combined" }
+                }},
+
+            // Final projection
+            { $replaceRoot: { newRoot: "$managerData" }}
+        ]);
+        console.log("the data ", data);
+        res.status(200).json(runtimeValidation(nestedEmployeeData, data));
     } catch (e) {
         onCatchError(e, res);
     }

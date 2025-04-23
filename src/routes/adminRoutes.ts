@@ -33,9 +33,9 @@ import {
 } from '../controllers/category/categoryController';
 import {
   createEmployee, deleteManager,
-  getAllEmployeesOfPrivilege,
+  getAllEmployeesOfPrivilege, getAllStructuredEmployees,
   getSpecificEmployee, updateEmployee
-} from "../controllers/marketting-section/employee/staff-manager-controller";
+} from '../controllers/marketting-section/employee/staff-manager-controller';
 const router = express.Router();
 
 router.route("/login").post(login);
@@ -102,7 +102,7 @@ router.route('/manager')
 
 router.route('/employee')
     .post(createEmployee)
-    .get(getAllEmployeesOfPrivilege)
+    .get(getAllStructuredEmployees)
 
 router.route('/manager/:id')
     .get(getSpecificEmployee)

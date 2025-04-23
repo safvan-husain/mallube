@@ -157,18 +157,22 @@ export const employeeWholeDataResSchema = createEmployeeSchema.omit({
 
 export type EmployeeWholeDataRes = z.infer<typeof employeeWholeDataResSchema>
 
-export const minimalManagerResponseForAdminSchema = z.object({
+export const employeeMinimalData = z.object({
     _id: z.instanceof(Types.ObjectId),
     name: z.string(),
     username: z.string(),
     phone: z.string(),
     city: z.string(),
     district: z.string(),
-    place: z.string(),
 });
 
 // Type inference (optional)
-export type MinimalManagerResponseForAdmin = z.infer<typeof minimalManagerResponseForAdminSchema>;
+export type MinimalManagerResponseForAdmin = z.infer<typeof employeeMinimalData>;
+
+//manager -> staff
+export const nestedEmployeeData = employeeMinimalData.extend({
+    staffs: z.array(employeeMinimalData)
+})
 
 export const businessCountPerStaffSchema = z.object({
     businessType: z.enum(['freelancer', 'business']),
