@@ -173,7 +173,7 @@ export const createBusiness = async (req: Request, res: TypedResponse<EmployeeBu
             rawBody: {...data, plainPassword: data.phone},
             addedBy: req.employee!._id
         });
-        await Target.achieveTarget(req.employee!._id!);
+        await Target.achieveTarget({ employeeId: req.employee!._id! });
 
         res.status(201).json({
             _id: validatedData._id.toString(),

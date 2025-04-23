@@ -1,4 +1,6 @@
 import mongoose, {Document} from 'mongoose';
+import Employee from "./managerModel";
+import {AppError} from "../controllers/service/requestValidationTypes";
 
 export interface ITarget extends Document {
     month?: Date;
@@ -60,9 +62,10 @@ TargetSchema.statics.setTarget = async function (
 
 // Static method to record target achievement
 TargetSchema.statics.achieveTarget = async function (
-    employeeId: mongoose.Types.ObjectId,
+    { employeeId, date} : {employeeId: mongoose.Types.ObjectId, date?: Date},
 ): Promise<void> {
-    const currentDate = new Date();
+    //the date argument is only for testing, when creating test stores, so I can pass with custom dates.
+    const currentDate = date ?? new Date();
     const currentMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const currentDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
 
@@ -74,13 +77,22 @@ TargetSchema.statics.achieveTarget = async function (
     let dayTarget = await this.findOne({
         assigned: employeeId,
         day: currentDay
-    })
+    });
+
+    //used to set default target count based on what have been stored early.
+    const employee = await Employee
+        .findById(employeeId, { dayTarget: true, monthTarget: true })
+        .lean<{ dayTarget: number, monthTarget: number }>()
+
+    if(!employee) {
+        throw new AppError("Employee not found while achieving target", 500);
+    }
 
     if(!dayTarget) {
         await this.create({
             assigned: employeeId,
             day: currentDay,
-            total: 0,
+            total: employee!.dayTarget ?? 8,
             achieved: 1,
         })
     } else {
@@ -93,7 +105,7 @@ TargetSchema.statics.achieveTarget = async function (
         await this.create({
             assigned: employeeId,
             month: currentMonth,
-            total: 0,
+            total: employee!.monthTarget ?? 8,
             achieved: 1,
         });
     } else {
@@ -111,7 +123,7 @@ interface TargetModel extends mongoose.Model<ITarget> {
     ): Promise<ITarget>;
 
     achieveTarget(
-        employeeId: mongoose.Types.ObjectId,
+        { employeeId, date } : {employeeId: mongoose.Types.ObjectId, date?: Date}
     ): Promise<ITarget>;
     
     getTargetsByDateAndRange(
