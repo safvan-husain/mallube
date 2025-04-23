@@ -1,3 +1,138 @@
+
+import Store from "../../../models/storeModel";
+import {getCreatedAtFilterFromDateRange} from "../../../schemas/commom.schema";
+import {TypedResponse} from "../../../types/requestion";
+import {onCatchError, runtimeValidation} from "../../service/serviceContoller";
+import {FullDashboardStats, FullDashboardStatsSchema} from "../validations";
+import {FilterQuery} from "mongoose";
+import {employeePrivilegeSchema} from "../../../models/managerModel";
+import Employee from "../../../models/managerModel";
+import {AppError} from "../../service/requestValidationTypes";
+import {Request} from "express";
+
+export const getBusinessDashboardData = async (req: Request, res: TypedResponse<FullDashboardStats>) => {
+    try {
+        if (!req.employee) {
+            res.status(403).json({message: "Not authorized"})
+            return;
+        }
+        let dbMatchQuery: FilterQuery<IStore> = {};
+
+        if (req.employee.privilege === employeePrivilegeSchema.enum.manager) {
+            const staffIds = (await Employee.find({manager: req.employee._id}, {_id: 1}).lean()).map(e => e._id)
+            dbMatchQuery.addedBy = {$in: staffIds}
+        } else if (req.employee.privilege === employeePrivilegeSchema.enum.staff) {
+            dbMatchQuery.addedBy = req.employee._id;
+        } else {
+            throw new AppError("Should be employee or staff", 400);
+        }
+
+        const now = new Date();
+        const istNow = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+        const istStartOfToday = new Date(istNow);
+        istStartOfToday.setHours(0, 0, 0, 0);
+        const istStartOfMonth = new Date(istNow.getFullYear(), istNow.getMonth(), 1);
+        const startOfTodayUTC = new Date(istStartOfToday.toISOString());
+        const startOfMonthUTC = new Date(istStartOfMonth.toISOString());
+
+        const data = await Store.aggregate([
+            {
+                $match: dbMatchQuery
+            },
+            {
+                $facet: {
+                    storeToday: [
+                        {
+                            $match: {
+                                type: "business",
+                                createdAt: {$gte: startOfTodayUTC},
+                            },
+                        },
+                        {$count: "count"},
+                    ],
+                    storeMonth: [
+                        {
+                            $match: {
+                                type: "business",
+                                createdAt: {$gte: startOfMonthUTC},
+                            },
+                        },
+                        {$count: "count"},
+                    ],
+                    storeTotal: [
+                        {
+                            $match: {
+                                type: "business",
+                            },
+                        },
+                        {$count: "count"},
+                    ],
+                    freelancerToday: [
+                        {
+                            $match: {
+                                type: "freelancer",
+                                createdAt: {$gte: startOfTodayUTC},
+                            },
+                        },
+                        {$count: "count"},
+                    ],
+                    freelancerMonth: [
+                        {
+                            $match: {
+                                type: "freelancer",
+                                createdAt: {$gte: startOfMonthUTC},
+                            },
+                        },
+                        {$count: "count"},
+                    ],
+                    freelancerTotal: [
+                        {
+                            $match: {
+                                type: "freelancer",
+                            },
+                        },
+                        {$count: "count"},
+                    ],
+                },
+            },
+            {
+                $project: {
+                    business: {
+                        today: {
+                            $ifNull: [{$arrayElemAt: ["$storeToday.count", 0]}, 0],
+                        },
+                        thisMonth: {
+                            $ifNull: [{$arrayElemAt: ["$storeMonth.count", 0]}, 0],
+                        },
+                        total: {
+                            $ifNull: [{$arrayElemAt: ["$storeTotal.count", 0]}, 0],
+                        },
+                    },
+                    freelancer: {
+                        today: {
+                            $ifNull: [{$arrayElemAt: ["$freelancerToday.count", 0]}, 0],
+                        },
+                        thisMonth: {
+                            $ifNull: [{$arrayElemAt: ["$freelancerMonth.count", 0]}, 0],
+                        },
+                        total: {
+                            $ifNull: [{$arrayElemAt: ["$freelancerTotal.count", 0]}, 0],
+                        },
+                    },
+                },
+            },
+        ]);
+
+        if (data.length === 0) {
+            res.status(200).json(FullDashboardStatsSchema.parse({}));
+            return;
+        }
+        res.status(200).json(runtimeValidation(FullDashboardStatsSchema, data[0]));
+    } catch (e) {
+        onCatchError(e, res);
+    }
+};
+
 import {TypedResponse} from "../../../types/requestion";
 import {onCatchError, runtimeValidation} from "../../service/serviceContoller";
 import {addStoreSchema} from "../../../schemas/store.schema";

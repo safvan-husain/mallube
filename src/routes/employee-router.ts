@@ -16,7 +16,7 @@ import {
 import {
     businessCountAddedByStaffPerManager,
     createBusiness, getBusinessCountForStaffPerDayForMonth, getBusinessesPerEmployee,
-    getBusinessProfile, getGraphDataForMonth, updateBusinessProfile
+    getBusinessProfile, getGraphDataForMonth, updateBusinessProfile, getBusinessDashboardData
 } from "../controllers/marketting-section/employee/business-manage-controller";
 import {
     getAllStaffAttendanceForThisDay,
@@ -83,5 +83,8 @@ router.route('/staff-attendance-history')
 
 router.route('/all-staff-attendance-for-this-day')
     .get(employeeProtect, getAllStaffAttendanceForThisDay);
+
+router.route('/business-dashboard')
+    .get(employeeProtect, getBusinessDashboardData);
 
 export {router as employeeRouter};
