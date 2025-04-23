@@ -1,0 +1,129 @@
+export const getPendingBusinessDashBoardData = async (req: Request, res: TypedResponse<FullDashboardStats>) => {
+    try {
+        if (!req.employee) {
+            res.status(403).json({message: "Not authorized"})
+            return;
+        }
+        let dbMatchQuery: FilterQuery<IPendingBusiness> = {};
+
+        if (req.employee.privilege === employeePrivilegeSchema.enum.manager) {
+            const staffIds = (await Employee.find({manager: req.employee._id}, {_id: 1}).lean()).map(e => e._id)
+            dbMatchQuery.createdBy = {$in: staffIds}
+        } else if (req.employee.privilege === employeePrivilegeSchema.enum.staff) {
+            dbMatchQuery.createdBy = req.employee._id;
+        } else {
+            throw new AppError("Should be employee or staff", 400);
+        }
+        // const query = pendingStoreDashBoardQuerySchema.parse(req.query);
+        const now = new Date();
+
+        // Run in JS to get current date in IST
+        const istNow = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+
+        // Start of today in IST
+        const istStartOfToday = new Date(istNow);
+        istStartOfToday.setHours(0, 0, 0, 0);
+
+        // Start of this month in IST
+        const istStartOfMonth = new Date(istNow.getFullYear(), istNow.getMonth(), 1);
+
+        // Convert both to UTC before querying MongoDB (since MongoDB stores dates in UTC)
+        const startOfTodayUTC = new Date(istStartOfToday.toISOString());
+        const startOfMonthUTC = new Date(istStartOfMonth.toISOString());
+
+        const data = await PendingBusiness.aggregate([
+            {
+                $match: dbMatchQuery
+            },
+            {
+                $facet: {
+                    storeToday: [
+                        {
+                            $match: {
+                                businessType: "business",
+                                createdAt: {$gte: startOfTodayUTC},
+                            },
+                        },
+                        {$count: "count"},
+                    ],
+                    storeMonth: [
+                        {
+                            $match: {
+                                businessType: "business",
+                                createdAt: {$gte: startOfMonthUTC},
+                            },
+                        },
+                        {$count: "count"},
+                    ],
+                    storeTotal: [
+                        {
+                            $match: {
+                                businessType: "business",
+                            },
+                        },
+                        {$count: "count"},
+                    ],
+                    freelancerToday: [
+                        {
+                            $match: {
+                                businessType: "freelancer",
+                                createdAt: {$gte: startOfTodayUTC},
+                            },
+                        },
+                        {$count: "count"},
+                    ],
+                    freelancerMonth: [
+                        {
+                            $match: {
+                                businessType: "freelancer",
+                                createdAt: {$gte: startOfMonthUTC},
+                            },
+                        },
+                        {$count: "count"},
+                    ],
+                    freelancerTotal: [
+                        {
+                            $match: {
+                                businessType: "freelancer",
+                            },
+                        },
+                        {$count: "count"},
+                    ],
+                },
+            },
+            {
+                $project: {
+                    business: {
+                        today: {
+                            $ifNull: [{$arrayElemAt: ["$storeToday.count", 0]}, 0],
+                        },
+                        thisMonth: {
+                            $ifNull: [{$arrayElemAt: ["$storeMonth.count", 0]}, 0],
+                        },
+                        total: {
+                            $ifNull: [{$arrayElemAt: ["$storeTotal.count", 0]}, 0],
+                        },
+                    },
+                    freelancer: {
+                        today: {
+                            $ifNull: [{$arrayElemAt: ["$freelancerToday.count", 0]}, 0],
+                        },
+                        thisMonth: {
+                            $ifNull: [{$arrayElemAt: ["$freelancerMonth.count", 0]}, 0],
+                        },
+                        total: {
+                            $ifNull: [{$arrayElemAt: ["$freelancerTotal.count", 0]}, 0],
+                        },
+                    },
+                },
+            },
+        ]);
+        if (data.length === 0) {
+            res.status(200).json(FullDashboardStatsSchema.parse({}));
+            return
+        }
+        res.status(200).json(runtimeValidation(FullDashboardStatsSchema, data[0]))
+    } catch (e) {
+        onCatchError(e, res);
+    }
+}
