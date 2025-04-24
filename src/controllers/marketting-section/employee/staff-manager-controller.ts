@@ -144,7 +144,7 @@ export const updateEmployee = async (req: Request, res: TypedResponse<MinimalMan
         Object.assign(employeeToUpdate, data);
         await employeeToUpdate.save();
 
-        const response = safeRuntimeValidation(employeeMinimalData, {...employeeToUpdate, resignedDate: employeeToUpdate.resignedDate?.getTime()});
+        const response = safeRuntimeValidation(employeeMinimalData, {...employeeToUpdate?.toObject(), resignedDate: employeeToUpdate.resignedDate?.getTime()});
         if (response.error != null) {
             res.status(500).json(response.error);
             return;
