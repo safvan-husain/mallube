@@ -79,7 +79,7 @@ export const createEmployee = async (req: Request, res: TypedResponse<MinimalMan
         await Target.setTarget(employee._id, 'day', data.dayTarget);
         await Target.setTarget(employee._id, 'month', data.monthTarget);
 
-        let response = safeRuntimeValidation(employeeMinimalData, employee);
+        let response = safeRuntimeValidation(employeeMinimalData, {...employee, resignedDate: employee.resignedDate?.getTime()});
         if (response.error != null) {
             res.status(500).json(response.error)
             return;
@@ -144,7 +144,7 @@ export const updateEmployee = async (req: Request, res: TypedResponse<MinimalMan
         Object.assign(employeeToUpdate, data);
         await employeeToUpdate.save();
 
-        const response = safeRuntimeValidation(employeeMinimalData, employeeToUpdate);
+        const response = safeRuntimeValidation(employeeMinimalData, {...employeeToUpdate, resignedDate: employeeToUpdate.resignedDate?.getTime()});
         if (response.error != null) {
             res.status(500).json(response.error);
             return;
@@ -190,7 +190,7 @@ export const getAllEmployeesOfPrivilege = async (req: ICustomRequest<any>, res: 
 
         let responseList = [];
         for (let manager of managers) {
-            let response = safeRuntimeValidation(employeeMinimalData, manager);
+            let response = safeRuntimeValidation(employeeMinimalData, {...manager, resignedDate: manager.resignedDate?.getTime()});
             if (response.error != null) {
                 res.status(500).json(response.error)
                 return;
@@ -218,6 +218,7 @@ export const getAllStructuredEmployees = async (req: ICustomRequest<any>, res: T
                     district: 1,
                     manager: 1,
                     privilege: 1,
+                    resignedDate:  { $toLong: "$resignedDate" },
                 }
             },
             {
@@ -251,6 +252,7 @@ export const getAllStructuredEmployees = async (req: ICustomRequest<any>, res: T
                                 phone: "$manager.phone",
                                 city: "$manager.city",
                                 district: "$manager.district",
+                                resignedDate: { $toLong: "$manager.resignedDate" },
                                 staffs: 1
                             }
                         }
@@ -269,6 +271,7 @@ export const getAllStructuredEmployees = async (req: ICustomRequest<any>, res: T
                                 phone: 1,
                                 city: 1,
                                 district: 1,
+                                resignedDate: 1,
                                 staffs: []
                             }
                         }
@@ -293,7 +296,6 @@ export const getAllStructuredEmployees = async (req: ICustomRequest<any>, res: T
             // Final projection
             { $replaceRoot: { newRoot: "$managerData" }}
         ]);
-        console.log("the data ", data);
         res.status(200).json(runtimeValidation(nestedEmployeeData, data));
     } catch (e) {
         onCatchError(e, res);

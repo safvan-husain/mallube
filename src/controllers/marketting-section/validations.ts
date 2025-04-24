@@ -137,8 +137,6 @@ export const createEmployeeSchema = z.object({
 export const updateEmployeeSchema = z.object({
     resignedDate: istFromStringOrNumberSchema.optional()
 }).merge(createEmployeeSchema).omit({
-    joinedDate: true,
-    aadharNumber: true,
     password: true,
 }).partial();
 
@@ -164,6 +162,7 @@ export const employeeMinimalData = z.object({
     phone: z.string(),
     city: z.string(),
     district: z.string(),
+    resignedDate: z.number().nullable().optional()
 });
 
 // Type inference (optional)

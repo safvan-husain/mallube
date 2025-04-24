@@ -113,22 +113,11 @@ const updateData = expressAsyncHandler(
         // let data = paginationSchema.parse(req.query);
         try {
 
-            let searchTerm = "https"; // whatever you want to search
-            const replaceImageUrl = "https://static.vendroo.in/1744795695974_410_default-store-vendroo.jpg";
-            let stores = await Store.find({
-                shopImgUrl: {
-                    $not: {
-                        $regex: searchTerm, // This can be a string or a RegExp object
-                        $options: 'i' // optional: 'i' for case-insensitive
-                    }
-
-                }
-            });
-            for (const s of stores) {
-                s.shopImgUrl = replaceImageUrl;
-                await s.save();
-            }
-            res.status(200).json(stores);
+           let date = await Employee.updateMany({ dayTarget: { $exists: false}}, {
+               dayTarget: 5,
+               monthTarget: 10
+           });
+            res.status(200).json(date);
         } catch (error) {
             console.log(error)
             res.status(400).json({message: error})
