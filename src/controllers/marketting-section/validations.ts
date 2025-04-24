@@ -156,7 +156,7 @@ export const employeeWholeDataResSchema = createEmployeeSchema.omit({
 export type EmployeeWholeDataRes = z.infer<typeof employeeWholeDataResSchema>
 
 export const employeeMinimalData = z.object({
-    _id: z.instanceof(Types.ObjectId),
+    _id: z.union([z.instanceof(Types.ObjectId), z.string()]),
     name: z.string(),
     username: z.string(),
     phone: z.string(),
