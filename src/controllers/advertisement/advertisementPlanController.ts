@@ -3,8 +3,8 @@ import { Request, Response } from "express";
 import AdvertisementPlan from "../../models/advertismentPlanModel";
 import {ICustomRequest, TypedResponse} from "../../types/requestion";
 import { IAddAdvertisementPlanSchema } from "../../schemas/advertisement.schema";
-import {onCatchError} from "../service/serviceContoller";
 import {createAdsPlanSchema} from "./validation";
+import {onCatchError} from "../../error/onCatchError";
 
 
 export const createNewAdvertisementPlan = asyncHandler(

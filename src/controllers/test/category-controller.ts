@@ -2,7 +2,8 @@
 import expressAsyncHandler from "express-async-handler";
 import {Request, Response} from "express";
 import Category from "../../models/categoryModel";
-import {onCatchError} from "../service/serviceContoller";
+
+import {onCatchError} from "../../error/onCatchError";
 
 export const randomizeCategoryFields = expressAsyncHandler(
     async (req: Request, res: Response) => {

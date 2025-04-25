@@ -3,7 +3,6 @@ import asyncHandler from "express-async-handler";
 import {UserFavRequestValidationSchema} from "./validation";
 import {ICustomRequest, TypedResponse} from "../../../types/requestion";
 import User from "../../../models/userModel";
-import {safeRuntimeValidation, onCatchError} from "../../service/serviceContoller";
 import Store from "../../../models/storeModel";
 import {Freelancer} from "../../../models/freelancerModel";
 import {Types} from "mongoose";
@@ -13,6 +12,8 @@ import {calculateDistance} from "../../../utils/interfaces/common";
 import {z} from "zod";
 import {locationSchema} from "../buy_and_sell/validation";
 import {StoreDetailsResponse, StoreDetailsSchema} from "../userController";
+import {onCatchError} from "../../../error/onCatchError";
+import {safeRuntimeValidation} from "../../../error/safeRuntimeValidation";
 
 
 export const toggleFavorite = asyncHandler(async (req: ICustomRequest<any>, res: Response) => {

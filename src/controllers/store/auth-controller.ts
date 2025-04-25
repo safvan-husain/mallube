@@ -3,9 +3,9 @@ import {ICustomRequest, TypedResponse} from "../../types/requestion";
 import Store from "../../models/storeModel";
 import bcrypt from "bcryptjs";
 import {z} from "zod";
-import {onCatchError} from "../service/serviceContoller";
 import jwt, {JsonWebTokenError} from "jsonwebtoken";
 import User from "../../models/userModel";
+import {onCatchError} from "../../error/onCatchError";
 
 export const changeStorePasswordV2 = async (
     req: ICustomRequest<any>,

@@ -1,9 +1,9 @@
 import asyncHandler from "express-async-handler";
 import {Response} from "express";
-import {onCatchError} from "../service/serviceContoller";
 import {ICustomRequest} from "../../types/requestion";
 import Booking from "../../models/bookingModel";
 import {paginationSchema} from "../../types/validation";
+import {onCatchError} from "../../error/onCatchError";
 
 export const getBookingHistory = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {

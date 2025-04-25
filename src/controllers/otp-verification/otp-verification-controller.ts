@@ -1,9 +1,9 @@
 import {NextFunction, Request, Response} from "express";
 import {ICustomRequest, TypedResponse} from "../../types/requestion";
 import {z} from "zod";
-import {onCatchError} from "../service/serviceContoller";
 import jwt from "jsonwebtoken";
 import {phoneZodValidation} from "../../schemas/commom.schema";
+import {onCatchError} from "../../error/onCatchError";
 
 //TODO: otp-secret.
 export const otpVerifyV2 = async (req: Request, res: Response) => {

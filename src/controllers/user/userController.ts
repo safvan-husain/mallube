@@ -18,9 +18,10 @@ import Specialisation from "../../models/specialisationModel";
 import {calculateDistance} from "../../utils/interfaces/common";
 import {ObjectIdSchema} from "../../types/validation";
 import {z} from "zod";
-import {safeRuntimeValidation, onCatchError} from "../service/serviceContoller";
 import {locationQuerySchema} from "../../schemas/localtion-schema";
 import {businessAccountTypeSchema} from "../../schemas/store.schema";
+import {onCatchError} from "../../error/onCatchError";
+import {safeRuntimeValidation} from "../../error/safeRuntimeValidation";
 
 const {TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN} = process.env;
 // const twilioclient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTHTOKEN, {

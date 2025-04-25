@@ -1,10 +1,10 @@
 
 import { Request, Response } from 'express';
 import { z } from 'zod';
-import { onCatchError } from '../service/serviceContoller';
 import User from '../../models/userModel';
 import Store from '../../models/storeModel';
 import Employee from '../../models/managerModel';
+import {onCatchError} from "../../error/onCatchError";
 
 export const getTokens = async (req: Request, res: Response) => {
     try {

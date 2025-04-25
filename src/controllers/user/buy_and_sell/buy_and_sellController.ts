@@ -1,13 +1,13 @@
 import {Request, Response, Router} from "express";
 import asyncHandler from "express-async-handler";
 import {Types, Schema} from "mongoose";
-import {onCatchError} from "../../service/serviceContoller";
 import {querySchema, UpdateUserProductSchema, CreateUserProductSchema} from "./validation";
 import UserProduct, {IUserProduct, UserProductResponse} from "../../../models/user_product";
 import {calculateDistance} from "../../../utils/interfaces/common";
 import Category from "../../../models/categoryModel";
 import {ICustomRequest, TypedResponse} from "../../../types/requestion";
 import {createdAtIST} from "../../../utils/ist_time";
+import {onCatchError} from "../../../error/onCatchError";
 
 export const createUserPoduct = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {

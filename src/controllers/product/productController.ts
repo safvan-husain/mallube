@@ -20,10 +20,10 @@ import ProductSearch from "../../models/productSearch";
 
 import User from "../../models/userModel";
 import { addProductSchema } from "./validators";
-import { onCatchError } from "../service/serviceContoller";
 import { Freelancer } from "../../models/freelancerModel";
 import {ObjectIdSchema, paginationSchema} from "../../types/validation";
 import {z} from "zod";
+import {onCatchError} from "../../error/onCatchError";
 
 // get all products
 export const getAllProducts = asyncHandler(

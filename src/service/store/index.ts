@@ -12,8 +12,8 @@ import {
   ZStore
 } from "../../controllers/store/validation/store_validation";
 import {FeedBack} from "../../models/feedbackModel";
-import {runtimeValidation} from "../../controllers/service/serviceContoller";
 import {ObjectId, Types} from "mongoose";
+import {runtimeValidation} from "../../error/runtimeValidation";
 
 export async function getStoreByPhoneOrUniqueNameOrEmail(
   phone: string,

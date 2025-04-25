@@ -6,7 +6,6 @@ import {CustomerBill} from "../../models/customerBillModel";
 import {formatLastPurchaseDate, getIST} from "../../utils/ist_time";
 import {z} from "zod";
 import {ObjectIdSchema} from "../../types/validation";
-import {onCatchError, runtimeValidation} from "../service/serviceContoller";
 import {Types} from "mongoose";
 import {
     CustomerResponse,
@@ -14,6 +13,8 @@ import {
     deleteCustomersSchema,
     updateCustomerSchema
 } from "./validation/pattu-book-validations";
+import {onCatchError} from "../../error/onCatchError";
+import {runtimeValidation} from "../../error/runtimeValidation";
 
 
 export const createCustomer = asyncHandler(

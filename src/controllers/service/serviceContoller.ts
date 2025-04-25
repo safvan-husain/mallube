@@ -1,15 +1,9 @@
 //this service is added by our team
 import {calculateDistance} from "../../utils/interfaces/common";
-import e, {Request, Response} from "express";
+import {Request, Response} from "express";
 import asyncHandler from "express-async-handler";
 import {Freelancer} from "../../models/freelancerModel";
-import {z} from "zod";
-import {
-    AppError,
-    createServiceSchema,
-    getServicesQuerySchema,
-    updateServiceSchema
-} from "./requestValidationTypes";
+import {createServiceSchema, getServicesQuerySchema, updateServiceSchema} from "./requestValidationTypes";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import Product from "../../models/productModel";
@@ -17,70 +11,7 @@ import Category from "../../models/categoryModel";
 import Store from "../../models/storeModel";
 import {TypedResponse} from "../../types/requestion";
 import {businessAccountTypeSchema} from "../../schemas/store.schema";
-
-export const onCatchError = (error: any, res: Response) => {
-    if (error instanceof z.ZodError) {
-        console.log(error);
-        res.status(400).json({
-            message: error.errors.length > 0 ? `${error.errors[0].path[0]}: ${error.errors[0].message}` : "Validation error",
-            errors: error.errors
-        });
-        return;
-    }
-    if (error instanceof AppError) {
-        console.log(error);
-        res.status(error.statusCode).json(error.toJson());
-        return;
-    }
-    console.log(error);
-    res.status(500).json({message: "Internal server error", error});
-}
-
-export const safeRuntimeValidation = <T>(schema: z.ZodSchema<T>, data: T)
-    : ({ data: T; error: null } | { data: null; error: { message: string; errors?: any } }) => {
-    try {
-        return {data: schema.parse(data), error: null};
-    } catch (e) {
-        if (e instanceof z.ZodError) {
-            return {
-                data: null,
-                error: {
-                    message: e.errors.length > 0 ? `${e.errors[0].path[0]}: ${e.errors[0].message} while validating response` : "Response error",
-                    errors: e.errors
-                }
-            };
-        } else {
-            console.error("Unexpected error:", e);
-            return {
-                data: null,
-                error: {message: "Internal server error"}
-            }
-        }
-    }
-};
-
-// Function overloads
-export function runtimeValidation<T>(schema: z.ZodSchema<T>, data: T): T;
-export function runtimeValidation<T>(schema: z.ZodSchema<T>, data: T[]): T[];
-
-export function runtimeValidation <T>(schema: z.ZodSchema<T>, data: T | T[])
-    : T | T[]  {
-    try {
-        if (Array.isArray(data)) {
-            // If it's an array, validate each item individually
-            return data.map(item => schema.parse(item));
-        } else {
-            // If it's a single object
-            return schema.parse(data);
-        }
-    } catch (e) {
-        if (e instanceof z.ZodError) {
-            throw new AppError(e.errors.length > 0 ? `${e.errors[0].path[0]}: ${e.errors[0].message} while validating response` : "Response error", 500, e.errors)
-        } else {
-            throw new AppError("Internal server error", 500)
-        }
-    }
-}
+import {onCatchError} from "../../error/onCatchError";
 
 export const getServiceCategory = asyncHandler(
     async (_: Request, res: Response) => {
@@ -95,39 +26,6 @@ export const getServiceCategory = asyncHandler(
         }
     }
 );
-
-// export const updateServiceCategoryIndex = asyncHandler(
-//     async (req: Request, res: Response) => {
-//         const { id } = req.body;
-//         const { index } = req.body;
-//         if (!mongoose.Types.ObjectId.isValid(id)) {
-//             res.status(400).json({ message: "id must be a valid MongoDB ObjectId" });
-//             return;
-//         }
-//         if (!index || isNaN(index)) {
-//             res.status(400).json({ message: "Index must be a number" });
-//             return;
-//         }
-//         try {
-//             let cat = await ServiceCategory.findById(id);
-//             if (!cat) {
-//                 res.status(400).json({ message: "Service category not found" });
-//                 return;
-//             }
-//             let tServiceCategory = await ServiceCategory.findOne({ index });
-//             if (tServiceCategory) {
-//                 tServiceCategory.index = cat.index;
-//                 await tServiceCategory.save();
-//                 return;
-//             }
-//             cat.index = index;
-//             cat = await cat.save();
-//             res.status(201).json({ message: "Service category index updated successfully", category: cat });
-//         } catch (error) {
-//             res.status(500).json({ message: "Internal server error", error });
-//         }
-//     }
-// );
 
 export const createServiceProfile = asyncHandler(
     async (req: Request, res: Response) => {

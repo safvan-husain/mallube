@@ -1,10 +1,10 @@
 
 import { Request } from 'express';
 import { TypedResponse } from "../../types/requestion";
-import { onCatchError } from "../service/serviceContoller";
 import Employee from "../../models/managerModel";
 import Attendance from "../../models/EmployeeAttendance";
 import { Types } from "mongoose";
+import {onCatchError} from "../../error/onCatchError";
 
 export const generateRandomAttendance = async (req: Request, res: TypedResponse<{ message: string }>) => {
     try {

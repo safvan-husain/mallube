@@ -5,7 +5,8 @@ import { generateRandomStores } from '../controllers/test/store-controller';
 import { getTokens } from '../controllers/test/token-controller';
 import { randomizeCategoryFields } from '../controllers/test/category-controller';
 import { employeeProtect } from '../middleware/auth';
-import {onCatchError} from "../controllers/service/serviceContoller";
+
+import {onCatchError} from "../error/onCatchError";
 
 const router = Router();
 

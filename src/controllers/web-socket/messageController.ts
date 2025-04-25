@@ -5,10 +5,10 @@ import {ICustomRequest} from "../../types/requestion";
 import {Message} from "../../models/messageModel";
 import {Types} from "mongoose";
 import * as s from './webSocketController';
-import {onCatchError} from "../service/serviceContoller";
 import {Chat} from "../../models/chatsModel";
 import User from "../../models/userModel";
 import {ObjectIdSchema} from "../../types/validation";
+import {onCatchError} from "../../error/onCatchError";
 
 export const getConversation = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {

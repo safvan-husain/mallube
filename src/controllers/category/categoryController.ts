@@ -24,11 +24,11 @@ import {
     getDisplayCategorySchema,
     updateCategorySchemaV2
 } from "./validations";
-import {onCatchError} from "../service/serviceContoller";
 import {Freelancer} from "../../models/freelancerModel";
 import DisplayCategory, {DisplayCategoryZod} from "../../models/DisplayCategory";
 import {z} from "zod";
 import {ObjectIdSchema} from "../../schemas/commom.schema";
+import {onCatchError} from "../../error/onCatchError";
 
 // get all categories for admin category management
 export const getCategories = asyncHandler(

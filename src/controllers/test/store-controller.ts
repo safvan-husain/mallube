@@ -1,9 +1,9 @@
 
 import { Request, Response } from 'express';
 import Store, { IStore } from '../../models/storeModel';
-import { onCatchError } from '../service/serviceContoller';
 import { Types } from 'mongoose';
 import Target from "../../models/Target";
+import {onCatchError} from "../../error/onCatchError";
 
 function getRandomDate(start: Date, end: Date) {
   return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
