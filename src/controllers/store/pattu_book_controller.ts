@@ -6,8 +6,14 @@ import {CustomerBill} from "../../models/customerBillModel";
 import {formatLastPurchaseDate, getIST} from "../../utils/ist_time";
 import {z} from "zod";
 import {ObjectIdSchema} from "../../types/validation";
-import {onCatchError} from "../service/serviceContoller";
+import {onCatchError, runtimeValidation} from "../service/serviceContoller";
 import {Types} from "mongoose";
+import {
+    CustomerResponse,
+    CustomerResponseSchema,
+    deleteCustomersSchema,
+    updateCustomerSchema
+} from "./validation/pattu-book-validations";
 
 
 export const createCustomer = asyncHandler(
@@ -44,13 +50,13 @@ export const createCustomer = asyncHandler(
 )
 
 export const getAllCustomers = asyncHandler(
-    async (req: ICustomRequest<any>, res: Response) => {
+    async (req: ICustomRequest<any>, res: TypedResponse<CustomerResponse[]>) => {
         try {
             const storeId = req.store?._id;
-            var tempCustomers: any[] = await Customer.find({storeId}, {name: 1, contact: 1, _id: 1});
-            let customers: any[] = [];
-            for (var customer of tempCustomers) {
-                var purchaseHistory = await CustomerBill.aggregate([
+            const tempCustomers = await Customer.find({storeId}, {name: 1, contact: 1, _id: 1}).lean<{ name: string, contact: string, _id: Types.ObjectId}[]>();
+            let customers: CustomerResponse[] = [];
+            for (const customer of tempCustomers) {
+                const purchaseHistory = await CustomerBill.aggregate([
                     {
                         $match: {
                             customerId: customer._id,
@@ -83,11 +89,9 @@ export const getAllCustomers = asyncHandler(
                     });
                 }
             }
-
-            res.status(200).json(customers);
+            res.status(200).json(runtimeValidation(CustomerResponseSchema, customers));
         } catch (error) {
-            console.log("error ", error);
-            res.status(500).json({message: "Internal server error"})
+            onCatchError(error, res);
         }
     }
 )
@@ -95,14 +99,18 @@ export const getAllCustomers = asyncHandler(
 export const updateCustomer = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {
         try {
-            const {id, name, contact} = req.body;
-            var customer: any = await Customer.findByIdAndUpdate(id, {name, contact});
-            customer.name = name;
-            customer.contact = contact;
-            res.status(200).json(customer);
+            const {id, name, contact} = updateCustomerSchema.parse(req.body);
+            let customer = await Customer
+                .findByIdAndUpdate(id, {name, contact}, {new: true})
+                .lean<{ name: string, contact: string, _id: Types.ObjectId}>();
+
+            if(!customer) {
+                res.status(404).json({message: "Customer not found"});
+                return;
+            }
+            res.status(200).json(runtimeValidation(CustomerResponseSchema, {...customer, lastPurchase: '', totalAmount: 0}));
         } catch (error) {
-            console.log("error ", error);
-            res.status(500).json({message: "Internal server error"})
+            onCatchError(error, res);
         }
     }
 )
@@ -110,13 +118,16 @@ export const updateCustomer = asyncHandler(
 export const deleteCustomer = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {
         try {
-            const {customerIds} = req.body;
-            await Customer.deleteMany({_id: {$in: customerIds}});
+            const {customerIds} = deleteCustomersSchema.parse(req.body);
+            let deleteItems = await Customer.deleteMany({_id: {$in: customerIds}});
             await CustomerBill.deleteMany({customerId: {$in: customerIds}});
+            if(!deleteItems) {
+                res.status(404).json({message: "Customer not found"});
+                return;
+            }
             res.status(200).json({message: "success"});
         } catch (error) {
-            console.log("error ", error);
-            res.status(500).json({message: "Internal server error"})
+            onCatchError(error, res);
         }
     }
 )

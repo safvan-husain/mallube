@@ -5,4 +5,4 @@ dist/
 combined.log
 error.log
 exceptions.log
-src/service
+src/secrets
