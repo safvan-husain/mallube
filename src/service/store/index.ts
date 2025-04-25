@@ -12,8 +12,10 @@ import {
   ZStore
 } from "../../controllers/store/validation/store_validation";
 import {FeedBack} from "../../models/feedbackModel";
-import {ObjectId, Types} from "mongoose";
+import {FilterQuery, ObjectId, Types} from "mongoose";
 import {runtimeValidation} from "../../error/runtimeValidation";
+import {calculateDistance} from "../../utils/interfaces/common";
+import {StoreDetailsResponse, StoreDetailsSchema} from "../../controllers/user/userController";
 
 export async function getStoreByPhoneOrUniqueNameOrEmail(
   phone: string,
@@ -158,3 +160,65 @@ export const updateStore =
         subCategories: updatedStore.subCategories?.map(e => e.toString()),
       } as any);
     };
+
+export const fetchNearByStoreByFilter =
+    async ({
+             query, latitude, limit, longitude, skip
+           }: {
+      query: FilterQuery<IStore>,
+      latitude: number,
+      longitude: number,
+      limit: number,
+      skip: number
+    }): Promise<StoreDetailsResponse[]> => {
+      const nearStores = await Store.find({
+        ...query,
+    location: {
+      $near: {
+        $geometry: {
+          type: "Point",
+          coordinates: [latitude, longitude],
+        },
+      },
+    },
+    isActive: true,
+    //TODO: when closed, do we need to show on user app?
+    isAvailable: true,
+  }, {
+    storeName: true, bio: true, address: true,
+    openTime: true, closeTime: true, isDeliveryAvailable: true,
+    instagram: true, facebook: true, whatsapp: true,
+    phone: true, shopImgUrl: true,
+    service: true, location: true, city: true, type: true,
+  })
+      .skip(skip)
+      .limit(limit)
+      .populate<{ category: { name: string } }>("category", "name")
+      .populate<{ categories: { name: string }[] }>("categories", "name")
+      .lean()
+
+      //TODO: distance getting wrong. need to work on this
+      const storeWithDistance = [];
+
+      for (const tStore of nearStores) {
+        const distance =
+            calculateDistance(
+                latitude,
+                longitude,
+                tStore.location.coordinates[0],
+                tStore.location.coordinates[1]
+            ).toFixed(2)
+
+        const data: StoreDetailsResponse = {
+          ...tStore,
+          _id: tStore._id.toString(),
+          categories: tStore.categories?.map(e => e.name),
+          category: tStore.category?.name,
+          service: tStore.service ?? false,
+          distance,
+        };
+        storeWithDistance.push(data);
+      }
+
+      return runtimeValidation(StoreDetailsSchema as any, storeWithDistance);
+}

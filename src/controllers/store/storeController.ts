@@ -13,7 +13,7 @@ import {TimeSlot} from "../../models/timeSlotModel";
 import Booking, {bookingStatusSchema} from "../../models/bookingModel";
 import {ICustomRequest, TypedResponse} from "../../types/requestion";
 import {
-  createAndSaveStore,
+  createAndSaveStore, fetchNearByStoreByFilter,
   getBusinessDataById,
   getStoreByPhoneOrUniqueNameOrEmail,
   updateStore
@@ -304,64 +304,15 @@ export const fetchStoresNearByV2 = async (req: Request, res: TypedResponse<Store
       type: businessAccountTypeSchema.enum.business
     };
 
-    const nearStores = await Store.find({
-      ...query,
-      location: {
-        $near: {
-          $geometry: {
-            type: "Point",
-            coordinates: [latitude, longitude],
-          },
-        },
-      },
-      isActive: true,
-      //TODO: when closed, do we need to show on user app?
-      isAvailable: true,
-    }, {
-      storeName: true, bio: true, address: true,
-      openTime: true, closeTime: true, isDeliveryAvailable: true,
-      instagram: true, facebook: true, whatsapp: true,
-      phone: true, shopImgUrl: true,
-      service: true, location: true, city: true, type: true,
+    const data =  await fetchNearByStoreByFilter({
+      query,
+      longitude,
+      latitude,
+      limit,
+      skip
     })
-        .skip(skip)
-        .limit(limit)
-        .populate<{ category: { name: string } }>("category", "name")
-        .populate<{ categories: { name: string }[] }>("categories", "name")
-        .lean()
 
-
-    //TODO: distance getting wrong. need to work on this
-    const storeWithDistance = [];
-
-    for (const tStore of nearStores) {
-      const distance =
-          calculateDistance(
-              latitude,
-              longitude,
-              tStore.location.coordinates[0],
-              tStore.location.coordinates[1]
-          ).toFixed(2)
-
-      const data: StoreDetailsResponse = {
-        ...tStore,
-        _id: tStore._id.toString(),
-        categories: tStore.categories?.map(e => e.name),
-        category: tStore.category?.name,
-        service: tStore.service ?? false,
-        distance,
-      };
-      const response = safeRuntimeValidation<StoreDetailsResponse>(
-          StoreDetailsSchema as any,
-          data
-      );
-
-      if (response.error) {
-        return res.status(500).json(response.error); // Stop execution if error occurs
-      }
-      storeWithDistance.push(response.data);
-    }
-    res.status(200).json(storeWithDistance);
+    res.status(200).json(data);
   } catch (error) {
     onCatchError(error, res);
   }
@@ -541,39 +492,10 @@ export const fetchStoreByCategory = async (req: Request, res: Response) => {
 export const fetchStoreByCategoryV2 = async (req: Request, res: Response) => {
   try {
     const { categoryId, longitude, latitude } = z.object({
-      categoryId: ObjectIdSchema
+      categoryId: ObjectIdSchema,
+      businessType: z.enum(['freelancer', 'business']).optional().default('business')
     }).merge(locationQuerySchema).parse(req.query);
 
-    let response: any;
-
-    const findStores = async (query: any) => {
-      const stores = await Store.find(query, {
-        storeName: true, bio: true, address: true,
-        openTime: true, closeTime: true, isDeliveryAvailable: true,
-        instagram: true, facebook: true, whatsapp: true,
-        phone: true, shopImgUrl: true,
-        service: true, location: true, city: true
-      }).populate('category');
-      if (!stores || stores.length === 0) {
-        return res.status(404).json({ message: "No stores found" });
-      }
-      const storesWithDistance = stores.map((tStore: any) => {
-        const distance = calculateDistance(
-          latitude,
-          longitude,
-          tStore.location.coordinates[0],
-          tStore.location.coordinates[1]
-        );
-        var store = tStore.toObject();
-        store.category = store.category.name;
-        return {
-          ...store,
-          distance: distance.toFixed(2),
-        };
-      });
-
-      return res.status(200).json(storesWithDistance);
-    };
 
     let type: BusinessAccountType;
     if(req.url.includes("freelancer")) {
@@ -581,29 +503,25 @@ export const fetchStoreByCategoryV2 = async (req: Request, res: Response) => {
     } else {
        type = businessAccountTypeSchema.enum.business;
     }
-    console.log(type);
-
-      let categoryIds = (await DisplayCategory.findById(categoryId, { categories: 1 }).lean())?.categories ?? [];
-
-      //TODO: correct , we dont need category any more, just categories.
-      response = await findStores({
-        $or: [{ category: categoryId, categories: { $in: categoryIds } }],
-        type,
-        location: {
-          $near: {
-            $geometry: {
-              type: "Point",
-              coordinates: [latitude, longitude],
-            },
-            // $maxDistance: 10000, // in meters
+    //TODO: add pagination.
+    const data = await fetchNearByStoreByFilter({
+      query: {
+        $or: [
+          {
+            category: categoryId,
           },
-        },
-        isActive: true,
-        isAvailable: true,
-      });
-    if (!response || response.length === 0) {
-      return res.status(404).json({ message: "No stores found" });
-    }
+          {
+            categories: {$in: [categoryId]}
+          }
+        ],
+        type,
+      },
+      latitude,
+      longitude,
+      skip: 0,
+      limit: 50
+    });
+    res.status(200).json(data);
   } catch (error) {
     onCatchError(error, res);
   }
