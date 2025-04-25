@@ -2,3 +2,6 @@ node_modules
 .env
 dist/
 .idea/
+combined.log
+error.log
+exceptions.log
