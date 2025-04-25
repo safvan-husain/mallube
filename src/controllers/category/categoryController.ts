@@ -15,7 +15,7 @@ import {
     listActiveSubCategories,
     listPendingSubCategories,
 } from "../../service/category";
-import {Types} from "mongoose";
+import {FilterQuery, Types} from "mongoose";
 import Product from "../../models/productModel";
 import Store from "../../models/storeModel";
 import {
@@ -95,16 +95,22 @@ export const getDisplayCategories = asyncHandler(
     async (req: Request, res: TypedResponse<{ _id: string, name: string, icon: string}[]>) => {
         try {
             let { businessType } = getDisplayCategorySchema.parse(req.params);
-            let query: any = {};
-            //TODO: uncomment below
-            // if (businessType) {
-            //     if (businessType === 'business') {
-            //         query.businessIndex = { $gte : 0 };
-            //     } else if (businessType === 'freelancer') {
-            //         query.freelancerIndex = { $gte : 0 };
-            //     }
-            // }
-            let displayCategories = await DisplayCategory.find(query, {name: true, icon: true }).lean<{ name: string, icon: string, _id: string}[]>();
+            let query: FilterQuery<ICategory> = {
+                parentId: { $exists: false },
+                isActive: true,
+                isPending: false
+            };
+
+            if (businessType === 'business') {
+                query.isEnabledForStore = true;
+            } else {
+                query.isEnabledForIndividual = true;
+            }
+
+            let displayCategories = await Category
+                .find(query, {name: true, icon: true })
+                .lean<{ name: string, icon: string, _id: string}[]>();
+
             res.status(200).json(displayCategories);
         } catch (e) {
             onCatchError(e, res);
