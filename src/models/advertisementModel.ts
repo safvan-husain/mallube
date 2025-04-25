@@ -1,7 +1,7 @@
 import {Schema, model, Document, Types} from "mongoose";
 import {z} from "zod";
 
-const advertisementStatusSchema = z.enum(['pending', 'live', 'expired', 'rejected'])
+export const advertisementStatusSchema = z.enum(['pending', 'live', 'expired', 'rejected'])
 export type AdvertisementStatus = z.infer<typeof advertisementStatusSchema>
 
 //using generic args, so that when populating, we can still have type safety.

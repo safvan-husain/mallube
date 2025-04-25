@@ -8,7 +8,9 @@ import connectDb from "./config/db";
 import './utils/common'
 import {errorHandler, notFound} from "./middleware/error.middleware";
 import {config} from "./config/vars";
-import {periodicallyChangeStatusOfExpiredAdvertisemets} from "./controllers/advertisement/advertisementController";
+import {
+    scheduleExpireAdvertisementStatusChanger,
+} from "./controllers/advertisement/advertisementController";
 import {Server} from 'socket.io';
 import {socketHandler} from "./controllers/web-socket/webSocketController";
 import {removeExpiredAds} from "./controllers/user/buy_and_sell/buy_and_sellController";
@@ -48,7 +50,7 @@ loadRoutes({ app });
 //not found when no endpoint match, this should be below of all route setup
 app.use(notFound);
 app.use(errorHandler);
-periodicallyChangeStatusOfExpiredAdvertisemets();
+scheduleExpireAdvertisementStatusChanger();
 
 const PORT = config.port || 4000;
 

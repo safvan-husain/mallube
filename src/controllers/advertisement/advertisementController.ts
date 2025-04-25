@@ -1,6 +1,10 @@
 import asyncHandler from "express-async-handler";
 import { Request, Response } from "express";
-import Advertisement, {AdvertisementStatus, IAdvertisement} from "../../models/advertisementModel";
+import Advertisement, {
+  AdvertisementStatus,
+  advertisementStatusSchema,
+  IAdvertisement
+} from "../../models/advertisementModel";
 import { IAddAdvertisementPlanSchema } from "../../schemas/advertisement.schema";
 import AdvertisementPlan, {IAdvertisementPlan} from "../../models/advertismentPlanModel";
 import {Types} from "mongoose";
@@ -18,6 +22,7 @@ import {
   relevantAdvertisementSchema
 } from "./validation";
 import {runtimeValidation} from "../../error/runtimeValidation";
+import {logger} from "../../config/logger";
 
 
 interface StoreAdvertisementResponse {
@@ -87,42 +92,17 @@ export const AddAdvertisement = async (req: any, res: TypedResponse<{
 
 export const fetchAllStoreAdvertisement = async (req: ICustomRequest<any>, res: TypedResponse<BAppAdvertisement[]>): Promise<void> => {
   try {
-    const storeId = req.store?._id;
-
-    if (!storeId || !Types.ObjectId.isValid(storeId)) {
-      res.status(400).json({ message: "Store ID is required" });
-      return;
-    }
-
-    const advertisements  = await Advertisement.find({ store: storeId })
-        .populate<{ adPlan?: { name: string }}>('adPlan', 'name')
+    const advertisements = await Advertisement
+        .find({store: req.store!._id})
         .lean();
 
-    // const processedAds: StoreAdvertisementResponse[] = advertisements.map((ad) : StoreAdvertisementResponse => ({
-    //   _id: ad._id,
-    //   image: ad.image,
-    //   status: ad.status ?? "pending",
-    //   store: storeId as unknown as Types.ObjectId,
-    //   expireAt: ad.expireAt?.getTime() ?? 0,
-    //   isActive: ad.isActive ?? false,
-    //   //TODO: delete later.
-    //   plan_name: ad.adPlan?.name,
-    //   advertisementDisplayStatus: 'hideFromBothCarousal',
-    //   adPlan: "",
-    //   location: ad.location,
-    //   radius: ad.radius,
-    //   radiusInRadians: ad.radiusInRadians,
-    //   timestamp: Date.now()
-    //   //use type safety.
-    // } as any));
-
-    res.status(200).json(runtimeValidation(BAppAdvertisementSchema, advertisements.map(e => ({ _id: e._id.toString(), image: e.image, status: e.status ?? "pending" }))));
+    res.status(200).json(runtimeValidation(BAppAdvertisementSchema, advertisements.map(e => ({
+      _id: e._id.toString(),
+      image: e.image,
+      status: e.status ?? "pending"
+    }))));
   } catch (error) {
-    console.error('Error fetching store advertisements:', error);
-    res.status(500).json({
-      message: "Failed to fetch advertisements",
-      // error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+    onCatchError(error, res);
   }
 };
 
@@ -201,8 +181,6 @@ export const fetchAllAdvertisement = asyncHandler(
     }
   }
 );
-
-
 
 //TODO: check this and fix.
 export const fetchRelaventAdvertisement = asyncHandler(
@@ -323,17 +301,18 @@ export const updateAdvertisementStatus = asyncHandler(async (req: Request, res: 
 export const rePublishRequestAnAdvertisement = asyncHandler(async (req: ICustomRequest<any>, res: TypedResponse<BAppAdvertisement>) => {
   const { advertisementId } = objectIdRequestSchema.parse(req.query);
   try {
-    let existingAdvertisement = await Advertisement.findById(advertisementId);
+    let existingAdvertisement = await Advertisement.findById(advertisementId).populate<{ adPlan?: IAdvertisementPlan }>('adPlan');
     if (existingAdvertisement == undefined) {
       res.status(401).json({ message: "Advertisement doesn't exist" });
       return;
     }
-    const { location, image, isActive, store, radius, radiusInRadians, adPlan, createdAt } = existingAdvertisement;
-    const advertisementPlan = await AdvertisementPlan.findById(adPlan);
-    if(!advertisementPlan) {
+    if (!existingAdvertisement.adPlan) {
       res.status(400).json({ message: "The same plan no longer exist, please use a new"});
       return;
     }
+
+    const { location, image, isActive, store, radius, radiusInRadians, adPlan, createdAt } = existingAdvertisement;
+
     let newAdvertisement = new Advertisement({
       location,
       image,
@@ -341,25 +320,9 @@ export const rePublishRequestAnAdvertisement = asyncHandler(async (req: ICustomR
       store,
       radius,
       radiusInRadians,
-      adPlan,
+      adPlan: adPlan._id,
     });
     newAdvertisement = await newAdvertisement.save();
-    // res.status(201).json({ message: "New advertisement created", advertisement: {
-    //     _id: newAdvertisement._id,
-    //     image: newAdvertisement.image,
-    //     expireAt: newAdvertisement.expireAt?.getTime() ?? 0,
-    //     status: newAdvertisement.status,
-    //     //TODO: delete later.
-    //     isActive: newAdvertisement.isActive ?? false,
-    //     store: newAdvertisement.store as Types.ObjectId,
-    //     advertisementDisaplay: 'hideFromBothCarousal',
-    //     adPlan: "",
-    //     location: newAdvertisement.location,
-    //     radius: newAdvertisement.radius,
-    //     radiusInRadians: newAdvertisement.radiusInRadians,
-    //     timestamp: Date.now()
-    //     //use type safety.
-    //   } as any});
     res.status(200).json(runtimeValidation(BAppAdvertisementSchema, {
       _id: newAdvertisement._id.toString(),
       image: newAdvertisement.image,
@@ -371,7 +334,7 @@ export const rePublishRequestAnAdvertisement = asyncHandler(async (req: ICustomR
 })
 
 
-export const periodicallyChangeStatusOfExpiredAdvertisemets = () => {
+export const scheduleExpireAdvertisementStatusChanger = () => {
   setInterval(async () => {
     try {
       const expiredAdvertisements = await Advertisement.find({
@@ -381,12 +344,12 @@ export const periodicallyChangeStatusOfExpiredAdvertisemets = () => {
       if (expiredAdvertisements) {
         for (let expiredAd of expiredAdvertisements) {
           expiredAd.isActive = false;
-          expiredAd.status = 'expired';
+          expiredAd.status = advertisementStatusSchema.enum.expired;
           expiredAd.save();
         }
       }
     } catch (error) {
-      console.log("error at periodicallyChangeStatusOfExpiredAdvertisemets", error);
+      logger.error("error at periodicallyChangeStatusOfExpiredAdvertisemets", error);
     }
 
   }, 60000 * 10);
