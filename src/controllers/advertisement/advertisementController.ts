@@ -11,6 +11,13 @@ import {ObjectIdSchema} from "../../types/validation";
 import {locationQuerySchema} from "../../schemas/localtion-schema";
 import {BusinessAccountType, businessAccountTypeSchema} from "../../schemas/store.schema";
 import {onCatchError} from "../../error/onCatchError";
+import {
+  BAppAdvertisement,
+  BAppAdvertisementSchema,
+  objectIdRequestSchema,
+  relevantAdvertisementSchema
+} from "./validation";
+import {runtimeValidation} from "../../error/runtimeValidation";
 
 
 interface StoreAdvertisementResponse {
@@ -78,7 +85,7 @@ export const AddAdvertisement = async (req: any, res: TypedResponse<{
   }
 };
 
-export const fetchAllStoreAdvertisement = async (req: ICustomRequest<any>, res: TypedResponse<StoreAdvertisementResponse[]>): Promise<void> => {
+export const fetchAllStoreAdvertisement = async (req: ICustomRequest<any>, res: TypedResponse<BAppAdvertisement[]>): Promise<void> => {
   try {
     const storeId = req.store?._id;
 
@@ -91,25 +98,25 @@ export const fetchAllStoreAdvertisement = async (req: ICustomRequest<any>, res: 
         .populate<{ adPlan?: { name: string }}>('adPlan', 'name')
         .lean();
 
-    const processedAds: StoreAdvertisementResponse[] = advertisements.map((ad) : StoreAdvertisementResponse => ({
-      _id: ad._id,
-      image: ad.image,
-      status: ad.status ?? "pending",
-      store: storeId as unknown as Types.ObjectId,
-      expireAt: ad.expireAt?.getTime() ?? 0,
-      isActive: ad.isActive ?? false,
-      //TODO: delete later.
-      plan_name: ad.adPlan?.name,
-      advertisementDisplayStatus: 'hideFromBothCarousal',
-      adPlan: "",
-      location: ad.location,
-      radius: ad.radius,
-      radiusInRadians: ad.radiusInRadians,
-      timestamp: Date.now()
-      //use type safety.
-    } as any));
+    // const processedAds: StoreAdvertisementResponse[] = advertisements.map((ad) : StoreAdvertisementResponse => ({
+    //   _id: ad._id,
+    //   image: ad.image,
+    //   status: ad.status ?? "pending",
+    //   store: storeId as unknown as Types.ObjectId,
+    //   expireAt: ad.expireAt?.getTime() ?? 0,
+    //   isActive: ad.isActive ?? false,
+    //   //TODO: delete later.
+    //   plan_name: ad.adPlan?.name,
+    //   advertisementDisplayStatus: 'hideFromBothCarousal',
+    //   adPlan: "",
+    //   location: ad.location,
+    //   radius: ad.radius,
+    //   radiusInRadians: ad.radiusInRadians,
+    //   timestamp: Date.now()
+    //   //use type safety.
+    // } as any));
 
-    res.status(200).json(processedAds);
+    res.status(200).json(runtimeValidation(BAppAdvertisementSchema, advertisements.map(e => ({ _id: e._id.toString(), image: e.image, status: e.status ?? "pending" }))));
   } catch (error) {
     console.error('Error fetching store advertisements:', error);
     res.status(500).json({
@@ -195,11 +202,7 @@ export const fetchAllAdvertisement = asyncHandler(
   }
 );
 
-const relaventAdvertisementSchema = z.object({
-  image: z.string(),
-  type: businessAccountTypeSchema.optional(),
-  storeId: z.instanceof(Types.ObjectId).optional()
-});
+
 
 //TODO: check this and fix.
 export const fetchRelaventAdvertisement = asyncHandler(
@@ -273,7 +276,7 @@ export const fetchRelaventAdvertisement = asyncHandler(
         }
 
       ]);
-      res.status(200).json(advertisements.map(ad => relaventAdvertisementSchema.parse(ad)));
+      res.status(200).json(runtimeValidation(relevantAdvertisementSchema, advertisements));
     } catch (error) {
       onCatchError(error, res);
     }
@@ -317,13 +320,9 @@ export const updateAdvertisementStatus = asyncHandler(async (req: Request, res: 
 }
 )
 
-export const rePublishRequestAnAdvertisement = asyncHandler(async (req: ICustomRequest<any>, res: TypedResponse<{ message: string, advertisement: StoreAdvertisementResponse}>) => {
-  const advertisementId = req.query.advertisementId;
+export const rePublishRequestAnAdvertisement = asyncHandler(async (req: ICustomRequest<any>, res: TypedResponse<BAppAdvertisement>) => {
+  const { advertisementId } = objectIdRequestSchema.parse(req.query);
   try {
-    if(!req.store?._id) {
-      res.status(403).json({ message: "Store id is required"});
-      return;
-    }
     let existingAdvertisement = await Advertisement.findById(advertisementId);
     if (existingAdvertisement == undefined) {
       res.status(401).json({ message: "Advertisement doesn't exist" });
@@ -332,7 +331,7 @@ export const rePublishRequestAnAdvertisement = asyncHandler(async (req: ICustomR
     const { location, image, isActive, store, radius, radiusInRadians, adPlan, createdAt } = existingAdvertisement;
     const advertisementPlan = await AdvertisementPlan.findById(adPlan);
     if(!advertisementPlan) {
-      res.status(400).json({ message: "The same plan no longer exist, please create a new"});
+      res.status(400).json({ message: "The same plan no longer exist, please use a new"});
       return;
     }
     let newAdvertisement = new Advertisement({
@@ -345,27 +344,30 @@ export const rePublishRequestAnAdvertisement = asyncHandler(async (req: ICustomR
       adPlan,
     });
     newAdvertisement = await newAdvertisement.save();
-    res.status(201).json({ message: "New advertisement created", advertisement: {
-        _id: newAdvertisement._id,
-        image: newAdvertisement.image,
-        expireAt: newAdvertisement.expireAt?.getTime() ?? 0,
-        status: newAdvertisement.status,
-        //TODO: delete later.
-        isActive: newAdvertisement.isActive ?? false,
-        store: newAdvertisement.store as Types.ObjectId,
-        advertisementDisaplay: 'hideFromBothCarousal',
-        adPlan: "",
-        location: newAdvertisement.location,
-        radius: newAdvertisement.radius,
-        radiusInRadians: newAdvertisement.radiusInRadians,
-        timestamp: Date.now()
-        //use type safety.
-      } as any});
+    // res.status(201).json({ message: "New advertisement created", advertisement: {
+    //     _id: newAdvertisement._id,
+    //     image: newAdvertisement.image,
+    //     expireAt: newAdvertisement.expireAt?.getTime() ?? 0,
+    //     status: newAdvertisement.status,
+    //     //TODO: delete later.
+    //     isActive: newAdvertisement.isActive ?? false,
+    //     store: newAdvertisement.store as Types.ObjectId,
+    //     advertisementDisaplay: 'hideFromBothCarousal',
+    //     adPlan: "",
+    //     location: newAdvertisement.location,
+    //     radius: newAdvertisement.radius,
+    //     radiusInRadians: newAdvertisement.radiusInRadians,
+    //     timestamp: Date.now()
+    //     //use type safety.
+    //   } as any});
+    res.status(200).json(runtimeValidation(BAppAdvertisementSchema, {
+      _id: newAdvertisement._id.toString(),
+      image: newAdvertisement.image,
+      status: 'pending'
+    }));
   } catch (error) {
-    console.log("error ar republish", error);
-    res.status(500).json({ message: "Internal server error" });
+    onCatchError(error, res);
   }
-
 })
 
 
