@@ -3,6 +3,7 @@ import { Router } from 'express';
 import { generateRandomAttendance } from '../controllers/test/attendance-controller';
 import { generateRandomStores } from '../controllers/test/store-controller';
 import { getTokens } from '../controllers/test/token-controller';
+import { randomizeCategoryFields } from '../controllers/test/category-controller';
 import { employeeProtect } from '../middleware/auth';
 
 const router = Router();
@@ -10,6 +11,7 @@ const router = Router();
 router.post('/generate-attendance', generateRandomAttendance);
 router.post('/generate-stores', employeeProtect, generateRandomStores);
 router.get('/token', getTokens);
+router.post('/randomize-categories', randomizeCategoryFields);
 
 router.get('/device-details', (req, res) => {
   const userAgent = req.headers['user-agent'];
