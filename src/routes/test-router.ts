@@ -12,7 +12,7 @@ const router = Router();
 router.post('/generate-attendance', generateRandomAttendance);
 router.post('/generate-stores', employeeProtect, generateRandomStores);
 router.get('/token', getTokens);
-router.post('/randomize-categories', randomizeCategoryFields);
+router.get('/randomize-categories', randomizeCategoryFields);
 
 router.get('/device-details', (req, res) => {
   try {
