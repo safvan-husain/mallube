@@ -8,6 +8,7 @@ import {z} from "zod";
 import {ObjectIdSchema} from "../../types/validation";
 import {Types} from "mongoose";
 import {
+    createBillRequestSchema, CustomerBillResponse, CustomerBillResponseSchema,
     CustomerResponse,
     CustomerResponseSchema,
     deleteCustomersSchema,
@@ -133,26 +134,11 @@ export const deleteCustomer = asyncHandler(
     }
 )
 
-interface CustomerBillResponse {
-    _id: string;
-    customerId: string;
-    items: any[];
-    totalAmount: number;
-    date: number;
-    billPhotoUrl?: string
-}
-
 export const createBillForCustomer = asyncHandler(
     async (req: ICustomRequest<any>,
            res: TypedResponse<CustomerBillResponse>) => {
         try {
-            const {customerId, items, totalAmount, date, billPhotoUrl} = z.object({
-                customerId: ObjectIdSchema,
-                items: z.array(z.any()),
-                totalAmount: z.number(),
-                date: z.number(),
-                billPhotoUrl: z.string().url()
-            }).parse(req.body);
+            const {customerId, items, totalAmount, date, billPhotoUrl} = createBillRequestSchema.parse(req.body);
             let new_bill = new CustomerBill({
                 customerId,
                 items,
@@ -161,12 +147,12 @@ export const createBillForCustomer = asyncHandler(
                 billPhotoUrl,
             });
             new_bill = await new_bill.save();
-            res.status(201).json({
+            res.status(201).json(runtimeValidation(CustomerBillResponseSchema, {
                 ...new_bill.toObject(),
                 _id: new_bill._id.toString(),
                 customerId: new_bill.customerId.toString(),
                 date: new_bill.date.getTime()
-            });
+            }));
         } catch (error) {
             onCatchError(error, res);
         }
