@@ -12,7 +12,7 @@ import {
     CustomerResponse,
     CustomerResponseSchema,
     deleteCustomersSchema,
-    updateCustomerSchema
+    updateCustomerSchema, updatePattuBookRequestSchema
 } from "./validation/pattu-book-validations";
 import {onCatchError} from "../../error/onCatchError";
 import {runtimeValidation} from "../../error/runtimeValidation";
@@ -234,7 +234,7 @@ export const getSpecificBill = asyncHandler(
                 res.status(404).json({message: "Bill not found"});
                 return;
             }
-            res.status(200).json({...bill, _id: bill._id.toString(), customerId: bill.customerId.toString(), date: bill.date.getTime()});
+            res.status(200).json(runtimeValidation(CustomerBillResponseSchema, {...bill, _id: bill._id.toString(), customerId: bill.customerId.toString(), date: bill.date.getTime()}));
         } catch (error) {
             onCatchError(error, res);
         }
@@ -244,29 +244,22 @@ export const getSpecificBill = asyncHandler(
 export const updateSpecificBill = asyncHandler(
     async (req: ICustomRequest<any>, res: TypedResponse<CustomerBillResponse>) => {
         try {
-            const {items, totalAmount, id, date} = z.object({
-                items: z.array(z.any()),
-                totalAmount: z.number(),
-                id: ObjectIdSchema,
-                date: z.number(),
-                billPhotoUrl: z.string().url()
-            }).partial().parse(req.body);
+            const {items, totalAmount, id, date} = updatePattuBookRequestSchema.parse(req.body);
 
-            await CustomerBill.findByIdAndUpdate(id, {items, totalAmount, date:date ?  new Date(date) : undefined});
-            const bill = await CustomerBill.findById(id, {
-                _id: true,
-                date: true,
-                items: true,
-                totalAmount: true,
-                customerId: true,
-                billPhotoUrl: true
-            }).lean();
+            const bill = await CustomerBill
+                .findByIdAndUpdate(id, {items, totalAmount, date:date ?  new Date(date) : undefined}, {new: true})
+                .lean();
 
             if(!bill) {
                 res.status(404).json({message: "Bill not found"});
                 return;
             }
-            res.status(200).json(bill.toObject());
+            res.status(200).json(runtimeValidation(CustomerBillResponseSchema, {
+                ...bill,
+                _id: bill._id.toString(),
+                customerId: bill.customerId.toString(),
+                date: bill.date.getTime()
+            }));
         } catch (error) {
             onCatchError(error, res);
         }

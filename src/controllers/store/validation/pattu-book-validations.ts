@@ -46,3 +46,8 @@ export const createBillRequestSchema =  z.object({
     date: z.number(),
     billPhotoUrl: z.string().url().optional()
 })
+
+export const updatePattuBookRequestSchema = createBillRequestSchema
+    .omit({customerId: true})
+    .extend({id: ObjectIdSchema})
+    .partial();
