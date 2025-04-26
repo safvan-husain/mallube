@@ -58,7 +58,7 @@ const userSchema = new Schema<IUser>(
 //   this.password = await bcrypt.hash(this.password, salt);
 // });
 
-// generate auth token
+// generate authentication token
 userSchema.methods.generateAuthToken = function (): string {
     const jwte = config.jwtSecret
     return jwt.sign({_id: this._id}, jwte);

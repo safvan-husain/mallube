@@ -20,7 +20,7 @@ import {
 } from "../schemas/category.schemas";
 import { validateData } from "../middleware/zod.validation";
 import { admin, store } from "../middleware/auth";
-// import { staff } from "../middleware/auth";
+// import { staff } from "../middleware/authentication";
 const router = express.Router();
 
 // need to add middleware here

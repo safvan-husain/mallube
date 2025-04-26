@@ -1,9 +1,12 @@
 import { Request, Response } from "express";
 import { messaging } from 'firebase-admin';
 import asyncHandler from "express-async-handler";
-import Notification from "../../models/notificationModel";
+import Notification, {NotificationType} from "../../models/notificationModel";
 import User from "../../models/userModel";
 import Store from "../../models/storeModel";
+import {createNotificationRequestSchema} from "./validation";
+import {Partner} from "../../models/Partner";
+import {onCatchError} from "../../error/onCatchError";
 
 
 export const getNotificationsForBusiness = asyncHandler(
@@ -16,7 +19,7 @@ export const getNotificationsForBusiness = asyncHandler(
             const { notifications, count: total } = await getNotificationsAndCount({
                 limit,
                 skip,
-                isForBusiness: true
+                notificationType: 'business'
             })
             res.status(200).json({
                 notifications,
@@ -39,7 +42,7 @@ export const getNotificationsForUser = asyncHandler(
             const { notifications, count: total } = await getNotificationsAndCount({
                 limit,
                 skip,
-                isForBusiness: false
+                notificationType: 'user'
             })
             res.status(200).json({
                 notifications,
@@ -60,12 +63,13 @@ export const createNotificationForUsers = asyncHandler(
             const notification = await createNotification({
                 title,
                 description,
-                isForBusiness: false
+                isForBusiness: false,
+                notificationType: 'user'
             });
-            sendPushNotifications({
+            await sendPushNotifications({
                 title,
                 body: description,
-                isForBusiness: false
+                notificationType: 'user'
             });
             res.status(201).json({ message: "Successfully created notification", notification });
         } catch (error) {
@@ -78,21 +82,21 @@ export const createNotificationForUsers = asyncHandler(
 export const createNotificationForBusiness = asyncHandler(
     async (req: Request, res: Response) => {
         try {
-            const { title, description } = req.body;
+            const { title, description, notificationType } = createNotificationRequestSchema.parse(req.body);
             const notification = await createNotification({
                 title,
                 description,
-                isForBusiness: true
+                isForBusiness: true,
+                notificationType
             });
-            sendPushNotifications({
+            await sendPushNotifications({
                 title,
                 body: description,
-                isForBusiness: true
+                notificationType
             });
             res.status(201).json({ message: "Successfully created notification", notification });
         } catch (error) {
-            console.log("error ar postNotification", error);
-            res.status(500).json({ message: "Internal server error" });
+            onCatchError(error, res);
         }
     }
 )
@@ -115,39 +119,46 @@ export const deleteNotification = asyncHandler(
 )
 
 
-const createNotification = async ({ title, description, isForBusiness }
-    : { title: string, description: string, isForBusiness: boolean }) => {
+const createNotification = async ({ title, description, isForBusiness, notificationType }
+    : { title: string, description: string, isForBusiness: boolean, notificationType: string }) => {
     var notification = new Notification({
         title,
         description,
-        isForBusiness
+        isForBusiness,
+        type: notificationType
     });
     return await notification.save();
 }
 
-const getNotificationsAndCount = async ({ limit, skip, isForBusiness }: { limit: number, skip: number, isForBusiness: boolean })
+const getNotificationsAndCount = async ({ limit, skip, notificationType }: { limit: number, skip: number, notificationType: NotificationType })
     : Promise<{ count: number, notifications: any[] }> => {
     const notifications = await Notification.find({
-        isForBusiness
+        type: notificationType
     })
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
     const totalCount = await Notification.countDocuments({
-        isForBusiness
+        type: notificationType
     })
-
     return { notifications, count: totalCount };
 }
 
-const sendPushNotifications = async ({ title, body, isForBusiness }: { title: string, body: string, isForBusiness: boolean }) => {
+const sendPushNotifications = async ({ title, body, notificationType }: { title: string, body: string, notificationType: NotificationType }) => {
     try {
         let result;
-        if (isForBusiness) {
-            result = await Store.find({ fcmToken: { $exists: true } }, 'fcmToken').lean() as { fcmToken: string }[];
-        } else {
-            result = await User.find({ fcmToken: { $exists: true }, isPushNotificationEnabled: true }, 'fcmToken').lean() as { fcmToken: string }[];
+
+        switch (notificationType) {
+            case 'partner':
+                result = await Partner.find({ fcmToken: { $exists: false }, pushNotificationStatus: true }, { fcmToken: true }).lean<{ fcmToken: string}[]>();
+                break;
+            case 'business':
+                result = await Store.find({ fcmToken: { $exists: true } }, 'fcmToken').lean() as { fcmToken: string }[];
+                break;
+            case 'user':
+                result = await User.find({ fcmToken: { $exists: true }, isPushNotificationEnabled: true }, 'fcmToken').lean() as { fcmToken: string }[];
         }
+
         for (let i = 0; i < result.length; i += 100) {
             const chunk = result.slice(i, i + 100);
             messaging().sendEachForMulticast({

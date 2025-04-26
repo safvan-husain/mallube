@@ -19,6 +19,7 @@ import {chatRoutes} from "../routes/messageRoutes";
 import {employeeRouter} from "../routes/employee-router";
 import {testRouter} from "../routes/test-router";
 import {logger} from "./logger";
+import {partnerRoute} from "../routes/partner-route";
 
 export const loadRoutes = ({ app }: {app: Express}) => {
     app.use("/api/developer", developerRoute);
@@ -43,6 +44,7 @@ export const loadRoutes = ({ app }: {app: Express}) => {
     app.use('/api/chats', chatRoutes);
     app.use('/api/employee', employeeRouter)
     app.use('/api/v1/test', testRouter);
+    app.use('/api/v1/partner', partnerRoute)
 
     logger.info("all routes setup done");
 }

@@ -68,6 +68,8 @@ export interface IStore extends Document {
     //subscription expiration.
     subscriptionExpireDate: Date;
     isPushNotificationEnabled: boolean;
+    //for partner.
+    referredFrom?: Types.ObjectId
 }
 
 const storeSchema = new Schema<IStore>(
@@ -220,7 +222,11 @@ const storeSchema = new Schema<IStore>(
         authToken: {type: String},
         keyWords: {type: String, default: ''},
         subscriptionExpireDate: {type: Date, required: true},
-        isPushNotificationEnabled: { type: Boolean, default: true }
+        isPushNotificationEnabled: { type: Boolean, default: true },
+        referredFrom: {
+            type: Schema.Types.ObjectId,
+            ref: 'Partner'
+        }
     },
     {
         timestamps: true,

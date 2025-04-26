@@ -48,7 +48,7 @@ adminSchema.pre("save", async function (next) {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-// generate auth token
+// generate authentication token
 adminSchema.methods.generateAuthToken = function (userId: string): string {
   return jwt.sign({ _id: userId }, "adminSecrete", { expiresIn: "360d" });
 };

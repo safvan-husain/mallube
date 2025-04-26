@@ -87,7 +87,7 @@ employeeSchema.pre("save", async function (next) {
     next();
 });
 
-// Generate auth token
+// Generate authentication token
 employeeSchema.methods.generateAuthToken = function (): string {
     return jwt.sign({_id: this._id}, "managerSecret", {expiresIn: "360d"});
 };

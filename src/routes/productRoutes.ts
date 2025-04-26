@@ -14,7 +14,7 @@ import {
   getNearbyProductsWithOffer,
   fetchProductsV2,
 } from "../controllers/product/productController";
-// import { staff } from "../middleware/auth";
+// import { staff } from "../middleware/authentication";
 import { validateData } from "../middleware/zod.validation";
 import {
   addProductSchema,

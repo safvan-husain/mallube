@@ -36,6 +36,11 @@ import {
   getAllEmployeesOfPrivilege, getAllStructuredEmployees,
   getSpecificEmployee, updateEmployee
 } from '../controllers/marketting-section/employee/staff-manager-controller';
+import {
+  createPartner,
+  getAllPartners,
+  updatePartner
+} from "../controllers/marketting-section/partner/partner-controller";
 const router = express.Router();
 
 router.route("/login").post(login);
@@ -108,5 +113,12 @@ router.route('/manager/:id')
     .get(getSpecificEmployee)
     .put(updateEmployee)
     .delete(deleteManager)
+
+router.route('/partner')
+    .get(admin, getAllPartners)
+    .post(admin, createPartner)
+
+router.route('/partner/:id')
+    .put(admin, updatePartner)
 
 export default router;

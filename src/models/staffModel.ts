@@ -66,7 +66,7 @@ staffSchema.pre("save", async function (next) {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-// generate auth token
+// generate authentication token
 staffSchema.methods.generateAuthToken = function (userId: string): string {
   return jwt.sign({ _id: userId }, "staffSecrete", { expiresIn: "360d" });
 };

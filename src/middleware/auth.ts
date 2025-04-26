@@ -10,6 +10,7 @@ import { config } from "../config/vars";
 import { Freelancer } from "../models/freelancerModel";
 import {Types} from "mongoose";
 import Employee, {IEmployee, TEmployeePrivilege} from "../models/managerModel";
+import {IPartner} from "../models/Partner";
 
 declare global {
   namespace Express {
@@ -17,7 +18,8 @@ declare global {
       user?: {
         _id: string;
       };
-      employee?: IEmployee
+      employee?: IEmployee;
+      partner: IPartner
     }
   }
 }

@@ -219,7 +219,7 @@ export const updateBusinessProfile = async (req: Request, res: TypedResponse<Emp
     }
 }
 
-async function getCommaSeparatedCategoryNames(ids: ObjectId[] | string[]): Promise<string> {
+export async function getCommaSeparatedCategoryNames(ids: ObjectId[] | string[]): Promise<string> {
     return await Category
         .find({_id: {$in: ids}}, {name: true})
         .lean<{ name: string }[]>().then(e => e.map(k => k.name).join(", "));

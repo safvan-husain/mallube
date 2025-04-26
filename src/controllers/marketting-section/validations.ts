@@ -1,5 +1,10 @@
 import { z } from "zod";
-import {istFromStringOrNumberSchema, ObjectIdSchema, phoneZodValidation} from "../../schemas/commom.schema";
+import {
+    istFromStringOrNumberSchema,
+    ObjectIdSchema,
+    paginationSchema,
+    phoneZodValidation
+} from "../../schemas/commom.schema";
 import {pendingBusinessStatus} from "../../models/PendingBusiness";
 import {Types} from "mongoose";
 import {employeePrivilegeSchema} from "../../models/managerModel";
@@ -207,6 +212,10 @@ export const getEmployeeStoreQuerySchema = z.object({
 })
     .merge(allRangeOfDateSchema)
 
+export const partnerStoreListQuerySchema = getEmployeeStoreQuerySchema.omit({
+    addedBy: true
+}).merge(paginationSchema)
+
 
 // Usage:
 export type FullDashboardStats = z.infer<typeof FullDashboardStatsSchema>;
@@ -224,4 +233,41 @@ export const employeeIdAndMonth = z.object({
     id: ObjectIdSchema
 }).merge(monthSchema);
 
+export const createPartnerSchema = z.object({
+    phone: z.string().min(8, "Phone number must be at least 8 characters"),
+    name: z.string().min(1, "Name is required"),
+    district: z.string().min(1, "District is required"),
+    place: z.string().min(1, "Place is required"),
+    address: z.string().min(1, "Address is required"),
+});
 
+export const partnerResponseSchema = createPartnerSchema.extend({
+    _id: z.string()
+})
+
+// Login request schema
+export const loginPartnerSchema = z.object({
+    phone: z.string().min(1, "Phone number is required"),
+    password: z.string().min(1, "Password is required"),
+    fcmToken: z.string().optional()
+});
+
+// Login response schema
+export const loginPartnerResponseSchema = z.object({
+    _id: z.string(),
+    phone: z.string(),
+    name: z.string(),
+    token: z.string(), // assuming you'll return a JWT or similar
+});
+
+export const fcmTokenRequestSchema = z.object({
+    fcmToken: z.string()
+})
+
+export const changePasswordRequestSchema = loginPartnerSchema.pick({
+    password: true
+});
+
+export const pushNotificationStatusChange = z.object({
+    pushNotificationStatus: z.boolean()
+})
