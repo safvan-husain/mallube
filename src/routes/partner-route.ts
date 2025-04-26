@@ -5,6 +5,7 @@ import {
     updateFcmToken, businessGraph, getBusinesses, updatePushNotificationStatus
 } from "../controllers/marketting-section/partner/partner-controller";
 import {partnerProtect} from "../middleware/authentication/partnerProtect";
+import {getNotificationsForPartner} from "../controllers/notification/notificationController";
 
 const router = Router();
 
@@ -25,5 +26,8 @@ router.route('/business')
 
 router.route('/push-notification-status')
     .put(partnerProtect, updatePushNotificationStatus)
+
+router.route('/notifications')
+    .get(partnerProtect, getNotificationsForPartner)
 
 export { router as partnerRoute }

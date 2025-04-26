@@ -7,15 +7,12 @@ import Store from "../../models/storeModel";
 import {createNotificationRequestSchema} from "./validation";
 import {Partner} from "../../models/Partner";
 import {onCatchError} from "../../error/onCatchError";
-
+import {paginationSchema} from "../../schemas/commom.schema";
 
 export const getNotificationsForBusiness = asyncHandler(
     async (req: Request, res: Response) => {
         try {
-            const page = parseInt(req.query.page as string) || 1;
-            const limit = parseInt(req.query.limit as string) || 10;
-            const skip = (page - 1) * limit;
-
+            const { skip, limit } = paginationSchema.parse(req.query);
             const { notifications, count: total } = await getNotificationsAndCount({
                 limit,
                 skip,
@@ -23,22 +20,17 @@ export const getNotificationsForBusiness = asyncHandler(
             })
             res.status(200).json({
                 notifications,
-                currentPage: page,
                 totalItems: total,
             });
         } catch (error) {
-            console.log("error ar getNotification", error);
-            res.status(500).json({ message: "Internal server error" });
+            onCatchError(error, res);
         }
     });
 
 export const getNotificationsForUser = asyncHandler(
     async (req: Request, res: Response) => {
         try {
-            const page = parseInt(req.query.page as string) || 1;
-            const limit = parseInt(req.query.limit as string) || 10;
-            const skip = (page - 1) * limit;
-
+            const { skip, limit } = paginationSchema.parse(req.query);
             const { notifications, count: total } = await getNotificationsAndCount({
                 limit,
                 skip,
@@ -46,12 +38,28 @@ export const getNotificationsForUser = asyncHandler(
             })
             res.status(200).json({
                 notifications,
-                currentPage: page,
                 totalItems: total,
             });
         } catch (error) {
-            console.log("error ar getNotification", error);
-            res.status(500).json({ message: "Internal server error" });
+            onCatchError(error, res);
+        }
+    });
+
+export const getNotificationsForPartner = asyncHandler(
+    async (req: Request, res: Response) => {
+        try {
+            const { skip, limit } = paginationSchema.parse(req.query);
+            const { notifications, count: total } = await getNotificationsAndCount({
+                limit,
+                skip,
+                notificationType: 'partner'
+            })
+            res.status(200).json({
+                notifications,
+                totalItems: total,
+            });
+        } catch (error) {
+            onCatchError(error, res);
         }
     });
 
@@ -117,6 +125,7 @@ export const deleteNotification = asyncHandler(
         }
     }
 )
+
 
 
 const createNotification = async ({ title, description, isForBusiness, notificationType }
