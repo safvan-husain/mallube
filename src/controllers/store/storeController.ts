@@ -946,7 +946,14 @@ export const getBookingsV2 = asyncHandler(
       ]);
       let bookings: StoreBookingResponse[] = [];
       for (const item of tempBookings) {
-        const k = safeRuntimeValidation(storeBookingResponse, item);
+        const k = safeRuntimeValidation(storeBookingResponse, {
+          ...item,
+          _id: item._id.toString(),
+          timeslot: {
+            startTime: item.timeslot.startTime.getTime(),
+            endTime: item.timeslot.endTime.getTime(),
+          }
+        });
         if (k.error) {
           //TODO: correct on production.
           res.status(500).json(k.error);
