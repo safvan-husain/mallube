@@ -73,3 +73,8 @@ export const EmployeeBusinessListItemSchema = z.object({
 
 // If you need the inferred TypeScript type
 export type EmployeeBusinessListItem = z.infer<typeof EmployeeBusinessListItemSchema>;
+
+export const changePasswordRequestSchema = z.object({
+    password: z.string().min(6, {message: "Password should have at least 6 characters"}),
+    hash: z.string()
+})

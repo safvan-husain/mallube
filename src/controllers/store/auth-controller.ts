@@ -6,19 +6,16 @@ import {z} from "zod";
 import jwt, {JsonWebTokenError} from "jsonwebtoken";
 import User from "../../models/userModel";
 import {onCatchError} from "../../error/onCatchError";
+import {changePasswordRequestSchema} from "./validation/store_validation";
 
 export const changeStorePasswordV2 = async (
     req: ICustomRequest<any>,
     res: TypedResponse<undefined>,
 ) => {
     try {
-        const { password, hash } = z.object({
-            password: z.string().min(6, { message: "password should contain min 6 characters"}),
-            hash: z.string()
-        }).parse(req.body);
+        const { password, hash } = changePasswordRequestSchema.parse(req.body);
 
         const decoded: { phone: string } = jwt.verify(hash, 'otp-secret') as any;
-
         if(!decoded.phone) {
             res.status(400).json({  message: "invalid token" });
             return;
@@ -46,12 +43,7 @@ export const changeStorePushNotificationStatus = async (req: ICustomRequest<any>
         status: z.boolean()
     }).parse(req.body);
     try {
-        const userId = req.store?._id;
-        if(!userId) {
-            res.status(400).json({message: "Invalid user id"});
-            return;
-        }
-        const user = await Store.findByIdAndUpdate(userId, {isPushNotificationEnabled: status})
+        const user = await Store.findByIdAndUpdate(req.store!._id, {isPushNotificationEnabled: status})
         if(!user) {
             res.status(404).json({message: "Store not found"});
             return;
