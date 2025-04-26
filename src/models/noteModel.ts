@@ -6,6 +6,8 @@ interface INote extends Document {
     title: string,
     body: string;
     timestamp: string;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 const noteSchema = new Schema<INote>(
