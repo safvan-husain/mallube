@@ -248,7 +248,7 @@ export const getSpecificBill = asyncHandler(
                 res.status(404).json({message: "Bill not found"});
                 return;
             }
-            res.status(200).json(bill.toObject());
+            res.status(200).json({...bill, _id: bill._id.toString(), customerId: bill.customerId.toString(), date: bill.date.getTime()});
         } catch (error) {
             onCatchError(error, res);
         }
