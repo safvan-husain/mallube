@@ -8,7 +8,7 @@ import {z} from "zod";
 import {ObjectIdSchema} from "../../types/validation";
 import {Types} from "mongoose";
 import {
-    createBillRequestSchema, CustomerBillResponse, CustomerBillResponseSchema,
+    createBillRequestSchema, createCustomerRequestSchema, CustomerBillResponse, CustomerBillResponseSchema,
     CustomerResponse,
     CustomerResponseSchema,
     deleteCustomersSchema,
@@ -21,7 +21,7 @@ import {runtimeValidation} from "../../error/runtimeValidation";
 export const createCustomer = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {
         try {
-            const {name, contact} = req.body;
+            const {name, contact} = createCustomerRequestSchema.parse(req.body);
             const existingCustomer = await Customer.findOne({contact, customerId: req.store?._id});
             if (existingCustomer) {
                 res.status(401).json({message: "Customer already exist with same contact"});
@@ -42,7 +42,6 @@ export const createCustomer = asyncHandler(
                 contact: customer.contact,
                 totalAmount: 0,
                 lastPurchase: 'just created',
-
             });
         } catch (error) {
             console.log("error ", error);
@@ -54,7 +53,7 @@ export const createCustomer = asyncHandler(
 export const getAllCustomers = asyncHandler(
     async (req: ICustomRequest<any>, res: TypedResponse<CustomerResponse[]>) => {
         try {
-            const storeId = req.store?._id;
+            const storeId = req.store!._id;
             const tempCustomers = await Customer.find({storeId}, {name: 1, contact: 1, _id: 1}).lean<{ name: string, contact: string, _id: Types.ObjectId}[]>();
             let customers: CustomerResponse[] = [];
             for (const customer of tempCustomers) {

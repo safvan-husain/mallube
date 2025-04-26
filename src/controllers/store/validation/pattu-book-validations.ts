@@ -51,3 +51,8 @@ export const updatePattuBookRequestSchema = createBillRequestSchema
     .omit({customerId: true})
     .extend({id: ObjectIdSchema})
     .partial();
+
+export const createCustomerRequestSchema = z.object({
+    name: z.string(),
+    contact: z.string()
+})
