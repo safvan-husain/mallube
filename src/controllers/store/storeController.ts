@@ -488,21 +488,14 @@ export const fetchStoreByCategory = async (req: Request, res: Response) => {
   }
 };
 
-//TODO: need to add validation for the response.
-export const fetchStoreByCategoryV2 = async (req: Request, res: Response) => {
+//TODO: refactor for name changes.
+export const fetchStoreByCategoryV2 = async (req: Request, res: TypedResponse<StoreDetailsResponse[]>) => {
   try {
-    const { categoryId, longitude, latitude } = z.object({
+    const { categoryId, longitude, latitude, businessType, ...query } = z.object({
       categoryId: ObjectIdSchema,
       businessType: z.enum(['freelancer', 'business']).optional().default('business')
-    }).merge(locationQuerySchema).parse(req.query);
+    }).merge(locationQuerySchema).merge(paginationSchema).parse(req.query);
 
-
-    let type: BusinessAccountType;
-    if(req.url.includes("freelancer")) {
-       type = businessAccountTypeSchema.enum.freelancer;
-    } else {
-       type = businessAccountTypeSchema.enum.business;
-    }
     //TODO: add pagination.
     const data = await fetchNearByStoreByFilter({
       query: {
@@ -514,12 +507,12 @@ export const fetchStoreByCategoryV2 = async (req: Request, res: Response) => {
             categories: {$in: [categoryId]}
           }
         ],
-        type,
+        type: businessType,
       },
       latitude,
       longitude,
-      skip: 0,
-      limit: 50
+      skip: query.skip,
+      limit: query.limit
     });
     res.status(200).json(data);
   } catch (error) {
