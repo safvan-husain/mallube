@@ -14,13 +14,13 @@ import {
 } from "../../service/category";
 
 import Product, {IProduct} from "../../models/productModel";
-import Category from "../../models/categoryModel";
+import Category, {ICategory} from "../../models/categoryModel";
 import Store from "../../models/storeModel";
 import ProductSearch from "../../models/productSearch";
 
 import User from "../../models/userModel";
 import {
-    addProductSchema,
+    addProductSchema, getProductsOfAStoreRequestSchema,
     nearByOfferProductsRequestSchema,
     ProductUserResponse,
     productUserResponseSchema
@@ -201,18 +201,21 @@ export const getProductById = asyncHandler(
 );
 
 //get product of a store
+//TODO: correct the validation, ensure consistency with flutter apps.
 export const getProductsOfAStore = asyncHandler(
-  async (req: ICustomRequest<undefined>, res: Response) => {
-    let query: any = {}
+  async (req: ICustomRequest<undefined>, res: TypedResponse<ProductUserResponse[]>) => {
+    let query: FilterQuery<IProduct> = {}
+
+      //if requested by store.
     if (req.store?._id) {
       query.store = req.store._id;
     } else {
-      query.store = req.params.storeId;
+        //otherwise there must be on the params.
+      query.store = ObjectIdSchema.parse(req.params.storeId);
     }
+
     try {
-        const { skip, limit, category } = z.object({
-            category: ObjectIdSchema.optional(),
-        }).merge(paginationSchema).parse(req.query);
+        const { skip, limit, category } = getProductsOfAStoreRequestSchema.parse(req.query);
 
         if(category) {
             query.category = category;
@@ -222,11 +225,16 @@ export const getProductsOfAStore = asyncHandler(
             .find(query)
             .skip(skip)
             .limit(limit)
-            .populate(
+            .populate<{
+            category?: ICategory
+            }>(
             "category"
-        );
+        ).lean();
 
-        res.status(200).json(products);
+        res.status(200).json(runtimeValidation(productUserResponseSchema, products.map(e => ({
+            ...e,
+            _id: e._id.toString()
+        }) as any)));
     } catch (e) {
         onCatchError(e, res);
     }
