@@ -57,6 +57,6 @@ export const productUserResponseSchema = z.object({
 export type ProductUserResponse = z.infer<typeof productUserResponseSchema>;
 
 export const getProductsOfAStoreRequestSchema = z.object({
-    storeId: z.string(),
+    storeId: z.string().optional(),
     category: ObjectIdSchema.optional(),
 }).merge(paginationSchema);
