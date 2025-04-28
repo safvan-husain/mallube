@@ -24,6 +24,7 @@ import { Freelancer } from "../../models/freelancerModel";
 import {ObjectIdSchema, paginationSchema} from "../../types/validation";
 import {z} from "zod";
 import {onCatchError} from "../../error/onCatchError";
+import {AppError} from "../service/requestValidationTypes";
 
 // get all products
 export const getAllProducts = asyncHandler(
@@ -63,18 +64,11 @@ export const addProduct = asyncHandler(
     res: Response
   ): Promise<any> => {
     try {
-      var { isPending, ...rest } = addProductSchema.parse(req.body);
+      let { isPending, ...rest } = addProductSchema.parse(req.body);
       if (!rest.store) {
         rest.store = req.store?._id ?? req.params.storeId;
       }
-      if (!rest.store) {
-        rest.individual = req.individual?._id;
-      }
-      //TODO need to remove.
-      if (rest.category == undefined || rest.category == null || rest.category.length == 0) {
-        console.log("category", rest.category);
-        rest.category = "668c25b3deec29b038e1fc25";
-      }
+
       if (req.store == undefined && isPending) { // through bussiness app, we would only choose available category, so no need for isPending, authToken passing from mobile side
         let storeId = req.params.storeId;
         const storeDetails = await Store.findById(storeId);
@@ -107,29 +101,14 @@ export const addProduct = asyncHandler(
       }
       let location;
 
-      if (rest.store) {
           const store = await Store.findById(rest.store, { location: 1 });
           if (!store) {
-            throw new Error('Store not found');
+            throw new AppError('Store not found', 404);
           }
 
           // Set the product's location to the store's location
           location = store.location;
-        }
-       else if (rest.individual) {
-          // Fetch the associated store
-          const individual = await Freelancer.findById(rest.individual);
-          if (!individual) {
-            throw new Error('Individual not found');
-          }
 
-          // Set the product's location to the store's location
-          location = individual.location;
-          console.log("this location");
-
-        } else {
-          throw new Error("Not store or individual");
-        }
 
         const product = new Product({
           isPending,

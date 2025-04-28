@@ -94,7 +94,7 @@ export const getSubCategoriesV2 = asyncHandler(
 export const getDisplayCategories = asyncHandler(
     async (req: Request, res: TypedResponse<{ _id: string, name: string, icon: string}[]>) => {
         try {
-            let { businessType } = getDisplayCategorySchema.parse(req.params);
+            let { businessType } = getDisplayCategorySchema.parse(req.query);
             let query: FilterQuery<ICategory> = {
                 parentId: { $exists: false },
                 isActive: true,

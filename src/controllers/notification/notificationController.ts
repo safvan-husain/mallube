@@ -8,6 +8,7 @@ import {createNotificationRequestSchema} from "./validation";
 import {Partner} from "../../models/Partner";
 import {onCatchError} from "../../error/onCatchError";
 import {paginationSchema} from "../../schemas/commom.schema";
+import {logger} from "../../config/logger";
 
 export const getNotificationsForBusiness = asyncHandler(
     async (req: Request, res: Response) => {
@@ -126,8 +127,6 @@ export const deleteNotification = asyncHandler(
     }
 )
 
-
-
 const createNotification = async ({ title, description, isForBusiness, notificationType }
     : { title: string, description: string, isForBusiness: boolean, notificationType: string }) => {
     var notification = new Notification({
@@ -177,13 +176,13 @@ const sendPushNotifications = async ({ title, body, notificationType }: { title:
                 },
                 tokens: chunk.map(e => e.fcmToken)
         }).then((response: any) => {
-            console.log('Multicast notification sent:', response);
+            logger.info('Multicast notification sent:', response);
         })
             .catch((error) => {
-                console.error('Error sending multicast notification:', error);
+                logger.error(error)
             });
         }
     } catch (error) {
-        console.log("error at sendPushNotificationToUsers", error);
+        logger.error("error at sendPushNotificationToUsers", error);
     }
 }
