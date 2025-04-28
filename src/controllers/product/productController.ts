@@ -31,7 +31,7 @@ import {z} from "zod";
 import {onCatchError} from "../../error/onCatchError";
 import {AppError} from "../service/requestValidationTypes";
 import {getProductCategoriesOfParent} from "../../service/category/product";
-import {FilterQuery} from "mongoose";
+import {FilterQuery, Types} from "mongoose";
 import {runtimeValidation} from "../../error/runtimeValidation";
 
 // get all products
@@ -387,7 +387,7 @@ export const fetchProductsV2 = asyncHandler(async (req: any, res: Response) => {
             .find(dbQuery)
             .populate<{
                 store: {
-                    _id: string,
+                    _id: Types.ObjectId,
                     storeName: string,
                 }
             }>("store", "storeName").populate<{
@@ -405,7 +405,11 @@ export const fetchProductsV2 = asyncHandler(async (req: any, res: Response) => {
                 category: e.category?.name ?? "N/A",
                 isEnquiryAvailable: e.isEnquiryAvailable ?? false,
                 description: e.description ?? "Unknown",
-                offerPrice: e.offerPrice ?? 0
+                offerPrice: e.offerPrice ?? 0,
+                store: {
+                    _id: e.store._id.toString(),
+                    storeName: e.store.storeName,
+                }
             }))),
         });
     } catch (error) {
