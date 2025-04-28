@@ -231,10 +231,8 @@ export const getProductsOfAStore = asyncHandler(
             "category"
         ).lean();
 
-        res.status(200).json(runtimeValidation(productUserResponseSchema, products.map(e => ({
-            ...e,
-            _id: e._id.toString()
-        }) as any)));
+        //TODO: correct. after changing business app model.
+        res.status(200).json(products as any);
     } catch (e) {
         onCatchError(e, res);
     }
