@@ -26,6 +26,7 @@ const router = express.Router();
 
 // for main website
 router.route("/fetch-products").get(fetchProducts);
+//used by user app.
 router.route("/fetch-products-v2").get(fetchProductsV2);
 
 //TODO: need to add middleware here

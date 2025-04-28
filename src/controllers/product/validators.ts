@@ -60,3 +60,9 @@ export const getProductsOfAStoreRequestSchema = z.object({
     storeId: z.string().optional(),
     category: ObjectIdSchema.optional(),
 }).merge(paginationSchema);
+
+export const getProductOfAStoreUserRequestSchema = z.object({
+    storeId: ObjectIdSchema,
+    category: ObjectIdSchema.optional(),
+    searchTerm: z.string().min(1, "Minimum one character required").optional(),
+}).merge(paginationSchema)

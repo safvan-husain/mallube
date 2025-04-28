@@ -20,7 +20,7 @@ import ProductSearch from "../../models/productSearch";
 
 import User from "../../models/userModel";
 import {
-    addProductSchema, getProductsOfAStoreRequestSchema,
+    addProductSchema, getProductOfAStoreUserRequestSchema, getProductsOfAStoreRequestSchema,
     nearByOfferProductsRequestSchema,
     ProductUserResponse,
     productUserResponseSchema
@@ -231,10 +231,7 @@ export const getProductsOfAStore = asyncHandler(
             "category"
         ).lean();
 
-        res.status(200).json(runtimeValidation(productUserResponseSchema, products.map(e => ({
-            ...e,
-            _id: e._id.toString()
-        }) as any)));
+        res.status(200).json(products as any);
     } catch (e) {
         onCatchError(e, res);
     }
@@ -359,81 +356,61 @@ export const fetchProducts = asyncHandler(async (req: any, res: Response) => {
 });
 
 export const fetchProductsV2 = asyncHandler(async (req: any, res: Response) => {
-  try {
-    const {
-      category,
-      sort,
-      searchTerm,
-      storeId,
-      page = 1,
-      limit = 12,
-    } = req.query;
-    console.log("on getch v2");
+    try {
+        const query = getProductOfAStoreUserRequestSchema.parse(req.query);
 
+        let dbQuery: FilterQuery<IProduct> = {
+            store: query.storeId,
+        };
 
-    let filter: any = {};
+        if (query.searchTerm) {
+            dbQuery.name = {$regex: query.searchTerm, $options: "i"};
 
-    if (storeId) {
-      filter["store"] = storeId;
-    } else {
-      filter["store"] = { $exists: true };
-    }
-    if (category) {
-      filter["category"] = category;
-    }
+            // Search product name using searchTerm, if not exist, also create collection for adding count.
+            // Check if the searched product already exists in the ProductSearch collection
+            // If it exists, increment searchCount; if not, add a new document.
+            const productSearch = await ProductSearch.findOneAndUpdate({
+                productName: query.searchTerm,
+            }, {
+                $inc: {searchCount: 1}
+            });
 
-    if (searchTerm && searchTerm.trim()) {
-      const trimmedSearchTerm = searchTerm.trim();
-      filter["name"] = { $regex: trimmedSearchTerm, $options: "i" };
+            if (!productSearch) {
+                await ProductSearch.create({
+                    productName: query.searchTerm,
+                    searchCount: 1,
+                });
+            }
+        }
 
-      // Search product name using searchTerm, if not exist, also create collection for adding count.
-      // Check if the searched product already exists in the ProductSearch collection
-      // If it exists, increment searchCount; if not, add a new document.
-      const productSearch = await ProductSearch.findOne({
-        productName: trimmedSearchTerm,
-      });
-      if (productSearch) {
-        await ProductSearch.findOneAndUpdate(
-          { productName: trimmedSearchTerm },
-          { $inc: { searchCount: 1 } }
-        );
-      } else {
-        await ProductSearch.create({
-          productName: trimmedSearchTerm,
-          searchCount: 1,
+        const tProducts = await Product
+            .find(dbQuery)
+            .populate<{
+                store: {
+                    _id: string,
+                    storeName: string,
+                }
+            }>("store", "storeName").populate<{
+                category?: {
+                    name: string,
+                }
+            }>("category", "name").lean();
+
+        const products = tProducts.filter((e) => e.store);
+
+        res.status(200).json({
+            products: runtimeValidation(productUserResponseSchema, products.map(e => ({
+                ...e,
+                _id: e._id.toString(),
+                category: e.category?.name ?? "N/A",
+                isEnquiryAvailable: e.isEnquiryAvailable ?? false,
+                description: e.description ?? "Unknown",
+                offerPrice: e.offerPrice ?? 0
+            }))),
         });
-      }
+    } catch (error) {
+        onCatchError(error, res);
     }
-
-    let sortOptions: any = {};
-
-    if (sort === "newest") {
-      sortOptions["createdAt"] = -1;
-    } else if (sort === "lowToHigh") {
-      sortOptions["price"] = 1;
-    } else if (sort === "highToLow") {
-      sortOptions["price"] = -1;
-    }
-
-    const tProducts = await Product.find(filter).populate("store", "storeName uniqueName location")
-      .sort(sortOptions)
-    const products = tProducts.filter((e) => e.store);
-
-    // Get the total count of products for pagination calculation
-    const totalProducts = await Product.countDocuments(filter);
-
-    // Calculate the total number of pages
-    const totalPages = Math.ceil(totalProducts / limit);
-
-    res.status(200).json({
-      products,
-      totalPages,
-      currentPage: parseInt(page),
-      totalProducts,
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Internal server error", error });
-  }
 });
 
 
