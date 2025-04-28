@@ -396,8 +396,8 @@ export const getBusinessesPerEmployee = async (req: Request, res: TypedResponse<
                 storeName: e.storeName,
                 storeOwnerName: e.storeOwnerName,
                 categoriesName: await getCommaSeparatedCategoryNames(e.categories),
-                place: e.city,
-                district: e.district,
+                place: e.city ?? "N/A",
+                district: e.district ?? "N/A",
             }))
         );
         res.status(200).json(runtimeValidation(EmployeeBusinessListItemSchema, responseList));
