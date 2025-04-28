@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { Types } from 'mongoose';
+import {ObjectIdSchema, paginationSchema} from "../../schemas/commom.schema";
+import {locationSchema} from "../user/buy_and_sell/validation";
 export const addProductSchema = z
   .object({
     name: z.string().trim().min(1, "product name cannot be empty"),
@@ -26,3 +28,30 @@ export const addProductSchema = z
       });
     }
   });
+
+export const nearByOfferProductsRequestSchema = z
+    .object({
+        category: ObjectIdSchema.optional(),
+        searchTerm: z.string().min(2, "Minimum two characters required").optional()
+    })
+    .merge(paginationSchema)
+    .merge(locationSchema)
+
+export const productUserResponseSchema = z.object({
+    isEnquiryAvailable: z.boolean(),
+    _id: z.string(),             // corresponds to id
+    name: z.string(),
+    images: z.array(z.string()),
+    description: z.string(),
+    price: z.number().int(),      // Dart's int -> JS number (integer)
+    offerPrice: z.number().int(),
+    category: z.string(),
+    store: z.object({
+        _id: z.string(),
+        storeName: z.string(),
+    }).nullable(),  // because in Dart it's `SubStoreModel?`
+    stock: z.boolean(),
+    addToCartActive: z.boolean(),
+});
+
+export type ProductUserResponse = z.infer<typeof productUserResponseSchema>;

@@ -6,25 +6,33 @@ import {
   IUploadProdutImagesSchema,
 } from "../../schemas/product.schema";
 
-import { ICustomRequest } from "../../types/requestion";
+import {ICustomRequest, TypedResponse} from "../../types/requestion";
 
 import {
   isDuplicateCategory,
   listAllSubCategories,
 } from "../../service/category";
 
-import Product from "../../models/productModel";
+import Product, {IProduct} from "../../models/productModel";
 import Category from "../../models/categoryModel";
 import Store from "../../models/storeModel";
 import ProductSearch from "../../models/productSearch";
 
 import User from "../../models/userModel";
-import { addProductSchema } from "./validators";
+import {
+    addProductSchema,
+    nearByOfferProductsRequestSchema,
+    ProductUserResponse,
+    productUserResponseSchema
+} from "./validators";
 import { Freelancer } from "../../models/freelancerModel";
 import {ObjectIdSchema, paginationSchema} from "../../types/validation";
 import {z} from "zod";
 import {onCatchError} from "../../error/onCatchError";
 import {AppError} from "../service/requestValidationTypes";
+import {getProductCategoriesOfParent} from "../../service/category/product";
+import {FilterQuery} from "mongoose";
+import {runtimeValidation} from "../../error/runtimeValidation";
 
 // get all products
 export const getAllProducts = asyncHandler(
@@ -422,42 +430,56 @@ export const fetchProductsV2 = asyncHandler(async (req: any, res: Response) => {
 
 
 export const getNearbyProductsWithOffer = asyncHandler(
-  async (req: any, res: any) => {
+  async (req: Request, res: TypedResponse<ProductUserResponse[]>) => {
     try {
-      var { longitude, latitude, limit, skip } = req.query;
-      if (!longitude || !latitude) {
-        return res.status(400).json({ message: "Longitude and latitude are required" });
-      }
+        let {
+            longitude,
+            latitude,
+            limit,
+            skip,
+            searchTerm,
+            category
+        } = nearByOfferProductsRequestSchema.parse(req.query);
 
-      if (!limit) {
-        limit = '80';
-      }
-
-      if (!skip) {
-        skip = '0';
-      }
-
-      const products2 = await Product.find({
-        offerPrice: { $exists: true, $gt: 0 },
-        store: { $exists: true },
-        isActive: true,
-        isAvailable: true,
-        location: {
-          $near: {
-            $geometry: {
-              type: "Point",
-              coordinates: [parseFloat(latitude), parseFloat(longitude)]
+        let dbQuery: FilterQuery<IProduct> = {
+            offerPrice: {$exists: true, $gt: 0},
+            store: {$exists: true},
+            isActive: true,
+            isAvailable: true,
+            location: {
+                $near: {
+                    $geometry: {
+                        type: "Point",
+                        coordinates: [latitude, longitude]
+                    }
+                }
             }
-          }
-        }
-      }).skip(parseInt(skip))
-        .limit(parseInt(limit))
-        .populate('store', 'storeName location')
-        .lean();
+        };
 
-      res.status(200).json(products2);
+        if (category) {
+            const productCategories = await getProductCategoriesOfParent(category.toString());
+            dbQuery.category = {$in: productCategories.map(e => e._id)}
+        }
+
+        if (searchTerm) {
+            dbQuery.name = {$regex: searchTerm, $options: "i"};
+        }
+
+        const products2: any[] = await Product
+            .find(dbQuery)
+            .skip(skip)
+            .limit(limit)
+            .populate<{
+                store: {
+                    storeName: string,
+                    location: { coordinates: [number, number] }
+                }
+            }>('store', 'storeName location')
+            .lean();
+
+        res.status(200).json(runtimeValidation(productUserResponseSchema, products2));
     } catch (error) {
-      res.status(500).json({ message: "Internal server error", error });
+        onCatchError(error, res);
     }
   }
 );
