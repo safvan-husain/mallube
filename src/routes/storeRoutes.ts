@@ -23,7 +23,6 @@ import {
   updateFcmToken,
   addTimeSlotV2,
   getBookingsV2,
-  confirmBookingV2,
   getTimeSlotV2,
   deleteTimeSlotV2,
   fetchStoresNearByV2,
@@ -40,7 +39,9 @@ import {
 } from "../controllers/advertisement/advertisementController";
 import { createNote, deleteNote, getNotesForStore, updateNote } from "../controllers/store/notes_controller";
 import { createBillForCustomer, createCustomer, deleteCustomer, deleteSelectedBills, getAllCustomers, getCustomerPurchaseHistory, getSpecificBill, markRecievedPayment, updateCustomer, updateSpecificBill } from "../controllers/store/pattu_book_controller";
-import {getBookingHistory, getTodayBookings} from "../controllers/store/store-booking-timeslot-Controller";
+import {getBookingHistory, getTodayBookings,
+  confirmBookingV2,
+} from "../controllers/store/store-booking-timeslot-Controller";
 import {otpVerifyV2, sendOtpV2} from "../controllers/otp-verification/otp-verification-controller";
 import {changeStorePasswordV2, changeStorePushNotificationStatus} from "../controllers/store/auth-controller";
 const router = express.Router();

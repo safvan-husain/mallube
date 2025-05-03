@@ -838,35 +838,6 @@ export const deleteTimeSlotV2 = asyncHandler(
   }
 )
 
-export const confirmBookingV2 = asyncHandler(
-  async (req: ICustomRequest<any>, res: Response) => {
-    try {
-      const { bookingId } = z.object({
-        bookingId: ObjectIdSchema
-      }).parse(req.query);
-
-      const booking = await Booking.findById(bookingId);
-      if (!booking) {
-        res.status(400).json({ message: "booking not found" });
-        return;
-      }
-      const timeSlot = await TimeSlot.findById(booking.timeSlotId);
-      if (timeSlot.numberOfAvailableSeats > 0) {
-        await TimeSlot.findByIdAndUpdate(
-          booking.timeSlotId,
-          { $inc: { numberOfAvailableSeats: -1 } }
-        );
-        booking!.status = bookingStatusSchema.enum.confirmed;
-        await booking.save();
-        res.status(200).json({ message: "Booking confirmed" });
-      } else {
-        res.status(400).json({ message: "No available seats left" });
-      }
-    } catch (error) {
-      onCatchError(error, res);
-    }
-  }
-);
 
 const storeBookingResponse = z.object({
   _id: ObjectIdSchema,

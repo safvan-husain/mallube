@@ -13,6 +13,7 @@ export interface IBooking extends Document {
     startTime:Date,
     endTime:Date,
     date:Date;
+    //not saving name anymore.
     name:string;
     phone:string;
     doctor:Schema.Types.ObjectId;
