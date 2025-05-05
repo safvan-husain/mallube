@@ -2,6 +2,7 @@ import {Schema, model, Document, InferSchemaType, Types} from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import {z} from "zod";
+import {config} from "../config/vars";
 
 export const employeePrivilegeSchema = z.enum(['manager', 'staff']);
 
@@ -89,7 +90,7 @@ employeeSchema.pre("save", async function (next) {
 
 // Generate authentication token
 employeeSchema.methods.generateAuthToken = function (): string {
-    return jwt.sign({_id: this._id}, "managerSecret", {expiresIn: "360d"});
+    return jwt.sign({_id: this._id, type: "employee"}, config.jwtSecret, {expiresIn: "360d"});
 };
 
 

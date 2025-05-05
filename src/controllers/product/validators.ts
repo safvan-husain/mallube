@@ -59,6 +59,7 @@ export type ProductUserResponse = z.infer<typeof productUserResponseSchema>;
 export const getProductsOfAStoreRequestSchema = z.object({
     storeId: z.string().optional(),
     category: ObjectIdSchema.optional(),
+    stockStatus: z.enum(['stockIn', 'stockOut']).optional()
 }).merge(paginationSchema);
 
 export const getProductOfAStoreUserRequestSchema = z.object({

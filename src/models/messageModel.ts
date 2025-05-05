@@ -1,5 +1,5 @@
-import { Document, model, Schema } from "mongoose";
-import { Chat } from "./chatsModel";
+import {Document, Model, model, Schema, Types} from "mongoose";
+import {Chat, IChatParticipantTypes} from "./chatsModel";
 
 export interface IMessage extends Document {
     _id: Schema.Types.ObjectId;
@@ -8,6 +8,10 @@ export interface IMessage extends Document {
     content: string,
     timestamp: Date,
     isRead: boolean;
+}
+
+export interface IMessageModel extends Model<IMessage> {
+    handleChatCreationOrUpdate: (data: {senderId: Types.ObjectId, receiverId: Types.ObjectId, content: string, participantTypes: IChatParticipantTypes[]}) => Promise<IMessage>;
 }
 
 const messageSchema = new Schema<IMessage>(
@@ -32,31 +36,40 @@ const messageSchema = new Schema<IMessage>(
             type: Boolean,
             required: true,
         }
+    },
+    {
+        timestamps: true
     }
 )
 
-messageSchema.pre('save', async function(next) {
-  const message = this;
+messageSchema.statics.handleChatCreationOrUpdate =  async function({senderId, receiverId, participantTypes, content}) {
+  const message = await Message.create({
+      senderId,
+      receiverId,
+      content,
+      timestamp: new Date(),
+      isRead: false
+  });
   
-  // Check if chat exists
+  // Check if chat [conversation] exists
   let chat = await Chat.findOne({
-    participants: { $all: [message.senderId, message.receiverId] },
+    participants: { $all: [senderId,receiverId] },
+      participantTypes: { $all: participantTypes }
   });
 
   if (!chat) {
     // Create new chat
-    const newChat = new Chat({
-      participants: [message.senderId, message.receiverId],
+      await Chat.create({
+      participants: [senderId, receiverId],
+        participantTypes,
       lastMessage: message._id
     });
-    await newChat.save();
-    chat = newChat;
   } else {
     // Update existing chat
     chat.lastMessage = message._id;
     await chat.save();
   }
-  next();
-});
+  return message;
+};
 
-export const Message = model<IMessage>('messages', messageSchema)
+export const Message = model<IMessage, IMessageModel>('messages', messageSchema)

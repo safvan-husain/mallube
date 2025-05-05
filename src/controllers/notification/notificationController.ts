@@ -8,7 +8,7 @@ import {createNotificationRequestSchema} from "./validation";
 import {Partner} from "../../models/Partner";
 import {onCatchError} from "../../error/onCatchError";
 import {paginationSchema} from "../../schemas/commom.schema";
-import {logger} from "../../config/logger";
+import {errorLogger, logger} from "../../config/logger";
 
 export const getNotificationsForBusiness = asyncHandler(
     async (req: Request, res: Response) => {
@@ -179,10 +179,10 @@ const sendPushNotifications = async ({ title, body, notificationType }: { title:
             logger.info('Multicast notification sent:', response);
         })
             .catch((error) => {
-                logger.error(error)
+                errorLogger(error)
             });
         }
     } catch (error) {
-        logger.error("error at sendPushNotificationToUsers", error);
+        errorLogger("error at sendPushNotificationToUsers", error);
     }
 }

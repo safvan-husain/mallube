@@ -249,7 +249,7 @@ const storeSchema = new Schema<IStore>(
 
 // GENERATE AUTH TOKEN
 storeSchema.methods.generateAuthToken = function (): string {
-    return jwt.sign({_id: this._id}, config.jwtSecret);
+    return jwt.sign({_id: this._id, type: 'business' }, config.jwtSecret);
 };
 
 storeSchema.index({ addedBy: 1 });

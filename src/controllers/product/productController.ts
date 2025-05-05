@@ -215,10 +215,14 @@ export const getProductsOfAStore = asyncHandler(
     }
 
     try {
-        const { skip, limit, category } = getProductsOfAStoreRequestSchema.parse(req.query);
+        const { skip, limit, category, stockStatus } = getProductsOfAStoreRequestSchema.parse(req.query);
 
         if(category) {
             query.category = category;
+        }
+
+        if (stockStatus) {
+            query.stock = stockStatus === "stockIn";
         }
 
         const products = await Product

@@ -1,77 +1,100 @@
-import { Server, Socket } from 'socket.io';
-import { createdAtIST, getIST } from '../../utils/ist_time';
+import {DefaultEventsMap, Server, Socket} from 'socket.io';
 import { Types } from 'mongoose';
 import { saveMessage } from './messageController';
+import {errorLogger, logger} from "../../config/logger";
+import {WebSocketMessage, webSocketMessageSchema} from "./message-validation";
+import {z} from "zod";
+import jwt from "jsonwebtoken";
+import {config} from "../../config/vars";
 
+interface SocketEvents {
+    message: (data: WebSocketMessage) => void;
+    error: (data: any) => void;
+    appError: (data: { message: string, error?: any}) => void;
+}
+
+type AppSocket = Socket<DefaultEventsMap, SocketEvents, DefaultEventsMap, { user: { id: string, type: 'user' | 'business' | 'employee' }}>;
 
 export const socketHandler = (io: Server) => {
-    const userSocketsMap: Map<string, Socket> = new Map();
+    const userSocketsMap: Map<string, AppSocket> = new Map();
 
-    io.on('connection', (socket: Socket) => {
-        const userId = socket.handshake.query.userId as string;
+    // Add middleware for authentication
+    io.use(async (socket: AppSocket, next) => {
+        try {
+            const token = socket.handshake.auth.token || socket.handshake.headers.authorization;
 
-        if (!Types.ObjectId.isValid(userId)) {
-            // If the user exists, reject the connection with an error message
-            socket.emit('message', { error:  'not valid ObjectId on userId'});
-            socket.disconnect(true);
-            return;
+            if (!token) {
+                return next(new Error('Authentication token required'));
+            }
+
+            const user = authenticateUser(token);
+
+            if (!user) {
+                return next(new Error('Invalid authentication token'));
+            }
+            console.log(user);
+            // Add user data to socket for later use
+            socket.data.user = {
+                id: user._id.toString(),
+                type: user.type
+            };
+
+            next();
+        } catch (error) {
+            errorLogger(error);
+            next(new Error('Authentication failed'));
         }
+    });
 
+    io.on('connection', (socket: AppSocket) => {
+        console.log("on connection");
+        const userId = socket.data.user.id;
         userSocketsMap.set(userId, socket);
 
-        socket.on('message', async (data: Message) => {
-            if(!checkObjectAndFields(data)) {
-                socket.emit('message', { error: "Not valid data"});
-                return;
-            }
-            data.timestamp = createdAtIST().getTime();
-            data.senderId = userId;
-            if (!Types.ObjectId.isValid(data.receiverId)) {
-                socket.emit('message', { error: 'not valid ObjectId on receiverId' });
-                return;
-            }
+        socket.on('message', async (data: any) => {
             try {
-                await saveMessage(data);
-            } catch (e) {
-                socket.emit('message', { error: e });
-            }
-            if (userSocketsMap.has(data.receiverId)) {
-                const receiverSocket = userSocketsMap.get(data.receiverId);
-                if (receiverSocket) {
-                    receiverSocket.emit('message', data);
+                const messageObject = webSocketMessageSchema.parse(data);
+                await saveMessage(messageObject);
+                if (userSocketsMap.has(data.receiverId)) {
+                    const receiverSocket = userSocketsMap.get(data.receiverId);
+                    if (receiverSocket) {
+                        receiverSocket.emit('message', data);
+                    }
+                } else {
+                    logger.info(`Receiver not found for message to ${data.receiverId}`);
                 }
-            } else {
-                console.warn(`Receiver not found for message to ${data.receiverId}`);
+            } catch (e) {
+                if (e instanceof  z.ZodError) {
+                    socket.emit('appError', { error: e, message: 'Invalid message format' });
+                } else {
+                    socket.emit('appError', { error: e, message: 'Unknown Server Error' });
+                    errorLogger(e);
+                }
             }
         });
 
         socket.on('disconnect', () => {
-            console.log(`User disconnected: ${userId}`);
+
+            logger.info(`User disconnected: ${userId}`);
             userSocketsMap.delete(userId);
         });
 
         socket.on('error', (err) => {
-            console.error(`Socket error from ${socket.id}:`, err);
+            errorLogger(err);
         });
     });
 };
 
-export interface Message {
-    receiverId: string;
-    content: string;
-    senderId: string;
-    timestamp: number;
-}
-
-function checkObjectAndFields(obj: any): boolean {
-    const fieldNames = ['receiverId', 'content', 'senderId']
-    if (typeof obj === "object" && obj !== null) {
-        for (const fieldName of fieldNames) {
-            if (!(fieldName in obj) || !obj.hasOwnProperty(fieldName)) {
-                return false;
-            }
-        }
-        return true;
+const authenticateUser = (token: string) => {
+    const decoded = jwt.verify(token, config.jwtSecret) as {
+        _id: string;
+        type: 'user' | 'business' | 'employee'
+    };
+    if(!decoded.type) {
+        return null;
     }
-    return false;
+    return {
+        _id: decoded._id,
+        type: decoded.type
+    }
 }

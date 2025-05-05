@@ -1,6 +1,6 @@
 
 // Schedule cleanup tasks
-import {logger} from "./logger";
+import {errorLogger, logger} from "./logger";
 import {server} from "../server";
 import {removeExpiredAds} from "../controllers/user/buy_and_sell/buy_and_sellController";
 
@@ -10,7 +10,7 @@ const cleanupInterval = setInterval(async () => {
         await removeExpiredAds();
         logger.info('Expired ads cleanup completed');
     } catch (error: any) {
-        logger.error('Failed to remove expired ads', { error: error?.message });
+        errorLogger('Failed to remove expired ads', { error: error?.message });
     }
 }, DAILY_INTERVAL);
 
@@ -32,7 +32,7 @@ function gracefulShutdown() {
 
     // Force close after 10 seconds if graceful shutdown fails
     setTimeout(() => {
-        logger.error('Could not close connections in time, forcefully shutting down');
+        errorLogger('Could not close connections in time, forcefully shutting down');
         process.exit(1);
     }, 10000);
 }

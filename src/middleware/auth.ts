@@ -19,7 +19,9 @@ declare global {
         _id: string;
       };
       employee?: IEmployee;
-      partner: IPartner
+      partner: IPartner;
+        requestedId?: string;
+        requesterType?: 'user' | 'business' | 'employee'
     }
   }
 }
@@ -106,6 +108,8 @@ export const store = asyncHandler(
         _id: string;
       };
 
+      req.requestedId = decoded._id;
+      req.requesterType = 'business'
       req.store = decoded;
       next();
     } catch (error) {
@@ -127,6 +131,9 @@ export const user = asyncHandler(
         const decoded = jwt.verify(token, config.jwtSecret) as {
           _id: string;
         };
+
+          req.requestedId = decoded._id;
+          req.requesterType = 'user'
 
         req.user = await User.findById(decoded._id).select("-password");
         if (!req.user) throw new Error("user is not found");
@@ -190,6 +197,8 @@ export const employeeProtect = asyncHandler(
                 _id: string;
                 privilege: TEmployeePrivilege;
             };
+            req.requestedId = decoded._id;
+            req.requesterType = 'employee'
 
             let employee = await Employee.findById(decoded._id);
             if (!employee) {

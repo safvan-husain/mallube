@@ -1,7 +1,7 @@
 import {Response} from "express";
 import {z} from "zod";
 import {AppError} from "../controllers/service/requestValidationTypes";
-import {logger} from "../config/logger";
+import {errorLogger, logger} from "../config/logger";
 
 export const onCatchError = (error: any, res: Response) => {
     if (error instanceof z.ZodError) {
@@ -15,6 +15,6 @@ export const onCatchError = (error: any, res: Response) => {
         res.status(error.statusCode).json(error.toJson());
         return;
     }
-    logger.error(error);
+    errorLogger(error);
     res.status(500).json({message: "Internal server error", error});
 }

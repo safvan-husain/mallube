@@ -1,5 +1,6 @@
 import  winston from "winston";
 const { combine, timestamp, errors, json, colorize, printf } = winston.format;
+require('dotenv').config();
 
 const consoleFormat = printf(({ level, message, timestamp, stack }) => {
     const log = stack ? `${stack}` : message;
@@ -27,3 +28,13 @@ export const logger = winston.createLogger({
     ]
 });
 
+export function errorLogger(err: any, other?: any) {
+    if (process.env.ENVIRONMENT === 'development') {
+        throw err;
+    } else {
+        if (other) {
+            logger.error(err, other);
+        }
+        logger.error(err);
+    }
+}

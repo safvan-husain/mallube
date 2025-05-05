@@ -2,25 +2,35 @@
 
 import { Document, model, Schema, Types } from "mongoose";
 import {Message} from "./messageModel";
+import {z} from "zod";
+
+export const chatParticipantTypesSchema = z.enum(['user', 'business'])
+export type IChatParticipantTypes = z.infer<typeof chatParticipantTypesSchema>;
 
 export interface IChat extends Document {
   participants: Types.ObjectId[];
   deletedParticipants: Types.ObjectId[];
+  participantTypes: IChatParticipantTypes[];
   lastMessage: Schema.Types.ObjectId;
 }
 
 const chatSchema = new Schema<IChat>({
   participants: [
     {
-      type: Schema.Types.ObjectId,
-      ref: "users",
+      type: String,
       required: true,
     },
   ],
+  participantTypes: [
+    {
+      type: String,
+      enum: chatParticipantTypesSchema.enum,
+      required: true
+    }
+  ],
   deletedParticipants: [
     {
-      type: Schema.Types.ObjectId,
-      ref: "users",
+      type: String,
       required: true,
     },
   ],
@@ -31,8 +41,9 @@ const chatSchema = new Schema<IChat>({
   },
 });
 
+//TODO: llok our delte logic
 chatSchema.pre("save", async function (next) {
-  if (this.deletedParticipants.length === 2) {
+  if (this.deletedParticipants.length === 0) {
     // Delete all messages related to this chat
     await Message.deleteMany({
       $or: [

@@ -22,7 +22,7 @@ import {
   relevantAdvertisementSchema
 } from "./validation";
 import {runtimeValidation} from "../../error/runtimeValidation";
-import {logger} from "../../config/logger";
+import {errorLogger, logger} from "../../config/logger";
 
 
 interface StoreAdvertisementResponse {
@@ -349,7 +349,7 @@ export const scheduleExpireAdvertisementStatusChanger = () => {
         }
       }
     } catch (error) {
-      logger.error("error at periodicallyChangeStatusOfExpiredAdvertisemets", error);
+      errorLogger("error at periodicallyChangeStatusOfExpiredAdvertisemets", error);
     }
 
   }, 60000 * 10);

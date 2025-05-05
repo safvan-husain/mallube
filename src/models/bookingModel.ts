@@ -1,7 +1,7 @@
 import { Schema, model, Document } from "mongoose";
 import {z} from "zod";
 
-export const bookingStatusSchema = z.enum(['pending', 'confirmed', 'canceled']);
+export const bookingStatusSchema = z.enum(['pending', 'confirmed', 'canceled', 'rejected']);
 type IBookingStatus = z.infer<typeof bookingStatusSchema>;
 
 //TODO: remove uneccessery fields later.
