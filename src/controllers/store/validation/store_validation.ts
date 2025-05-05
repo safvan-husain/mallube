@@ -71,6 +71,41 @@ export const EmployeeBusinessListItemSchema = z.object({
     district: z.string(),
 });
 
+export const employeeBusinessListItems = [
+    {
+        _id: "1",
+        storeName: "QuickFix Electronics",
+        storeOwnerName: "Rajesh Kumar",
+        categoriesName: "Electronics Repair",
+        place: "MG Road",
+        district: "Bangalore",
+    },
+    {
+        _id: "2",
+        storeName: "FreshMart Groceries",
+        storeOwnerName: "Anita Sharma",
+        categoriesName: "Grocery",
+        place: "Lajpat Nagar",
+        district: "Delhi",
+    },
+    {
+        _id: "3",
+        storeName: "Style Hub",
+        storeOwnerName: "Mohammed Rafiq",
+        categoriesName: "Fashion & Apparel",
+        place: "Charminar",
+        district: "Hyderabad",
+    },
+    {
+        _id: "4",
+        storeName: "Book Haven",
+        storeOwnerName: "Sneha Iyer",
+        categoriesName: "Books & Stationery",
+        place: "T. Nagar",
+        district: "Chennai",
+    },
+   ];
+
 // If you need the inferred TypeScript type
 export type EmployeeBusinessListItem = z.infer<typeof EmployeeBusinessListItemSchema>;
 

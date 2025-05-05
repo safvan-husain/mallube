@@ -1,6 +1,10 @@
 import {Request, Response} from "express";
 import {TypedResponse} from "../../../types/requestion";
-import {EmployeeBusinessListItem} from "../../store/validation/store_validation";
+import {
+    EmployeeBusinessListItem,
+    employeeBusinessListItems,
+    EmployeeBusinessListItemSchema
+} from "../../store/validation/store_validation";
 import {
     changePasswordRequestSchema,
     createPartnerSchema, fcmTokenRequestSchema, loginPartnerResponseSchema,
@@ -44,8 +48,32 @@ export const getBusinesses = async (req: Request, res: TypedResponse<EmployeeBus
 
         console.log("query here", dbQuery);
 
+        // res.status(200).json(await businessListFromQuery({ query: dbQuery, skip: query.skip, limit: query.limit }));
+        res.status(200).json(runtimeValidation(EmployeeBusinessListItemSchema,employeeBusinessListItems));
+    } catch (e) {
+        onCatchError(e, res);
+    }
+}
 
-        res.status(200).json(await businessListFromQuery({ query: dbQuery, skip: query.skip, limit: query.limit }));
+export const getJoinedStoreCount = async (req: Request, res: TypedResponse<any>) => {
+    try {
+        const {month} = monthAndBusinessTypeSchema.parse(req.query);
+        res.status(200).json([
+            {
+                date: (new Date('2023-04-01')).getTime(),
+                count: 6
+            }, {
+                date: (new Date('2023-04-02')).getTime(),
+                count: 2
+            },
+            {
+                date: (new Date('2023-04-04')).getTime(),
+                count: 8
+            }, {
+                date: (new Date('2023-04-05')).getTime(),
+                count: 1
+            },
+        ])
     } catch (e) {
         onCatchError(e, res);
     }

@@ -2,7 +2,7 @@ import { Router } from "express";
 import {
     loginPartner,
     changePassword,
-    updateFcmToken, businessGraph, getBusinesses, updatePushNotificationStatus
+    updateFcmToken, businessGraph, getBusinesses, updatePushNotificationStatus, getJoinedStoreCount
 } from "../controllers/marketting-section/partner/partner-controller";
 import {partnerProtect} from "../middleware/authentication/partnerProtect";
 import {getNotificationsForPartner} from "../controllers/notification/notificationController";
@@ -20,6 +20,9 @@ router.route('/fcm-token')
 
 router.route('/graph')
     .get(partnerProtect, businessGraph)
+
+router.route('/business-count')
+    .get(partnerProtect, getJoinedStoreCount)
 
 router.route('/business')
     .get(partnerProtect, getBusinesses)
