@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { user } from "../middleware/auth";
+import {protect, user} from "../middleware/auth";
 import { getChats, getConversation } from "../controllers/web-socket/messageController";
 
 const router = Router();
 
-router.route('/').get(user, getChats);
-router.route('/:otherUserId').get(user, getConversation);
+router.route('/').get(protect, getChats);
+router.route('/:otherUserId').get(protect, getConversation);
 
 export { router as chatRoutes };

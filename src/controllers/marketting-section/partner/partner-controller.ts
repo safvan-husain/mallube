@@ -81,14 +81,14 @@ export const getJoinedStoreCount = async (req: Request, res: TypedResponse<any>)
 
 export const createPartner = async (req: Request, res: TypedResponse<any>) => {
     try {
-        const data = createPartnerSchema.parse(req.body);
+        let data = createPartnerSchema.parse(req.body);
         // Check if user already exists by phone number
         const existingUser = await Partner.findOne({ phone: data.phone });
         if (existingUser) {
             return res.status(409).json({ message: 'Partner with this phone number already exists.' });
         }
         // Create new partner
-        const newUser = await Partner.create(data);
+        const newUser = await Partner.create({...data, password: data.phone});
         return res.status(201).json(runtimeValidation(partnerResponseSchema, {
             _id: newUser._id.toString(),
             ...data
@@ -189,7 +189,12 @@ export const updateFcmToken = async (req: Request, res: TypedResponse<any>) => {
 export const changePassword = async (req: Request, res: TypedResponse<any>) => {
     try {
         const { password } = changePasswordRequestSchema.parse(req.body);
-        await Partner.findByIdAndUpdate(req.partner._id,{ password });
+        let partner = await Partner.findById(req.partner._id, {});
+        if (!partner) {
+            return res.status(404).json({ message: 'Partner not found.' });
+        }
+        partner.password = password;
+        await partner.save();
         return res.status(200).json({ message: 'Password reset successfully' });
     } catch (e) {
         onCatchError(e, res);

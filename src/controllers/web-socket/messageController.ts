@@ -15,7 +15,7 @@ import Store from "../../models/storeModel";
 
 export const getConversation = asyncHandler(
     async (req: Request, res: Response) => {
-        const userId = req.user!._id;
+        const userId = req.requestedId;
         const otherUserId = ObjectIdSchema.parse(req.params.otherUserId);
 
         try {

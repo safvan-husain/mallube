@@ -51,10 +51,6 @@ chatSchema.pre("save", async function (next) {
         {senderId: this.deletedParticipants[1], receiverId: this.deletedParticipants[0] },
       ]
     });
-
-    // Delete the chat itself
-    await this.deleteOne();
-    return; // Stop further processing
   }
   next();
 });
