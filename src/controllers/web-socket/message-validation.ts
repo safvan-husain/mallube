@@ -11,6 +11,7 @@ export const getChatsRequestSchema = z.object({
 export const webSocketMessageSchema = z.object({
     receiverId: ObjectIdSchema,
     senderId: ObjectIdSchema,
+    senderUserName: z.string().optional().default("Default Unknown"),
     content: z.string().min(1, {message: "Message cannot be empty"}),
     senderCollection: chatParticipantTypesSchema,
     receiverCollection: chatParticipantTypesSchema,

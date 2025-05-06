@@ -58,7 +58,7 @@ export const socketHandler = (io: Server) => {
                 if (userSocketsMap.has(data.receiverId)) {
                     const receiverSocket = userSocketsMap.get(data.receiverId);
                     if (receiverSocket) {
-                        receiverSocket.emit('message', data);
+                        receiverSocket.emit('message', messageObject);
                     }
                 } else {
                     logger.info(`Receiver not found for message to ${data.receiverId}`);

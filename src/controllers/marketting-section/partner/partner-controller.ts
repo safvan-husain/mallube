@@ -155,26 +155,22 @@ export const getAllPartners = async (req: Request, res: TypedResponse<any>) => {
 
 export const businessGraph = async (req: Request, res: Response) => {
     try {
-        const {month} = monthAndBusinessTypeSchema.parse(req.query);
-        const range = getUTCMonthRangeFromISTDate(month);
+        // Generate data for all 12 months (Jan to Dec)
+        const monthNames = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
 
-        // Get all days in the month
-        const allDays = [];
-        let currentDate = new Date(range.start);
-        while (currentDate < range.end) {
-            allDays.push(new Date(currentDate));
-            currentDate.setDate(currentDate.getDate() + 1);
-        }
-        //TODO: correct calculations.
-        const data = allDays.map(e => ({
-            day: e.getDate().toString().padStart(2, '0'),
-            count: Math.floor(Math.random() * 100),
+        const data = monthNames.map((month, index) => ({
+            month,
+            count: Math.floor(Math.random() * 100) // Replace with real data later
         }));
+
         res.status(200).json(data);
     } catch (e) {
         onCatchError(e, res);
     }
-}
+};
 
 export const updateFcmToken = async (req: Request, res: TypedResponse<any>) => {
     try {
