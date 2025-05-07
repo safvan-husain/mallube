@@ -16,7 +16,6 @@ import {
     listPendingSubCategories,
 } from "../../service/category";
 import {FilterQuery, Types} from "mongoose";
-import Product from "../../models/productModel";
 import Store from "../../models/storeModel";
 import {
     addCategorySchema,

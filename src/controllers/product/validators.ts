@@ -2,6 +2,7 @@ import { z } from "zod";
 import { Types } from 'mongoose';
 import {ObjectIdSchema, paginationSchema} from "../../schemas/commom.schema";
 import {locationSchema} from "../user/buy_and_sell/validation";
+import {productUnitSchema} from "../../models/productModel";
 export const addProductSchema = z
   .object({
     name: z.string().trim().min(1, "product name cannot be empty"),
@@ -15,6 +16,8 @@ export const addProductSchema = z
     addToCartActive: z.boolean().default(false).optional(),
     isEnquiryAvailable: z.boolean().default(false).optional(),
     store: z.string().optional(),
+      quantity: z.number(),
+      unit: productUnitSchema
   })
   .superRefine((data, ctx) => {
     if (data.offerPrice && data.offerPrice >= data?.price) {

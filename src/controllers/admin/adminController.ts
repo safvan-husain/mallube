@@ -9,8 +9,6 @@ import Advertisement from "../../models/advertisementModel";
 import ProductSearch from "../../models/productSearch";
 import User from "../../models/userModel";
 import { getNextYearSameDateMinusOneDay } from "../../utils/misc";
-import Product from "../../models/productModel";
-import Category from "../../models/categoryModel";
 
 export const login = async (req: Request, res: Response) => {
   try {

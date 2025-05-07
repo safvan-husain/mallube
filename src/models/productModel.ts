@@ -1,6 +1,10 @@
 import { Schema, model, Document } from "mongoose";
 import Store from "./storeModel";
 import { Freelancer } from "./freelancerModel";
+import {z} from "zod";
+
+export const productUnitSchema = z.enum(['kg', 'g', 'l', 'ml', 'pcs']);
+export type ProductUnit = z.infer<typeof productUnitSchema>
 
 export interface IProduct extends Document {
   name: string;
@@ -10,7 +14,6 @@ export interface IProduct extends Document {
   offerPrice?: number;
   category: Schema.Types.ObjectId;
   store?: Schema.Types.ObjectId;
-  individual?: Schema.Types.ObjectId;
   isActive: boolean; // controlled by admin
   isAvailable: boolean; // conrolled by admin/staff
   isPending: boolean;
@@ -21,6 +24,8 @@ export interface IProduct extends Document {
     type: string;
     coordinates: [number, number];
   };
+  quantity: number,
+    unit: ProductUnit
 }
 
 const productSchema = new Schema<IProduct>(
@@ -51,11 +56,6 @@ const productSchema = new Schema<IProduct>(
     store: {
       type: Schema.Types.ObjectId,
       ref: "stores",
-      required: false,
-    },
-    individual: {
-      type: Schema.Types.ObjectId,
-      ref: "services",
       required: false,
     },
     isActive: {
@@ -93,16 +93,18 @@ const productSchema = new Schema<IProduct>(
         required: true,
       },
     },
+      quantity: {type: Number, default: 1},
+      unit: {Type: String, enum: ['kg', 'g', 'l', 'ml', 'pcs'], default: 'pcs'}
   },
+
   {
     timestamps: true,
   }
 );
 
+//TODO: separate from pre save, what we have call with updateOne, this will not fet affected
 // Middleware to set the product's location from its store
 productSchema.pre('save', async function (next) {
-  console.log('on pre save with ', this);
-  
   // Check if the store field is modified or this is a new product
   if (this.store) {
     if (this.isModified('store') || this.isNew) {
@@ -111,27 +113,10 @@ productSchema.pre('save', async function (next) {
       if (!store) {
         throw new Error('Store not found');
       }
-
       // Set the product's location to the store's location
       this.location = store.location;
     }
-  } else if (this.individual) {
-    if(this.isModified('individual') || this.isNew) {
-      // Fetch the associated store
-      const individual = await Freelancer.findById(this.individual);
-      if (!individual) {
-        throw new Error('Store not found');
-      }
-
-      // Set the product's location to the store's location
-      this.location = individual.location;
-      console.log("this location");
-      
-    } else {
-      throw new Error("Not store or individual");
-    }
   }
-
   next();
 });
 
