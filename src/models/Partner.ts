@@ -11,6 +11,8 @@ export interface IPartner extends Document {
     password: string;
     fcmToken?: string;
     pushNotificationStatus: boolean;
+    //for app store / play complacency
+    isDeleted: boolean;
     comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -24,6 +26,7 @@ const partnerSchema: Schema<IPartner> = new Schema(
         password: { type: String, required: true },
         fcmToken: { type: String },
         pushNotificationStatus: { type: Boolean, default: true },
+        isDeleted: { type: Boolean, default: false },
     },
     {
         timestamps: true,

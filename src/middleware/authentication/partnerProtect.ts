@@ -23,7 +23,7 @@ const partnerProtect = async (req: Request, res: Response, next: NextFunction) =
 
     const partner = await Partner.findById(decoded._id).lean();
 
-    if (!partner) {
+    if (!partner || partner.isDeleted) {
         res.status(401).json({ message: 'Not authorized, partner not found' });
         return;
     }

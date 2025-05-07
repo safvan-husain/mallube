@@ -208,5 +208,13 @@ export const updatePushNotificationStatus = async (req: Request, res: TypedRespo
 };
 
 export const selfDeletePartner = async(req: Request, res: Response) => {
-    res.status(200).json({ message: "Success"});
+    try {
+        const data = await Partner.findByIdAndUpdate(req.partner._id, { isDeleted: true });
+        if (!data) {
+            return res.status(404).json({ message: 'Partner not found.' });
+        }
+        res.status(200).json({ message: "Success"});
+    } catch (e) {
+       onCatchError(e, res);
+    }
 }
