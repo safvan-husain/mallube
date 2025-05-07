@@ -81,7 +81,6 @@ export const businessAppProductResponseSchema = z.object({
     category: z.object({
         _id: z.union([z.string(), z.instanceof(Types.ObjectId)])
     }),
-    store: z.string(),
     isActive: z.boolean(),
     isAvailable: z.boolean(),
     isPending: z.boolean(),
