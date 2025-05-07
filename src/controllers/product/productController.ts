@@ -31,7 +31,7 @@ import {z} from "zod";
 import {onCatchError} from "../../error/onCatchError";
 import {AppError} from "../service/requestValidationTypes";
 import {getProductCategoriesOfParent} from "../../service/category/product";
-import {FilterQuery, Types} from "mongoose";
+import {FilterQuery, FlattenMaps, Types} from "mongoose";
 import {runtimeValidation} from "../../error/runtimeValidation";
 
 // get all products
@@ -421,7 +421,6 @@ export const fetchProductsV2 = asyncHandler(async (req: any, res: Response) => {
     }
 });
 
-
 export const getNearbyProductsWithOffer = asyncHandler(
   async (req: Request, res: TypedResponse<ProductUserResponse[]>) => {
     try {
@@ -458,19 +457,32 @@ export const getNearbyProductsWithOffer = asyncHandler(
             dbQuery.name = {$regex: searchTerm, $options: "i"};
         }
 
-        const products2: any[] = await Product
-            .find(dbQuery)
+        const products2 = await Product
+            .find<IProduct>(dbQuery)
             .skip(skip)
             .limit(limit)
             .populate<{
                 store: {
+                    _id: Types.ObjectId,
                     storeName: string,
                     location: { coordinates: [number, number] }
                 }
             }>('store', 'storeName location')
             .lean();
 
-        res.status(200).json(runtimeValidation(productUserResponseSchema, products2));
+        const data = products2.map(e => ({
+            ...e, _id: e._id.toString(),
+            description: e.description ?? "",
+            isEnquiryAvailable: e.isEnquiryAvailable ?? false,
+            category: e.category.toString(),
+            store: {
+                _id: e.store._id.toString(),
+                storeName: e.store.storeName,
+            }
+        }));
+
+        const validatedData: ProductUserResponse[] = runtimeValidation(productUserResponseSchema, data);
+        res.status(200).json(validatedData);
     } catch (error) {
         onCatchError(error, res);
     }

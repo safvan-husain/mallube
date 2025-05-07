@@ -44,12 +44,12 @@ export const productUserResponseSchema = z.object({
     images: z.array(z.string()),
     description: z.string(),
     price: z.number().int(),      // Dart's int -> JS number (integer)
-    offerPrice: z.number().int(),
+    offerPrice: z.number().optional(),
     category: z.string(),
     store: z.object({
         _id: z.string(),
         storeName: z.string(),
-    }).nullable(),  // because in Dart it's `SubStoreModel?`
+    }),
     stock: z.boolean(),
     addToCartActive: z.boolean(),
 });
