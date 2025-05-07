@@ -31,7 +31,14 @@ import {
 import { store } from "../middleware/auth";
 import { addSpecialisation, fetchAllSpecialisation } from "../controllers/specialisation/specialisationController";
 import { addDoctor, changeDrAvailability, deleteDoctor, fetchAllDoctors } from "../controllers/doctor/doctorController";
-import { addProduct, deleteProductOfAStore, getProductsOfAStore, switchStockStatusOfAProduct, updateProduct } from "../controllers/product/productController";
+import {
+  addProduct,
+  deleteProductOfAStore,
+  getMyStoreProducts,
+  getProductsOfAStore,
+  switchStockStatusOfAProduct,
+  updateProduct
+} from "../controllers/product/productController";
 import {
   AddAdvertisement,
   fetchAllStoreAdvertisement,
@@ -121,7 +128,7 @@ router.route("/fetch-all-doctors").get(store, fetchAllDoctors)
 router.route("/change-dr-availability").put(store, changeDrAvailability)
 router.route("/product")
   .post(store, addProduct)
-  .get(store, getProductsOfAStore)
+  .get(store, getMyStoreProducts)
   .delete(store, deleteProductOfAStore)
   .put(store, updateProduct);
 router.route("/product/stock-status").put(store, switchStockStatusOfAProduct);

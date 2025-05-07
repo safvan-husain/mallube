@@ -20,7 +20,10 @@ import ProductSearch from "../../models/productSearch";
 
 import User from "../../models/userModel";
 import {
-    addProductSchema, getProductOfAStoreUserRequestSchema, getProductsOfAStoreRequestSchema,
+    addProductSchema, BusinessAppProductResponse,
+    businessAppProductResponseSchema,
+    getProductOfAStoreUserRequestSchema,
+    getProductsOfAStoreRequestSchema,
     nearByOfferProductsRequestSchema,
     ProductUserResponse,
     productUserResponseSchema
@@ -241,6 +244,42 @@ export const getProductsOfAStore = asyncHandler(
     }
   }
 );
+
+export const getMyStoreProducts = asyncHandler(
+    async (req: ICustomRequest<undefined>, res: TypedResponse<BusinessAppProductResponse[]>) => {
+        let query: FilterQuery<IProduct> = {
+            store: req.store!._id
+        }
+        try {
+            const { skip, limit, category, stockStatus } = getProductsOfAStoreRequestSchema.parse(req.query);
+
+            if(category) {
+                query.category = category;
+            }
+
+            if (stockStatus) {
+                query.stock = stockStatus === "stockIn";
+            }
+
+            const products = await Product
+                .find(query)
+                .skip(skip)
+                .limit(limit)
+                .populate<{
+                    category?: {
+                        _id: Types.ObjectId,
+                        name: string
+                    }
+                }>(
+                    "category", 'name'
+                ).lean<any[]>();
+
+            res.status(200).json(runtimeValidation(businessAppProductResponseSchema, products));
+        } catch (e) {
+            onCatchError(e, res);
+        }
+    }
+)
 
 //delete product of a store
 export const deleteProductOfAStore = asyncHandler(

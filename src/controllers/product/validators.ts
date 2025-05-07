@@ -70,3 +70,26 @@ export const getProductOfAStoreUserRequestSchema = z.object({
     category: ObjectIdSchema.optional(),
     searchTerm: z.string().min(1, "Minimum one character required").optional(),
 }).merge(paginationSchema)
+
+export const businessAppProductResponseSchema = z.object({
+    _id: z.union([z.string(), z.instanceof(Types.ObjectId)]),
+    name: z.string(),
+    images: z.array(z.string().url()),
+    description: z.string(),
+    price: z.number(),
+    offerPrice: z.number(),
+    category: z.object({
+        _id: z.union([z.string(), z.instanceof(Types.ObjectId)])
+    }),
+    store: z.string(),
+    isActive: z.boolean(),
+    isAvailable: z.boolean(),
+    isPending: z.boolean(),
+    stock: z.boolean(),
+    addToCartActive: z.boolean(),
+    isEnquiryAvailable: z.boolean(),
+    quantity: z.number(),
+    unit: productUnitSchema
+});
+
+export type BusinessAppProductResponse = z.infer<typeof businessAppProductResponseSchema>;
