@@ -271,10 +271,12 @@ export const getMyStoreProducts = asyncHandler(
                         name: string
                     }
                 }>(
-                    "category", 'name'
+                    "category"
+            // "category", 'name'
                 ).lean<any[]>();
-
+//for devaj old app code, commented this, move back to validation later. TODO:
             res.status(200).json(runtimeValidation(businessAppProductResponseSchema, products));
+            res.status(200).json(products);
         } catch (e) {
             onCatchError(e, res);
         }
