@@ -1,36 +1,38 @@
-import { z } from "zod";
-import { Types } from 'mongoose';
+import {z} from "zod";
+import {Types} from 'mongoose';
 import {ObjectIdSchema, paginationSchema} from "../../schemas/commom.schema";
 import {locationSchema} from "../user/buy_and_sell/validation";
 import {productUnitSchema} from "../../models/productModel";
-export const addProductSchema = z
-  .object({
+
+const baseProductSchema = z.object({
     name: z.string().trim().min(1, "product name cannot be empty"),
     images: z.array(z.string()).min(1, "minimum 1 image is required"),
     description: z.string().trim().optional(),
-    price: z.number().gte(0, { message: "price cannot be a negative value" }),
+    price: z.number().gte(0, {message: "price cannot be a negative value"}),
     offerPrice: z.optional(z.number()),
-    category: z.string().refine((v) => Types.ObjectId.isValid(v), { message: "Invalid category ObjectId"}),
+    category: z.string().refine((v) => Types.ObjectId.isValid(v), {
+        message: "Invalid category ObjectId",
+    }),
     isActive: z.boolean().default(true),
     isPending: z.boolean().default(false).optional(),
     addToCartActive: z.boolean().default(false).optional(),
     isEnquiryAvailable: z.boolean().default(false).optional(),
     store: z.string().optional(),
-      quantity: z.number(),
-      unit: productUnitSchema
-  })
-  .superRefine((data, ctx) => {
-    if (data.offerPrice && data.offerPrice >= data?.price) {
-      ctx.addIssue({
-        type: "number",
-        code: "too_big",
-        maximum: data?.price - 1,
-        inclusive: false,
-        path: ["offerPrice"],
-        message: "The offer price should be less than the actual price.",
-      });
-    }
-  });
+    quantity: z.number(),
+    unit: productUnitSchema,
+});
+
+
+export const addProductSchema = baseProductSchema
+    .refine(data => (data.offerPrice ?? 0) < data.price, {
+        message: "Offer price must be less than actual price", path: ["offerPrice"]
+    });
+
+export const updateProductSchema = baseProductSchema.partial()
+    .refine(data => (data.offerPrice ?? 0) < (data.price ?? 1), {
+        message: "Offer price must be less than actual price", path: ["offerPrice"]
+    });
+
 
 export const nearByOfferProductsRequestSchema = z
     .object({
@@ -79,7 +81,8 @@ export const businessAppProductResponseSchema = z.object({
     price: z.number(),
     offerPrice: z.number(),
     category: z.object({
-        _id: z.union([z.string(), z.instanceof(Types.ObjectId)])
+        _id: z.union([z.string(), z.instanceof(Types.ObjectId)]),
+        name: z.string()
     }),
     isActive: z.boolean(),
     isAvailable: z.boolean(),

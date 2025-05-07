@@ -26,7 +26,7 @@ import {
     getProductsOfAStoreRequestSchema,
     nearByOfferProductsRequestSchema,
     ProductUserResponse,
-    productUserResponseSchema
+    productUserResponseSchema, updateProductSchema
 } from "./validators";
 import { Freelancer } from "../../models/freelancerModel";
 import {ObjectIdSchema, paginationSchema} from "../../types/validation";
@@ -280,6 +280,29 @@ export const getMyStoreProducts = asyncHandler(
         }
     }
 )
+
+export const updateMyStoreProduct = asyncHandler(
+    async (req: Request, res: TypedResponse<{ message: string, product: BusinessAppProductResponse }>) => {
+        try {
+            let productId = ObjectIdSchema.parse(req.query.productId);
+            const updateData = updateProductSchema.parse(req.body);
+            let product: any = await Product.findByIdAndUpdate(
+                productId,
+                updateData
+            );
+            if (!product) {
+                res.status(400).json({message: "Product not found"});
+                return;
+            }
+            product = await product.populate('category', 'name')
+
+            const data = runtimeValidation(businessAppProductResponseSchema, product)
+            res.status(200).json({message: "Product has been updated", product: data});
+        } catch (e) {
+            onCatchError(e, res);
+        }
+    }
+);
 
 //delete product of a store
 export const deleteProductOfAStore = asyncHandler(

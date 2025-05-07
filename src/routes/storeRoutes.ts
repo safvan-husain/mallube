@@ -36,7 +36,7 @@ import {
   deleteProductOfAStore,
   getMyStoreProducts,
   getProductsOfAStore,
-  switchStockStatusOfAProduct,
+  switchStockStatusOfAProduct, updateMyStoreProduct,
   updateProduct
 } from "../controllers/product/productController";
 import {
@@ -130,7 +130,7 @@ router.route("/product")
   .post(store, addProduct)
   .get(store, getMyStoreProducts)
   .delete(store, deleteProductOfAStore)
-  .put(store, updateProduct);
+  .put(store, updateMyStoreProduct);
 router.route("/product/stock-status").put(store, switchStockStatusOfAProduct);
 
 router.route('/key-word').post(store, addKeyWords)
