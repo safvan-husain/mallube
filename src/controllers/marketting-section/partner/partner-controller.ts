@@ -117,7 +117,7 @@ export const loginPartner = async (req: Request, res: TypedResponse<any>) => {
         const data = loginPartnerSchema.parse(req.body);
 
         const user = await Partner.findOne({ phone: data.phone });
-        if (!user) {
+        if (!user || user.isDeleted) {
             return res.status(404).json({ message: 'Partner not found.' });
         }
 
