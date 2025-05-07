@@ -310,12 +310,11 @@ export const addToCart = asyncHandler(
 
         const productDetails = await Product.findOne({_id: productId}).select({
             store: true,
-            individual: true
         });
 
         if (!productDetails) throw new Error("Product not found");
 
-        const {store: storeId, individual: individualId} = productDetails;
+        const {store: storeId } = productDetails;
 
         try {
             // Update existing product or add new product in one query
@@ -323,7 +322,7 @@ export const addToCart = asyncHandler(
             const isExists = await Cart.findOne({
                 userId,
                 $or: [
-                    {storeId, individualId}
+                    {storeId}
                 ],
                 "cartItems.productId": productId,
             });
@@ -351,7 +350,7 @@ export const addToCart = asyncHandler(
                     {
                         userId,
                         $or: [
-                            {storeId, individualId}
+                            {storeId}
                         ],
                         // storeId,
                     },

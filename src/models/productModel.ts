@@ -94,7 +94,7 @@ const productSchema = new Schema<IProduct>(
       },
     },
       quantity: {type: Number, default: 1},
-      unit: {Type: String, enum: ['kg', 'g', 'l', 'ml', 'pcs'], default: 'pcs'}
+      unit: {type: String, enum: ['kg', 'g', 'l', 'ml', 'pcs'], default: 'pcs'}
   },
 
   {
