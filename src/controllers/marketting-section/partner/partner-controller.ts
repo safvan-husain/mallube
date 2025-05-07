@@ -206,3 +206,7 @@ export const updatePushNotificationStatus = async (req: Request, res: TypedRespo
         onCatchError(e, res);
     }
 };
+
+export const selfDeletePartner = async(req: Request, res: Response) => {
+    res.status(200).json({ message: "Success"});
+}

@@ -2,12 +2,15 @@ import { Router } from "express";
 import {
     loginPartner,
     changePassword,
-    updateFcmToken, businessGraph, getBusinesses, updatePushNotificationStatus, getJoinedStoreCount
+    updateFcmToken, businessGraph, getBusinesses, updatePushNotificationStatus, getJoinedStoreCount, selfDeletePartner
 } from "../controllers/marketting-section/partner/partner-controller";
 import {partnerProtect} from "../middleware/authentication/partnerProtect";
 import {getNotificationsForPartner} from "../controllers/notification/notificationController";
 
 const router = Router();
+
+router.route('/')
+    .delete(partnerProtect, selfDeletePartner)
 
 router.route('/login')
     .post(loginPartner)
