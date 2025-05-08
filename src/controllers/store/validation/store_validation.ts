@@ -28,6 +28,7 @@ export const ObjectIdOrStringSchema = z.union([z.string(), z.instanceof(Types.Ob
 export const savedStoreResponseSchema = z.object({
     _id: ObjectIdOrStringSchema,
     categories: z.union([z.array(z.instanceof(Schema.Types.ObjectId)), z.array(z.string())]),
+    subCategories: z.union([z.array(z.instanceof(Schema.Types.ObjectId)), z.array(z.string())]),
     keyWords: z.string().optional(),
     deliveryRadius: z.number().optional(),
     subscriptionExpireDate: z.date().transform(e => e.getTime()), // Timestamp (converted in Flutter)
