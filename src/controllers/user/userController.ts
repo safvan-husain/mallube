@@ -8,7 +8,7 @@ import {ICustomRequest, TypedResponse} from "../../types/requestion";
 import {IAddCartSchema} from "../../schemas/cart.schema";
 import Product from "../../models/productModel";
 import jwt, {decode} from "jsonwebtoken";
-import TimeSlot, {ITimeSlot} from "../../models/timeSlotModel";
+import { TimeSlotModel } from "../../models/timeSlotModel";
 import Booking, {bookingStatusSchema} from "../../models/bookingModel";
 import TokenNumber from "../../models/tokenModel";
 import Doctor from "../../models/doctorModel";
@@ -535,89 +535,6 @@ export const changePushNotificationStatus = async (req: Request, res: Response) 
     }
 };
 
-
-export const fetchTimeSlot = async (req: Request, res: Response) => {
-    try {
-        const {id} = req.params;
-
-        if (!id) return res.status(400).json({message: "Store id is required"});
-
-        const slot: any = await TimeSlot.find({storeId: id}); // here except slots which booking id having the slot id.
-
-        if (!slot || slot.length === 0) {
-            return res.status(404).json({message: "No time slot for this store"});
-        }
-
-        const availableSlots = slot[0].slots.filter(
-            (slot: any) => slot.slotCount > 0
-        );
-        res.status(200).json(availableSlots);
-    } catch (error) {
-        console.log("error while fetching slots ", error);
-        res.status(500).json({message: "Internal server error", error});
-    }
-};
-
-//TODO: delete this.
-export const slotBooking = async (req: any, res: Response) => {
-    try {
-        const {slotId, date, startTime, endTime, storeId} = req.body;
-
-        const bookings: any = await Booking.find({storeId: storeId});
-
-        if (bookings.length === 0) {
-            await TokenNumber.findOneAndUpdate(
-                {storeId: storeId},
-                {$set: {tokenNumber: 0}}
-            );
-        }
-
-        const userId = req.user._id;
-        // Validate the slotData and storeId
-        if (!slotId || !storeId) {
-            return res.status(400).json({message: "Invalid booking data"});
-        }
-        // check if the slot is available
-        const timeslots: any = await TimeSlot.findOneAndUpdate(
-            {
-                storeId: storeId,
-                "slots._id": slotId,
-            },
-            {
-                $inc: {"slots.$.slotCount": -1},
-            },
-            {new: true}
-        );
-
-        const token = await TokenNumber.findOneAndUpdate(
-            {storeId},
-            {$inc: {tokenNumber: 1}, userId: userId},
-            {new: true, upsert: true}
-        );
-
-        const newBooking = new Booking({
-            timeSlotId: slotId,
-            date,
-            startTime,
-            endTime,
-            storeId,
-            userId,
-            token: token.tokenNumber,
-        });
-
-        await newBooking.save();
-        await timeslots.save();
-
-        res.status(201).json({
-            message: `Booking confirmed.Your token is ${token.tokenNumber}. You will get a call from shop owner.`,
-            newBooking,
-        });
-    } catch (error) {
-        console.log("booking error ", error);
-        res.status(500).json({message: "Internal server error", error});
-    }
-};
-
 type TimeSlotResponse = z.infer<typeof timeslotResponseSchema>;
 
 const timeslotResponseSchema = z.object({
@@ -633,9 +550,7 @@ export const getAvailableTimeSlotForStoreV2 = asyncHandler(
                 storeId: ObjectIdSchema
             }).parse(req.query);
 
-            console.log("called here w")
-            //TODO: remove slots later.
-            const tempTimeSlots = await TimeSlot.find({
+            const tempTimeSlots = await TimeSlotModel.find({
                 storeId,
                 numberOfAvailableSeats: {$gt: 0}
             });
@@ -676,7 +591,7 @@ export const slotBookingV2 = async (req: any, res: Response) => {
             return res.status(400).json({message: "Invalid booking data"});
         }
         // check if the slot is available
-        const timeslot: ITimeSlot | null = await TimeSlot.findById(slotId);
+        const timeslot = await TimeSlotModel.findById(slotId);
 
         if (!timeslot) {
             return res.status(400).json({message: "Invalid booking data"});

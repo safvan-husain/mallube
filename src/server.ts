@@ -5,7 +5,6 @@ import fileUpload from "express-fileupload";
 import {initializeApp} from "firebase-admin/app";
 import {credential} from "firebase-admin";
 import connectDb from "./config/db";
-import './utils/common'
 import {errorHandler, notFound} from "./middleware/error.middleware";
 import {config} from "./config/vars";
 import {

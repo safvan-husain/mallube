@@ -8,7 +8,7 @@ import {runtimeValidation} from "../../error/runtimeValidation";
 import {BookingHistoryItem, BookingHistoryItemSchema, getBookingHistoryRequestSchema} from "./validation/store-booking";
 import {FilterQuery} from "mongoose";
 import {z} from "zod";
-import TimeSlot from "../../models/timeSlotModel";
+import {TimeSlotModel} from "../../models/timeSlotModel";
 
 export const getBookingHistory = asyncHandler(
     async (req: ICustomRequest<any>, res: TypedResponse<BookingHistoryItem[]>) => {
@@ -96,7 +96,6 @@ export const getTodayBookings = asyncHandler(
     }
 )
 
-
 export const confirmBookingV2 = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {
         try {
@@ -109,9 +108,13 @@ export const confirmBookingV2 = asyncHandler(
                 res.status(400).json({ message: "booking not found" });
                 return;
             }
-            const timeSlot = await TimeSlot.findById(booking.timeSlotId);
+            const timeSlot = await TimeSlotModel.findById(booking.timeSlotId);
+            if(!timeSlot) {
+                res.status(400).json({ message: "time slot is not found"});
+                return;
+            }
             if (timeSlot.numberOfAvailableSeats > 0) {
-                await TimeSlot.findByIdAndUpdate(
+                await TimeSlotModel.findByIdAndUpdate(
                     booking.timeSlotId,
                     { $inc: { numberOfAvailableSeats: -1 } }
                 );

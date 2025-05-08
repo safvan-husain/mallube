@@ -14,9 +14,6 @@ import {
   OtpVerify,
   updatePassword,
   updateStoreProfile,
-  addTimeSlot,
-  fetchTimeSlot,
-  deleteTimeSlots,
   stockUpdate,
   getProfile,
   deleteStore,
@@ -114,7 +111,6 @@ router.route("/change-password-v2").put(changeStorePasswordV2);
 router.route("/otp-send-forgot-password").post(sendOtpV2);
 router.route("/otp-verify-forgot-password").post(OtpVerify);
 router.route("/update-password-request").put(updatePassword);
-router.route("/time-slots").post(store, addTimeSlot).get(store, fetchTimeSlot).delete(store, deleteTimeSlots)
 router.route('/time-slots-v2')
   .post(store, addTimeSlotV2)
   .get(store, getTimeSlotV2)

@@ -9,8 +9,6 @@ import {
     updateProfile,
     updateProfilePassword,
     fetchUser,
-    fetchTimeSlot,
-    slotBooking,
     fetchAllDoctors,
     fetchAllSpecialisations,
     slotBookingV2,
@@ -51,9 +49,7 @@ router.route("/update-password-v2").put(changeUserPasswordV2)
 router.route("/change-profile-password").put(user,updateProfilePassword)
 router.route("/change-notification-status").put(user, validateData(pushNotifcationStatusSchema), changePushNotificationStatus);
 router.route("/fetch-user-details").get(user,fetchUser)
-router.route("/time-slots/:id").get(user, fetchTimeSlot)
 router.route('/available-time-slots').get(user, getAvailableTimeSlotForStoreV2)
-router.route("/booking").post(user,slotBooking)
 router.route("/booking-v2").post(user,slotBookingV2).get(user, getBookingsV2)
 router.route("/booking-cancel").post(user, cancelBooking)
 router.route("/dr-booking").post(user,drBooking)

@@ -1,55 +1,37 @@
-import { Schema, model, Document, models } from "mongoose";
+import {prop, getModelForClass, modelOptions, Ref, ReturnModelType, DocumentType} from '@typegoose/typegoose';
+import { Types } from 'mongoose';
 
-export interface ITimeSlot extends Document {
-  storeId: Schema.Types.ObjectId;
-  date: Date,
-  startTime: Date;
-  endTime: Date;
-  token: number;
-  numberOfAvailableSeats: number;
-  numberOfTotalSeats: number;
-  slotIndex: number;
+@modelOptions({
+    schemaOptions: {
+        timestamps: true,
+    },
+})
+export class TimeSlot {
+    @prop({ required: true, ref: 'stores' })
+    public storeId!: Ref<any>; // You can replace 'any' with your actual Store class if using Typegoose for that too
+
+    @prop({ required: true })
+    public date!: Date;
+
+    @prop({ required: true })
+    public startTime!: Date;
+
+    @prop({ required: true })
+    public endTime!: Date;
+
+    @prop({ required: true })
+    public numberOfAvailableSeats!: number;
+
+    @prop({ required: true })
+    public numberOfTotalSeats!: number;
+
+    @prop({ required: true })
+    public slotIndex!: number;
+
+    public static async createDocument(this: ReturnModelType<typeof TimeSlot>, data: TimeSlot): Promise<DocumentType<TimeSlot>> {
+        return this.create(data);
+    }
 }
 
-const timeSlotSchema = new Schema<ITimeSlot>(
-  {
-    slotIndex: {
-      type: Number,
-      default: 0,
-    },
-    storeId: {
-      type: Schema.Types.ObjectId,
-      ref: "stores",
-      requried: true,
-    },
-    date: {
-      type: Date,
-      default: Date.now
-    },
-    startTime: {
-      type: Date,
-      required: true,
-    },
-    endTime: {
-      type: Date,
-      required: true,
-    },
-    //used to track available seats, after each bookings
-    numberOfAvailableSeats: {
-      type: Number,
-      default: 1
-    },
-    //the number seats available on this time, (in other words, how many users can book at this time)
-    numberOfTotalSeats: {
-      type: Number,
-      default: 1
-    }
-  },
-  {
-    timestamps: true,
-  }
-);
-
-export const TimeSlot = models.TimeSlot || model<ITimeSlot>("timeSlots", timeSlotSchema);
-
-export default TimeSlot;
+// Create and export the model
+export const TimeSlotModel = getModelForClass(TimeSlot);

@@ -9,7 +9,7 @@ import mongoose, {FilterQuery, Types} from "mongoose";
 import Product from "../../models/productModel";
 import ProductSearch from "../../models/productSearch";
 import jwt from "jsonwebtoken";
-import {TimeSlot} from "../../models/timeSlotModel";
+import {TimeSlot, TimeSlotModel} from "../../models/timeSlotModel";
 import Booking, {bookingStatusSchema} from "../../models/bookingModel";
 import {ICustomRequest, TypedResponse} from "../../types/requestion";
 import {
@@ -41,6 +41,7 @@ import {AppError} from "../service/requestValidationTypes";
 import {onCatchError} from "../../error/onCatchError";
 import {runtimeValidation} from "../../error/runtimeValidation";
 import {safeRuntimeValidation} from "../../error/safeRuntimeValidation";
+import {addTimeSlotSchema, timeSlotResponseSchema, TimeSlotStoreResponse} from "./validation/store-booking";
 
 const twilioServiceId = process.env.TWILIO_SERVICE_ID;
 
@@ -754,37 +755,35 @@ export const updateStoreProfile = async (req: any, res: TypedResponse<{ message:
   }
 };
 
-//TODO: write a function to delte all time slote and booking to be deleted.
 export const addTimeSlotV2 = asyncHandler(
-  async (req: ICustomRequest<any>, res: Response) => {
+  async (req: ICustomRequest<any>, res: TypedResponse<TimeSlotStoreResponse>) => {
     try {
-      let { startTime, endTime, numberOfTotalSeats, slotIndex } = req.body;
-      console.log("adding time slot", req.body);
+      const data = addTimeSlotSchema.parse(req.body);
 
       const storeId = req.store?._id;
       //converting millisecond since epoch format to Date
-      startTime = toTimeOnly(parseInt(startTime));
-      endTime = toTimeOnly(parseInt(endTime));
+      const startTime = toTimeOnly(data.startTime);
+      const endTime = toTimeOnly(data.endTime);
 
-      var timeSlot = new TimeSlot({
-        slotIndex,
+      const timeSlot = await TimeSlotModel.createDocument({
+        slotIndex: data.slotIndex,
         storeId,
         startTime,
         endTime,
-        numberOfTotalSeats,
-        numberOfAvailableSeats: numberOfTotalSeats
+        numberOfTotalSeats: data.numberOfTotalSeats,
+        date: startTime,
+        numberOfAvailableSeats: data.numberOfTotalSeats
       });
-      timeSlot = await timeSlot.save();
-      res.status(200).json({
+
+      res.status(200).json(runtimeValidation(timeSlotResponseSchema, {
         slotIndex: timeSlot.slotIndex ?? 0,
         startTime: timeSlot.startTime.getTime(),
         endTime: timeSlot.endTime.getTime(),
         numberOfTotalSeats: timeSlot.numberOfTotalSeats,
         _id: timeSlot._id,
-      });
+      }));
     } catch (error) {
-      console.log(`error addTimeSlot V2 ${error}`);
-      res.status(500).json({ message: "Internal server error", error })
+      onCatchError(error, res);
     }
   }
 );
@@ -797,7 +796,7 @@ export const getTimeSlotV2 = asyncHandler(
       const startOfDay = new Date();
       startOfDay.setHours(0, 0, 0, 0);
 
-      const tempTimeSlots = await TimeSlot.find({ storeId, createdAt: { $gte: startOfDay } });
+      const tempTimeSlots = await TimeSlotModel.find({ storeId, createdAt: { $gte: startOfDay } });
 
       let timeSlots = [];
       for (const slot of tempTimeSlots) {
@@ -829,7 +828,7 @@ export const deleteTimeSlotV2 = asyncHandler(
     try {
       const { id } = req.query;
       await Booking.deleteMany({ timeSlotId: id });
-      await TimeSlot.findByIdAndDelete(id);
+      await TimeSlotModel.findByIdAndDelete(id);
       res.status(200).json({ message: "Success" });
     } catch (error) {
       console.log(`error addTimeSlot V2 ${error}`);
@@ -855,12 +854,13 @@ const storeBookingResponse = z.object({
 
 type StoreBookingResponse = z.infer<typeof storeBookingResponse>;
 
+//TODO: may not be using, remove it.
 export const getBookingsV2 = asyncHandler(
   async (req: ICustomRequest<any>, res: TypedResponse<StoreBookingResponse[]>) => {
     try {
       const storeId = req.store?._id;
       //TODO
-      const slots = await TimeSlot.find({ storeId }, { _id: 1 });
+      const slots = await TimeSlotModel.find({ storeId }, { _id: 1 });
       const tempBookings = await Booking.aggregate([
         {
           $match: {
@@ -933,88 +933,6 @@ export const getBookingsV2 = asyncHandler(
     }
   }
 )
-
-export const addTimeSlot = async (req: any, res: Response) => {
-  try {
-    const storeId = req.store?._id;
-    const { slots } = req.body;
-    console.log(slots);
-
-
-    if (!storeId)
-      return res.status(400).json({ message: "Store id is required" });
-
-    if (!slots || !Array.isArray(slots))
-      return res.status(400).json({ message: "Slots are required and should be an array" });
-
-    // Ensure each slot has an originalSlotCount set
-    const slotsWithOriginalCount = slots.map((slot: any) => ({
-      ...slot,
-      originalSlotCount: slot.slotCount !== undefined ? slot.slotCount : 1, // Set originalSlotCount to slotCount or 1
-    }));
-
-    const existingTimeSlot = await TimeSlot.findOne({ storeId });
-
-    if (existingTimeSlot) {
-      // Append new slots to existing time slots
-      existingTimeSlot.slots = existingTimeSlot.slots.concat(slotsWithOriginalCount);
-      await existingTimeSlot.save();
-      res.status(201).json({
-        message: "Time slot updated successfully",
-        timeSlot: existingTimeSlot,
-      });
-    } else {
-      // Create a new time slot entry with the provided slots
-      const newTimeSlot = new TimeSlot({
-        storeId,
-        slots: slotsWithOriginalCount, // Use the processed slots with originalSlotCount
-      });
-      await newTimeSlot.save();
-      res.status(201).json({
-        message: "Time slot added successfully",
-        timeSlot: newTimeSlot,
-      });
-    }
-  } catch (error) {
-    console.log("error while adding time slot", error);
-    res.status(500).json({ message: "Internal server error", error });
-  }
-};
-
-export const fetchTimeSlot = async (req: any, res: Response) => {
-  try {
-    const storeId = req.store._id;
-
-    if (!storeId) return res.status(400).json({ message: "Store id required" });
-
-    const timeSlot = await TimeSlot.find({ storeId });
-
-    if (!timeSlot)
-      return res
-        .status(404)
-        .json({ message: "No timeslot found for this store." });
-
-    res.status(200).json(timeSlot);
-  } catch (error) {
-    console.log("error while fetching timeslot ", error);
-    res.status(500).json({ message: "Internal server error", error });
-  }
-};
-
-export const deleteTimeSlots = async (req: any, res: Response) => {
-  try {
-    const storeId = req.store._id;
-
-    if (!storeId) return res.status(400).json({ message: "Store id required" });
-
-    await TimeSlot.findOneAndDelete({ storeId });
-
-    res.status(200).json({ message: "Timeslots deleted successfully" });
-  } catch (error) {
-    console.log("error while fetching timeslot ", error);
-    res.status(500).json({ message: "Internal server error", error });
-  }
-};
 
 export const stockUpdate = async (req: Request, res: Response) => {
   try {

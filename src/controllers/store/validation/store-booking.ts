@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {bookingStatusSchema} from "../../../models/bookingModel";
 import {paginationSchema} from "../../../schemas/commom.schema";
+import {Types} from "mongoose";
 
 export const BookingHistoryItemSchema = z.object({
     _id: z.any(),
@@ -28,3 +29,20 @@ export const TodayBookingItemSchema = z.object({
         phone: z.string()
     })
 })
+
+export const addTimeSlotSchema = z.object({
+    startTime: z.number(),
+    endTime: z.number(),
+    numberOfTotalSeats: z.number(),
+    slotIndex: z.number(),
+});
+
+export const timeSlotResponseSchema = z.object({
+    slotIndex: z.number(),
+    startTime: z.number(),
+    endTime: z.number(),
+    numberOfTotalSeats: z.number(),
+    _id: z.union([z.string(), z.instanceof(Types.ObjectId)]),
+});
+
+export type TimeSlotStoreResponse = z.infer<typeof timeSlotResponseSchema>;
