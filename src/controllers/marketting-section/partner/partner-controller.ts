@@ -136,6 +136,7 @@ export const loginPartner = async (req: Request, res: TypedResponse<any>) => {
             phone: user.phone,
             name: user.name,
             token,
+            pushNotificationStatus: user.pushNotificationStatus
         }));
     } catch (e) {
         onCatchError(e, res);

@@ -258,6 +258,7 @@ export const loginPartnerResponseSchema = z.object({
     phone: z.string(),
     name: z.string(),
     token: z.string(), // assuming you'll return a JWT or similar
+    pushNotificationStatus: z.boolean()
 });
 
 export const fcmTokenRequestSchema = z.object({
