@@ -189,7 +189,7 @@ export const fetchNearByStoreByFilter =
     openTime: true, closeTime: true, isDeliveryAvailable: true,
     instagram: true, facebook: true, whatsapp: true,
     phone: true, shopImgUrl: true,
-    service: true, location: true, city: true, type: true,
+    service: true, location: true, city: true, type: true, storeOwnerName: true,
   })
       .skip(skip)
       .limit(limit)
