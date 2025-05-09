@@ -42,7 +42,7 @@ router.route('/fav/shops').get(user, getFavoriteShops);
 router.route('/fav/freelancers').get(user, getFavoriteFreelancers);
 router.route('/fav/user-products').get(user, getFavoriteUserProducts);
 
-router.route("/near-by-shop-v2").get(protect, fetchStoresNearByV2);
+router.route("/near-by-shop-v2").get(protect(false), fetchStoresNearByV2);
 
 router.route("/store-details").get(user, getStoreDetails);
 router.route("/cart").post(user, validateData(addCartSchema), addToCart).put(user, removeProductFromCart);

@@ -221,36 +221,47 @@ export const employeeProtect = asyncHandler(
     }
 )
 
-export const protect = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    let token;
-    // Check if the authorization header contains the Bearer token
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
-        // Extract the token from the header
-        token = req.headers.authorization.split(' ')[1];
-    }
-    if (!token) {
-        res.status(401).json({ message: 'Not authorized, no token' });
-        return;
-    }
+export const protect = (required = true) =>
+    asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+        let token;
 
-    try {
-        // Verify the token using the secret key from the config
-        const decoded = jwt.verify(token, config.jwtSecret) as {
-            _id: string,
-            type: 'user' | 'business' | 'employee'
-        };
-
-        if (!decoded.type) {
-            res.status(400).json({ message: "could not infer type from token"});
-            return;
+        if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+            token = req.headers.authorization.split(' ')[1];
         }
-        req.requestedId = decoded._id;
-        req.requesterType = decoded.type
 
-        next();
-    } catch (err) {
-        res.status(401).json({ message: 'Not authorized, token failed' });
-    }
-});
+        if (!token) {
+            if (required) {
+                res.status(401).json({ message: 'Not authorized, no token' });
+                return;
+            } else {
+                next();
+                return;
+            }
+        }
+
+        try {
+            const decoded = jwt.verify(token, config.jwtSecret) as {
+                _id: string,
+                type: 'user' | 'business' | 'employee'
+            };
+
+            if (!decoded.type) {
+                res.status(400).json({ message: 'Could not infer type from token' });
+                return;
+            }
+
+            req.requestedId = decoded._id;
+            req.requesterType = decoded.type;
+
+            next();
+        } catch (err) {
+            if (required) {
+                res.status(401).json({ message: 'Not authorized, token failed' });
+            } else {
+                next();
+            }
+        }
+    });
+
 
 

@@ -8,7 +8,7 @@ import {protect, user} from "../middleware/auth";
 const router = Router();
 
 router.route('/')
-    .get(protect, getUserProducts)
+    .get(protect(false), getUserProducts)
     .post(user, createUserPoduct);
 router.route('/myads')
     .get(user, getUserMyAds);
