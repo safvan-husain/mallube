@@ -43,6 +43,8 @@ import {runtimeValidation} from "../../error/runtimeValidation";
 import {safeRuntimeValidation} from "../../error/safeRuntimeValidation";
 import {addTimeSlotSchema, timeSlotResponseSchema, TimeSlotStoreResponse} from "./validation/store-booking";
 import {logger} from "../../config/logger";
+import User from "../../models/userModel";
+import {user} from "../../middleware/auth";
 
 const twilioServiceId = process.env.TWILIO_SERVICE_ID;
 
@@ -306,13 +308,29 @@ export const fetchStoresNearByV2 = async (req: Request, res: TypedResponse<Store
       type: businessAccountTypeSchema.enum.business
     };
 
-    const data =  await fetchNearByStoreByFilter({
+    let favouriteShopIds: string[] = [];
+
+    if (req.requestedId && req.requesterType === 'user') {
+      favouriteShopIds = await User
+          .findById(req.requestedId, {favouriteShops: true})
+          .lean<{
+            favouriteShops: Types.ObjectId[]
+          }>().then(e => e?.favouriteShops.map(e => e.toString()) ?? []);
+    }
+
+    let data =  await fetchNearByStoreByFilter({
       query,
       longitude,
       latitude,
       limit,
       skip
-    })
+    });
+
+    for (let business of data) {
+      if (favouriteShopIds.includes(business._id.toString())) {
+        business.isFavorite = true;
+      }
+    }
 
     res.status(200).json(data);
   } catch (error) {

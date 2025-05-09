@@ -216,6 +216,7 @@ export const fetchNearByStoreByFilter =
           category: tStore.category?.name,
           service: tStore.service ?? false,
           distance,
+          isFavorite: false,
         };
         storeWithDistance.push(data);
       }

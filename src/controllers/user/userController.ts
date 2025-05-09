@@ -250,6 +250,7 @@ export const StoreDetailsSchema = z.object({
     isDeliveryAvailable: z.boolean().optional().default(false),
     instagram: z.string().optional().default(''),
     facebook: z.string().optional().default(''),
+    isFavorite: z.boolean().optional().default(false)
 });
 
 export type StoreDetailsResponse = z.infer<typeof StoreDetailsSchema>;
@@ -290,6 +291,7 @@ export const getStoreDetails = asyncHandler(
                     category: tStore.category?.name,
                     service: tStore.service ?? false,
                     distance,
+                    isFavorite: false,
                 }
             const response = safeRuntimeValidation<StoreDetailsResponse>(StoreDetailsSchema as any, data);
             if (response.error) {
