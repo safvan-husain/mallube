@@ -4,7 +4,7 @@ import { getChats, getConversation } from "../controllers/web-socket/messageCont
 
 const router = Router();
 
-router.route('/').get(protect, getChats);
-router.route('/:otherUserId').get(protect, getConversation);
+router.route('/').get(protect(), getChats);
+router.route('/:otherUserId').get(protect(), getConversation);
 
 export { router as chatRoutes };
