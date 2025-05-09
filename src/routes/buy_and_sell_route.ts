@@ -3,12 +3,12 @@ import { UploadedFile } from "express-fileupload";
 import asyncHandler from "express-async-handler";
 import mongoose, { Types, Schema } from "mongoose";
 import { createUserPoduct, deleteUserProduct, getUserProducts, updateUserProduct, getUserProductsCategories, getUserMyAds } from "../controllers/user/buy_and_sell/buy_and_sellController";
-import { user } from "../middleware/auth";
+import {protect, user} from "../middleware/auth";
 
 const router = Router();
 
 router.route('/')
-    .get(getUserProducts)
+    .get(protect, getUserProducts)
     .post(user, createUserPoduct);
 router.route('/myads')
     .get(user, getUserMyAds);

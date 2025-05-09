@@ -15,6 +15,7 @@ export interface UserProductResponse {
     createdAt: number;
     distance: string;
     phone: string;
+    isFavorite: boolean;
 }
 
 //generate zod schema
@@ -135,6 +136,7 @@ productSchema.methods.forResponse = function(distance: number, phone: string, ow
         createdAt: this.createdAt.getTime(),
         distance: distance.toFixed(2),
        phone: phone,
+       isFavorite: false
    }
 }
 

@@ -8,6 +8,7 @@ import Category from "../../../models/categoryModel";
 import {ICustomRequest, TypedResponse} from "../../../types/requestion";
 import {createdAtIST} from "../../../utils/ist_time";
 import {onCatchError} from "../../../error/onCatchError";
+import User from "../../../models/userModel";
 
 export const createUserPoduct = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {
@@ -192,7 +193,17 @@ export const getUserProducts = asyncHandler(
                 });
             }
 
-            const products = await UserProduct.aggregate([
+            let favouriteProducts: string[] = [];
+
+            if (req.requestedId && req.requesterType === 'user') {
+                favouriteProducts = await User
+                    .findById(req.requestedId, {favouriteUserProducts: true})
+                    .lean<{
+                        favouriteUserProducts: Types.ObjectId[]
+                    }>().then(e => e?.favouriteUserProducts.map(e => e.toString()) ?? []);
+            }
+
+                let products = await UserProduct.aggregate([
                 ...pipeline,
                 {$sort: {distance: 1, _id: 1}},
                 {$skip: skip},
@@ -225,6 +236,14 @@ export const getUserProducts = asyncHandler(
                     }
                 }
             ]);
+            //TODO: improve this.
+            for (let product of products) {
+                if (favouriteProducts.includes(product._id.toString())) {
+                    product.isFavorite = true;
+                } else {
+                    product.isFavorite = false;
+                }
+            }
 
             res.status(200).json(products.map(e => ({
                 ...e,
