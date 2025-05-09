@@ -42,6 +42,7 @@ import {onCatchError} from "../../error/onCatchError";
 import {runtimeValidation} from "../../error/runtimeValidation";
 import {safeRuntimeValidation} from "../../error/safeRuntimeValidation";
 import {addTimeSlotSchema, timeSlotResponseSchema, TimeSlotStoreResponse} from "./validation/store-booking";
+import {logger} from "../../config/logger";
 
 const twilioServiceId = process.env.TWILIO_SERVICE_ID;
 
@@ -792,12 +793,11 @@ export const getTimeSlotV2 = asyncHandler(
   async (req: ICustomRequest<any>, res: Response) => {
     try {
       const storeId = req.store?._id;
-
-      const startOfDay = new Date();
-      startOfDay.setHours(0, 0, 0, 0);
-
-      const tempTimeSlots = await TimeSlotModel.find({ storeId, createdAt: { $gte: startOfDay } });
-
+      logger.info("called hree");
+      let dbQuery = { storeId};
+      console.log(dbQuery);
+      const tempTimeSlots = await TimeSlotModel.find(dbQuery);
+      console.log("timeslot " + tempTimeSlots);
       let timeSlots = [];
       for (const slot of tempTimeSlots) {
         try {
