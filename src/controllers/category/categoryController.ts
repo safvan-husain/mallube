@@ -97,7 +97,8 @@ export const getDisplayCategories = asyncHandler(
             let query: FilterQuery<ICategory> = {
                 parentId: { $exists: false },
                 isActive: true,
-                isPending: false
+                isPending: false,
+                isShowOnHomePage: true,
             };
 
             if (businessType === 'business') {
