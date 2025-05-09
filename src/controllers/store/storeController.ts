@@ -301,11 +301,16 @@ export const deleteAdvertisement = asyncHandler(
   }
 );
 
+const nearByBusinessRequestSchema = locationQuerySchema
+    .merge(paginationSchema).extend({
+  businessType: businessAccountTypeSchema.optional().default(businessAccountTypeSchema.enum.business)
+})
+
 export const fetchStoresNearByV2 = async (req: Request, res: TypedResponse<StoreDetailsResponse[]>) => {
   try {
-    const {longitude, latitude, limit, skip} = locationQuerySchema.merge(paginationSchema).parse(req.query);
+    const {longitude, latitude, limit, skip, businessType} = nearByBusinessRequestSchema.parse(req.query);
     let query: FilterQuery<IStore> = {
-      type: businessAccountTypeSchema.enum.business
+      type: businessType
     };
 
     let favouriteShopIds: string[] = [];
