@@ -54,6 +54,7 @@ export const updateCategorySchemaV2 = z
         //but one of the below is required
         isEnabledForStore: z.boolean().optional(),
         isEnabledForIndividual: z.boolean().optional(),
+        isShowOnHomePage: z.boolean().optional()
     })
     .refine((val) => {
         if (val.isEnabledForIndividual == false && val.isEnabledForStore == false) {

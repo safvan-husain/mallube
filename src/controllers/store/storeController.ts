@@ -793,11 +793,8 @@ export const getTimeSlotV2 = asyncHandler(
   async (req: ICustomRequest<any>, res: Response) => {
     try {
       const storeId = req.store?._id;
-      logger.info("called hree");
       let dbQuery = { storeId};
-      console.log(dbQuery);
       const tempTimeSlots = await TimeSlotModel.find(dbQuery);
-      console.log("timeslot " + tempTimeSlots);
       let timeSlots = [];
       for (const slot of tempTimeSlots) {
         try {
