@@ -82,6 +82,7 @@ export type PendingStoreMinimal = z.infer<typeof pendingStoreMinimalSchema>;
 export type PendingBusinessWholeRes = z.infer<typeof pendingBusinessWholeResponseSchema>;
 
 export const staffAndBusinessCountSchema = z.object({
+    id: z.union([z.instanceof(Types.ObjectId), z.string()]),
     businessCount: z.number(),
     staffUserName: z.string(),
     staffName: z.string(),

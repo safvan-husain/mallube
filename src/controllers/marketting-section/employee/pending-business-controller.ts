@@ -450,6 +450,7 @@ export function staffAndPendingBusinessCount(
         const staff = staffs.find(e => e._id.toString() === item._id.toString());
 
         responseList.push({
+            id: staff!._id.toString(),
             businessCount: item.businessCount,
             staffUserName: staff?.username ?? "Unknown Error",
             staffName: staff?.name ?? "Unknown Error",

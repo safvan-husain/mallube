@@ -522,6 +522,7 @@ export function getStaffAndBusinessCountsFromData(
         }
 
         responseList.push({
+            id: item._id,
             businessCount: item.businessCount,
             target,
             staffUserName: staff?.username ?? "Unknown Error",
