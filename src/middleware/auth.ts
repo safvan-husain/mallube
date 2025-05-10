@@ -11,6 +11,7 @@ import { Freelancer } from "../models/freelancerModel";
 import {Types} from "mongoose";
 import Employee, {IEmployee, TEmployeePrivilege} from "../models/managerModel";
 import {IPartner} from "../models/Partner";
+import { logger} from "../config/logger";
 
 declare global {
   namespace Express {
@@ -193,7 +194,7 @@ export const employeeProtect = asyncHandler(
                 res.status(401).json({ message: "Not authorized, no token available" });
                 return;
             }
-            const decoded = jwt.verify(token, 'managerSecret') as {
+            const decoded = jwt.verify(token, config.jwtSecret) as {
                 _id: string;
                 privilege: TEmployeePrivilege;
             };
