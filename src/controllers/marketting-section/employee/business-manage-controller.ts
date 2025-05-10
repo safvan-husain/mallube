@@ -380,20 +380,21 @@ export const getBusinessesPerEmployee = async (req: Request, res: TypedResponse<
         console.log("query here", dbQuery);
 
         const data = await Store
-            .find(dbQuery, {storeName: true, storeOwnerName: true, categories: true, district: true, city: true})
+            .find(dbQuery, {storeName: true, storeOwnerName: true, categories: true, district: true, city: true, uniqueName: true})
             .lean<{
                 storeName: string,
                 storeOwnerName: string,
                 categories: ObjectId[],
                 district: string,
                 city: string,
-                _id: ObjectId
+                _id: ObjectId,
+                uniqueName: string
             }[]>()
 
         const responseList = await Promise.all(
             data.map(async e => ({
                 _id: e._id.toString(),
-                storeName: e.storeName,
+                storeName: e.uniqueName,
                 storeOwnerName: e.storeOwnerName,
                 categoriesName: await getCommaSeparatedCategoryNames(e.categories),
                 place: e.city ?? "N/A",
