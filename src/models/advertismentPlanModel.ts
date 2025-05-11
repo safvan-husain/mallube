@@ -11,12 +11,17 @@ export interface IAdvertisementPlan extends Document {
     maxRadius?: number;
     maxRadiusInRadians?: number;
     message?: string;
+    isActive: boolean;
 }
 
 const advertisementPlanSchema = new Schema<IAdvertisementPlan>({
     name: {
         type: String,
         required: true,
+    },
+    isActive: {
+        type: Boolean,
+        default: true,
     },
     price: {
         type: Number,

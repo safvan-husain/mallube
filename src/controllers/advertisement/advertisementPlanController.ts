@@ -47,7 +47,8 @@ interface AdPlanResponse {
     duration: number;
     price: number;
     offerPrice?: number;
-    radius: number;
+    radius?: number;
+    isActive: boolean;
 }
 
 export const fetchAllAdvertisementPlan = asyncHandler(
@@ -60,10 +61,11 @@ export const fetchAllAdvertisementPlan = asyncHandler(
                 duration: e.duration,
                 price: e.price,
                 offerPrice: e.offerPrice,
-                radius: e.maxRadius ?? 0
+                radius: e.maxRadius,
+                isActive: e.isActive
             })));
         } catch (error) {
-            res.status(500).json({ message: "Internal server error" });
+            onCatchError(error, res);
         }
     }
 )

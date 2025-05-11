@@ -12,6 +12,7 @@ export const createAdsPlanSchema = z.object({
     //when radius null, it means unlimited radius.
     maxRadius: z.number().optional(),
     message: z.string().optional(),
+    isActive: z.boolean().optional()
 });
 
 export const objectIdRequestSchema = z.object({
