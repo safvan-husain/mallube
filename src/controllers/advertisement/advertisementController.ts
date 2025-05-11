@@ -90,10 +90,7 @@ export const AddAdvertisement = async (req: any, res: TypedResponse<{
   }
 };
 
-export const editAdvertisement = async (req: any, res: TypedResponse<{
-  advertisement: StoreAdvertisementResponse,
-  message: string
-}>) => {
+export const editAdvertisement = async (req: any, res: TypedResponse<BAppAdvertisement>) => {
   try {
     const storeId = req.store!._id;
     const advertisementId = ObjectIdSchema.parse(req.params.advertisementId);
@@ -139,14 +136,12 @@ export const editAdvertisement = async (req: any, res: TypedResponse<{
       return;
     }
 
-    res.status(201).json({ message: "Advertisement updated successfully", advertisement: {
-        _id: ad._id.toString(),
-        image: ad.image,
-        store: storeId as unknown as Types.ObjectId,
-        expireAt: ad.expireAt?.getTime() ?? 0,
-        status: ad.status ?? "pending",
-        isActive: false,
-      } });
+    res.status(201).json({
+      _id: ad._id.toString(),
+      image: ad.image,
+      status: ad.status ?? "pending",
+      planId: ad.adPlan!.toString()
+    });
   } catch (error) {
     onCatchError(error, res);
   }
@@ -161,7 +156,8 @@ export const fetchAllStoreAdvertisement = async (req: ICustomRequest<any>, res: 
     res.status(200).json(runtimeValidation(BAppAdvertisementSchema, advertisements.map(e => ({
       _id: e._id.toString(),
       image: e.image,
-      status: e.status ?? "pending"
+      status: e.status ?? "pending",
+      planId: e.adPlan!.toString()
     }))));
   } catch (error) {
     onCatchError(error, res);
@@ -388,13 +384,13 @@ export const rePublishRequestAnAdvertisement = asyncHandler(async (req: ICustomR
     res.status(200).json(runtimeValidation(BAppAdvertisementSchema, {
       _id: newAdvertisement._id.toString(),
       image: newAdvertisement.image,
-      status: 'pending'
+      status: 'pending',
+      planId: newAdvertisement.adPlan!.toString()
     }));
   } catch (error) {
     onCatchError(error, res);
   }
 })
-
 
 export const scheduleExpireAdvertisementStatusChanger = () => {
   setInterval(async () => {

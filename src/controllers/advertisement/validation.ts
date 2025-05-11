@@ -23,7 +23,8 @@ export const objectIdRequestSchema = z.object({
 export const BAppAdvertisementSchema = z.object({
     image: z.string().url(),
     status: z.string(),
-    _id: z.string()
+    _id: z.string(),
+    planId: z.string()
 })
 
 export type BAppAdvertisement = z.infer<typeof BAppAdvertisementSchema>
