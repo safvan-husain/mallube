@@ -37,7 +37,7 @@ import {
   updateProduct
 } from "../controllers/product/productController";
 import {
-  AddAdvertisement,
+  AddAdvertisement, editAdvertisement,
   fetchAllStoreAdvertisement,
   rePublishRequestAnAdvertisement
 } from "../controllers/advertisement/advertisementController";
@@ -103,7 +103,9 @@ router
 router.route("/advertisement/republish").put(store, rePublishRequestAnAdvertisement);
 router
   .route("/advertisement/:advertisementId")
-  .delete(store, deleteAdvertisement);
+  .delete(store, deleteAdvertisement)
+    .put(store, editAdvertisement);
+
 router.route("/near-by-shop/:longitude/:latitude").get(fetchStoresNearBy);
 router.route("/near-by-shop-v2").get(fetchStoresNearByV2);
 router.route("/change-password").put(store, changePassword);

@@ -90,6 +90,68 @@ export const AddAdvertisement = async (req: any, res: TypedResponse<{
   }
 };
 
+export const editAdvertisement = async (req: any, res: TypedResponse<{
+  advertisement: StoreAdvertisementResponse,
+  message: string
+}>) => {
+  try {
+    const storeId = req.store!._id;
+    const advertisementId = ObjectIdSchema.parse(req.params.advertisementId);
+
+    const { image, adPlan } = z.object({
+      image: z.string().url(),
+      adPlan: ObjectIdSchema
+    }).parse(req.body);
+
+    let adsPlanDoc = await AdvertisementPlan.findByIdAndUpdate(adPlan, { adPlan, image }).lean();
+    if(!adsPlanDoc) {
+      res.status(404).json({ message: "Advertisement plan not found"});
+      return;
+    }
+
+    let radius = adsPlanDoc.maxRadius;
+    if(!radius) {
+      console.log("no radius found, check here");
+      radius = 20;
+    }
+
+    const earthRadiusInMeters = 6378137; // Earth's radius in meters
+    const radiusInRadians = radius / earthRadiusInMeters;
+
+    const c = await Store.findById(storeId).lean();
+    if(!c) {
+      res.status(404).json({ message: "Store not found"});
+      return;
+    }
+
+    let ad = await Advertisement.findByIdAndUpdate(advertisementId, {
+      image,
+      store: storeId,
+      radius: radius || 10,
+      location: c?.location,
+      radiusInRadians,
+      adPlan,
+      status: "pending"
+    }, {new: true});
+
+    if (ad == undefined) {
+      res.status(401).json({ message: "Advertisement doesn't exist" });
+      return;
+    }
+
+    res.status(201).json({ message: "Advertisement updated successfully", advertisement: {
+        _id: ad._id.toString(),
+        image: ad.image,
+        store: storeId as unknown as Types.ObjectId,
+        expireAt: ad.expireAt?.getTime() ?? 0,
+        status: ad.status ?? "pending",
+        isActive: false,
+      } });
+  } catch (error) {
+    onCatchError(error, res);
+  }
+};
+
 export const fetchAllStoreAdvertisement = async (req: ICustomRequest<any>, res: TypedResponse<BAppAdvertisement[]>): Promise<void> => {
   try {
     const advertisements = await Advertisement
