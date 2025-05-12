@@ -1,7 +1,7 @@
 import mongoose, {Schema, Document, Types} from 'mongoose';
 import {z} from "zod";
 
-export const pendingBusinessStatus = z.enum(['pending', 'interested', 'registered', 'contacted', 'not interested', 'not attended'])
+export const pendingBusinessStatus = z.enum(['pending', 'interested', 'registered', 'contacted', 'notInterested', 'notAttended'])
 
 export type PendingBusinessStatus = z.infer<typeof pendingBusinessStatus>;
 

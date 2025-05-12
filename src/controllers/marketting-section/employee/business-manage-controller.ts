@@ -583,7 +583,7 @@ export const getDashboardData = async (
             },
             ...filterQuery
         }),
-        Store.estimatedDocumentCount(filterQuery),
+        Store.countDocuments(filterQuery),
     ]);
 
     return {
