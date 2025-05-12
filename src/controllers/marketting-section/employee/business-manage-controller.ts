@@ -407,18 +407,9 @@ export const getBusinessesPerEmployee = async (req: Request, res: TypedResponse<
     }
 }
 
-export const getGraphDataForMonth = async (req: Request, res: TypedResponse<any>) => {
+export const getGraphDataForMonth = async (req: Request, res: TypedResponse<DashBoardResponse>) => {
     try {
-        const {month} = monthAndBusinessTypeSchema.parse(req.query);
-        const range = getUTCMonthRangeFromISTDate(month);
-        
-        // Get all days in the month
-        const allDays = [];
-        let currentDate = new Date(range.start);
-        while (currentDate < range.end) {
-            allDays.push(new Date(currentDate));
-            currentDate.setDate(currentDate.getDate() + 1);
-        }
+        const {month, businessType } = monthAndBusinessTypeSchema.parse(req.query);
 
         // Get staff IDs based on requester's role
         let staffIds: Types.ObjectId[];
@@ -428,48 +419,15 @@ export const getGraphDataForMonth = async (req: Request, res: TypedResponse<any>
             staffIds = [req.employee!._id!];
         }
 
-        // Get all daily targets in one query
-        const dailyData = await Target.aggregate([
-            {
-                $match: {
-                    assigned: { $in: staffIds },
-                    day: { $gte: range.start, $lt: range.end }
-                }
-            },
-            {
-                $group: {
-                    _id: {
-                        $dateToString: {
-                            date: "$day",
-                            format: "%d",
-                            timezone: "Asia/Kolkata"
-                        }
-                    },
-                    totalTarget: { $sum: "$total" },
-                    achieved: { $sum: "$achieved" }
-                }
-            }
-        ]);
+        const data = await getDashboardData(month, { addedBy: { $in: staffIds }, type: businessType });
 
-        // Create a map for quick lookup
-        const dataMap = new Map(dailyData.map(d => [d._id, d]));
-        
-        // Format response including all days
-        const response = allDays.map(date => {
-            const dayStr = date.getDate().toString().padStart(2, '0');
-            const dayData = dataMap.get(dayStr);
-            return {
-                day: dayStr,
-                count: dayData?.achieved || 0,
-                target: dayData?.totalTarget || 0
-            };
-        });
-
-        res.status(200).json(runtimeValidation(graphResultSchema, response));
+        res.status(200).json(runtimeValidation(graphResultSchema, data));
     } catch (e) {
         onCatchError(e, res);
     }
 }
+
+
 
 /**
  * Builds a query filter based on employee privilege to restrict access to relevant records
@@ -546,3 +504,99 @@ type StaffNameAndU = {
     dayTarget: number;
     monthTarget: number;
 };
+
+export const getDashboardData = async (
+    date: Date,
+    filterQuery: FilterQuery<IStore>
+): Promise<DashBoardResponse> => {
+    const year = date.getUTCFullYear();
+    const month = date.getUTCMonth(); // 0-indexed
+
+    // Start and end of the month in UTC
+    const startOfMonth = new Date(Date.UTC(year, month, 1));
+    const endOfMonth = new Date(Date.UTC(year, month + 1, 1));
+
+    // Number of days in that month
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    // Start and end of today in IST
+    const istOffsetMs = 5.5 * 60 * 60 * 1000;
+    const todayIST = new Date(date.getTime() + istOffsetMs);
+
+    const istYear = todayIST.getFullYear();
+    const istMonth = todayIST.getMonth();
+    const istDate = todayIST.getDate();
+
+    const startOfTodayIST = new Date(Date.UTC(istYear, istMonth, istDate) - istOffsetMs);
+    const endOfTodayIST = new Date(Date.UTC(istYear, istMonth, istDate + 1) - istOffsetMs);
+
+    // --- Aggregation for daily data in the given month ---
+    const dailyAggregation = await Store.aggregate([
+        {
+            $match: {
+                createdAt: {
+                    $gte: startOfMonth,
+                    $lt: endOfMonth,
+                },
+                ...filterQuery,
+            },
+        },
+        {
+            $group: {
+                _id: {
+                    $dateToString: {
+                        format: '%d',
+                        date: '$createdAt',
+                        timezone: 'Asia/Kolkata',
+                    },
+                },
+                count: { $sum: 1 },
+            },
+        },
+        {
+            $project: {
+                day: { $toInt: '$_id' },
+                count: 1,
+                _id: 0,
+            },
+        },
+    ]);
+
+    const graphData = Array(daysInMonth).fill(0);
+    for (const { day, count } of dailyAggregation) {
+        graphData[day - 1] = count;
+    }
+
+    // --- Count queries ---
+    const [todayAdded, thisMonthAdded, totalAdded] = await Promise.all([
+        Store.countDocuments({
+            createdAt: {
+                $gte: startOfTodayIST,
+                $lt: endOfTodayIST,
+            },
+            ...filterQuery
+        }),
+        Store.countDocuments({
+            createdAt: {
+                $gte: startOfMonth,
+                $lt: endOfMonth,
+            },
+            ...filterQuery
+        }),
+        Store.estimatedDocumentCount(filterQuery),
+    ]);
+
+    return {
+        graphData,
+        todayAdded,
+        thisMonthAdded,
+        totalAdded,
+    };
+};
+
+type DashBoardResponse = {
+    graphData: number[],
+    todayAdded: number,
+    thisMonthAdded: number,
+    totalAdded: number;
+}

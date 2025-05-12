@@ -222,9 +222,15 @@ export const partnerStoreListQuerySchema = getEmployeeStoreQuerySchema.omit({
 export type FullDashboardStats = z.infer<typeof FullDashboardStatsSchema>;
 
 export const graphResultSchema = z.object({
-    day: z.string(),
-    count: z.number()
-})
+    graphData: z.array(z.number()),
+    todayAdded: z.number(),
+    thisMonthAdded: z.number(),
+    totalAdded: z.number(),
+});
+
+// Optional: Type inference from schema
+export type DashBoardResponse = z.infer<typeof graphResultSchema>;
+
 
 export const monthSchema = z.object({
     month: istFromStringOrNumberSchema
