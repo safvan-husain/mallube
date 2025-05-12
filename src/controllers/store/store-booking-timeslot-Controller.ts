@@ -42,6 +42,7 @@ export const getBookingHistory = asyncHandler(
                 name: e.userId?.fullName ?? "Unknown",
                 phone: e.userId?.phone ?? "Unknown",
                 endTime: e.endTime?.getTime(),
+                _id: e._id.toString()
             }));
 
             res.status(200).json(runtimeValidation(BookingHistoryItemSchema, result));
@@ -87,6 +88,7 @@ export const getTodayBookings = asyncHandler(
                 name: e.userId?.fullName ?? "Unknown",
                 phone: e.userId?.phone ?? "Unknown",
                 endTime: e.endTime?.getTime(),
+                _id: e._id.toString()
             }));
 
             res.status(200).json(runtimeValidation(BookingHistoryItemSchema, result));
