@@ -18,7 +18,7 @@ const baseProductSchema = z.object({
     addToCartActive: z.boolean().default(false).optional(),
     isEnquiryAvailable: z.boolean().default(false).optional(),
     store: z.string().optional(),
-    quantity: z.number(),
+    quantity: z.number().optional().default(1),
     unit: productUnitSchema.optional().default('pcs'),
 });
 
