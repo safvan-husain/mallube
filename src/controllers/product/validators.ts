@@ -19,7 +19,7 @@ const baseProductSchema = z.object({
     isEnquiryAvailable: z.boolean().default(false).optional(),
     store: z.string().optional(),
     quantity: z.number(),
-    unit: productUnitSchema,
+    unit: productUnitSchema.optional().default('pcs'),
 });
 
 
