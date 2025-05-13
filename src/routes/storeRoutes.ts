@@ -116,7 +116,8 @@ router.route("/update-password-request").put(updatePassword);
 router.route('/time-slots-v2')
   .post(store, addTimeSlotV2)
   .get(store, getTimeSlotV2)
-  .delete(store, deleteTimeSlotV2)
+
+router.route('time-slots-v2/:id').delete(store, deleteTimeSlotV2);
 router.route('/bookings-v2').get(store, getBookingsV2)
 router.route('/booking/confirm').put(store, confirmBookingV2);
 router.route("/update-product-stock").put(store, stockUpdate)

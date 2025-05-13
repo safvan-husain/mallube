@@ -846,13 +846,12 @@ export const getTimeSlotV2 = asyncHandler(
 export const deleteTimeSlotV2 = asyncHandler(
   async (req: ICustomRequest<any>, res: Response) => {
     try {
-      const { id } = req.query;
+      const id = ObjectIdSchema.parse(req.params.id);
       await Booking.deleteMany({ timeSlotId: id });
       await TimeSlotModel.findByIdAndDelete(id);
       res.status(200).json({ message: "Success" });
     } catch (error) {
-      console.log(`error addTimeSlot V2 ${error}`);
-      res.status(500).json({ message: "Internal server error" })
+      onCatchError(error, res);
     }
   }
 )
@@ -1007,9 +1006,3 @@ export const addKeyWords = asyncHandler(
       }
     }
 )
-
-
-
-
-
-
