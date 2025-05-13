@@ -58,7 +58,7 @@ export const createEmployee = async (req: Request, res: TypedResponse<MinimalMan
                 data.privilege = 'staff';
                 data.manager = req.employee._id;
             } else {
-                throw new AppError("Should be employee to create staff", 403);
+                throw new AppError("Should be manager to create staff", 403);
             }
         }
         const employeeExists = await Employee.findOne({$or: [{username: data.username}, {phone: data.phone}]});
@@ -76,7 +76,7 @@ export const createEmployee = async (req: Request, res: TypedResponse<MinimalMan
         }
         const employee = await Employee.create<TEmployee>({
             ...data,
-            hashedPassword: data.password,
+            hashedPassword: data.password ?? data.phone,
         });
         await Target.setTarget(employee._id, 'day', data.dayTarget);
         await Target.setTarget(employee._id, 'month', data.monthTarget);

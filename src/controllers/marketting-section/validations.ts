@@ -135,7 +135,7 @@ export const createEmployeeSchema = z.object({
     joinedDate: istFromStringOrNumberSchema,
     privilege: employeePrivilegeSchema.optional().default('staff'),
     manager: ObjectIdSchema.optional(),
-    password: z.string().min(3, {message: "Password should be at least 3 characters long"}),
+    password: z.string().min(3, {message: "Password should be at least 3 characters long"}).optional(),
     dayTarget: z.number(),
     monthTarget: z.number(),
 });

@@ -789,6 +789,13 @@ export const addTimeSlotV2 = asyncHandler(
       const startTime = toTimeOnly(data.startTime);
       const endTime = toTimeOnly(data.endTime);
 
+      const isTimeSlotExist = await TimeSlotModel.find({ slotIndex: data.slotIndex}).lean();
+
+      if(isTimeSlotExist) {
+        res.status(400).json({ message: "Time slot with same index already exist"});
+        return;
+      }
+
       const timeSlot = await TimeSlotModel.createDocument({
         slotIndex: data.slotIndex,
         storeId,
