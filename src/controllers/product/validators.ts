@@ -24,7 +24,12 @@ const baseProductSchema = z.object({
 
 
 export const addProductSchema = baseProductSchema
-    .refine(data => (data.offerPrice ?? 0) < data.price, {
+    .refine(data => {
+        if (!data.offerPrice) {
+            return
+        }
+        return (data.offerPrice ?? -1) < data.price;
+    }, {
         message: "Offer price must be less than actual price", path: ["offerPrice"]
     });
 
