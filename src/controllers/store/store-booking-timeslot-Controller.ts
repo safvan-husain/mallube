@@ -28,7 +28,8 @@ export const getBookingHistory = asyncHandler(
                     endTime: true,
                     createdAt: true,
                     isActive: true,
-                    userId: true
+                    userId: true,
+                    status: true
                 })
                 .skip(skip)
                 .limit(limit)
