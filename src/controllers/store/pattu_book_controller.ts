@@ -1,9 +1,9 @@
 import asyncHandler from "express-async-handler";
-import {Request, Response} from "express";
+import {Response} from "express";
 import {ICustomRequest, TypedResponse} from "../../types/requestion";
 import {Customer} from "../../models/customerModel";
-import {CustomerBill} from "../../models/customerBillModel";
-import {formatLastPurchaseDate, getIST} from "../../utils/ist_time";
+import {CustomerBillModel} from "../../models/customerBillModel";
+import {formatLastPurchaseDate} from "../../utils/ist_time";
 import {z} from "zod";
 import {ObjectIdSchema} from "../../types/validation";
 import {Types} from "mongoose";
@@ -17,7 +17,6 @@ import {
 import {onCatchError} from "../../error/onCatchError";
 import {runtimeValidation} from "../../error/runtimeValidation";
 
-
 export const createCustomer = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {
         try {
@@ -28,7 +27,7 @@ export const createCustomer = asyncHandler(
                 return;
             }
             const storeId = req.store?._id;
-            var customer = new Customer(
+            let customer = new Customer(
                 {
                     name,
                     contact,
@@ -54,42 +53,64 @@ export const getAllCustomers = asyncHandler(
     async (req: ICustomRequest<any>, res: TypedResponse<CustomerResponse[]>) => {
         try {
             const storeId = req.store!._id;
-            const tempCustomers = await Customer.find({storeId}, {name: 1, contact: 1, _id: 1}).lean<{ name: string, contact: string, _id: Types.ObjectId}[]>();
-            let customers: CustomerResponse[] = [];
-            for (const customer of tempCustomers) {
-                const purchaseHistory = await CustomerBill.aggregate([
-                    {
-                        $match: {
-                            customerId: customer._id,
-                        },
 
-                    },
-                    {
-                        $group: {
-                            _id: null,
-                            totalAmount: {$sum: "$totalAmount"},
-                            lastPurchaseDate: {$max: "$createdAt"}
+            // Use a lookup aggregation to join customer and bill data in a single database operation
+            const customers = await Customer.aggregate([
+                // Match customers for this store
+                { $match: { storeId } },
+
+                // Project only the fields we need
+                { $project: { name: 1, contact: 1 } },
+
+                // Lookup customer bills
+                { $lookup: {
+                        from: 'customerbills', // Collection name (adjust if different)
+                        localField: '_id',
+                        foreignField: 'customerId',
+                        as: 'bills'
+                    }
+                },
+
+                // Calculate purchase statistics
+                { $addFields: {
+                        balanceAmount: {
+                            $cond: {
+                                if: { $gt: [{ $size: "$bills" }, 0] },
+                                then: { $sum: "$bills.balanceAmount" },
+                                else: 0
+                            }
+                        },
+                        lastPurchaseDate: {
+                            $cond: {
+                                if: { $gt: [{ $size: "$bills" }, 0] },
+                                then: { $max: "$bills.createdAt" },
+                                else: null
+                            }
                         }
                     }
-                ]);
+                },
 
-                if (purchaseHistory.length > 0) {
-                    customers.push({
-                        name: customer.name,
-                        contact: customer.contact,
-                        _id: customer._id,
-                        totalAmount: purchaseHistory[0].totalAmount,
-                        lastPurchase: purchaseHistory[0].lastPurchaseDate ? formatLastPurchaseDate(purchaseHistory[0].lastPurchaseDate) : "none",
-                    });
-                } else {
-                    customers.push({
-                        name: customer.name,
-                        contact: customer.contact,
-                        _id: customer._id, totalAmount: 0,
-                        lastPurchase: 'not purchased yet',
-                    });
+                // Format the response
+                { $project: {
+                        _id: 1,
+                        name: 1,
+                        contact: 1,
+                        totalAmount: "$balanceAmount",
+                        lastPurchase: {
+                            $cond: {
+                                if: "$lastPurchaseDate",
+                                then: { $function: {
+                                        body: formatLastPurchaseDate.toString(),
+                                        args: ["$lastPurchaseDate"],
+                                        lang: "js"
+                                    }},
+                                else: "not purchased yet"
+                            }
+                        }
+                    }
                 }
-            }
+            ]);
+
             res.status(200).json(runtimeValidation(CustomerResponseSchema, customers));
         } catch (error) {
             onCatchError(error, res);
@@ -121,7 +142,7 @@ export const deleteCustomer = asyncHandler(
         try {
             const {customerIds} = deleteCustomersSchema.parse(req.body);
             let deleteItems = await Customer.deleteMany({_id: {$in: customerIds}});
-            await CustomerBill.deleteMany({customerId: {$in: customerIds}});
+            await CustomerBillModel.deleteMany({customerId: {$in: customerIds}});
             if(!deleteItems) {
                 res.status(404).json({message: "Customer not found"});
                 return;
@@ -137,14 +158,12 @@ export const createBillForCustomer = asyncHandler(
     async (req: ICustomRequest<any>,
            res: TypedResponse<CustomerBillResponse>) => {
         try {
-            const {customerId, items, totalAmount, date, billPhotoUrl} = createBillRequestSchema.parse(req.body);
-            let new_bill = new CustomerBill({
-                customerId,
-                items,
-                totalAmount,
-                date: new Date(date),
-                billPhotoUrl,
+            const data = createBillRequestSchema.parse(req.body);
+            let new_bill = await CustomerBillModel.createDocument({
+                ...data,
+                date: new Date(data.date)
             });
+
             new_bill = await new_bill.save();
             res.status(201).json(runtimeValidation(CustomerBillResponseSchema, {
                 ...new_bill.toObject(),
@@ -158,15 +177,17 @@ export const createBillForCustomer = asyncHandler(
     }
 )
 
-export const markRecievedPayment = asyncHandler(
+export const markReceivedPayment = asyncHandler(
     async (req: ICustomRequest<any>, res: Response) => {
         try {
             const {customerId, amount, date} = req.body;
-            const new_bill = new CustomerBill({
+            const new_bill = await CustomerBillModel.createDocument({
                 customerId,
                 items: [],
                 totalAmount: -amount,
-                date: new Date(date)
+                date: new Date(date),
+                receivedAmount: amount,
+                balanceAmount: 0
             });
             await new_bill.save();
             res.status(201).json({message: "Success"});
@@ -189,19 +210,24 @@ export const getCustomerPurchaseHistory = asyncHandler(
     }>) => {
         try {
             const customerId = ObjectIdSchema.parse(req.query.customerId);
-            const tempBills = await CustomerBill.find({customerId}, {
+            const tempBills = await CustomerBillModel.find({customerId}, {
                 _id: 1,
-                totalAmount: 1,
+                balanceAmount: 1,
                 date: 1,
                 billPhotoUrl: true
-            })
+            }).lean<{
+                _id: Types.ObjectId,
+                balanceAmount: number,
+                date: Date,
+                billPhotoUrl?: string
+            }[]>();
             let bills: any[] = [];
             let totalPending = 0;
             for (const bill of tempBills) {
-                totalPending += bill.totalAmount;
+                totalPending += bill.balanceAmount;
                 bills.push({
                     _id: bill._id,
-                    amount: bill.totalAmount,
+                    amount: bill.balanceAmount,
                     date: bill.date.toDateString(),
                     billPhotoUrl: bill.billPhotoUrl
                 });
@@ -220,20 +246,18 @@ export const getSpecificBill = asyncHandler(
     async (req: ICustomRequest<any>, res: TypedResponse<CustomerBillResponse>) => {
         try {
             const billId = ObjectIdSchema.parse(req.query.billId);
-            const bill = await CustomerBill.findById(billId, {
-                _id: true,
-                date: true,
-                items: true,
-                totalAmount: true,
-                customerId: true,
-                billPhotoUrl: true
-            }).lean()
+            const bill = await CustomerBillModel.findById(billId).lean()
 
             if (!bill) {
                 res.status(404).json({message: "Bill not found"});
                 return;
             }
-            res.status(200).json(runtimeValidation(CustomerBillResponseSchema, {...bill, _id: bill._id.toString(), customerId: bill.customerId.toString(), date: bill.date.getTime()}));
+            res.status(200).json(runtimeValidation(CustomerBillResponseSchema, {
+                ...bill,
+                _id: bill._id.toString(),
+                customerId: bill.customerId.toString(),
+                date: bill.date.getTime()
+            }));
         } catch (error) {
             onCatchError(error, res);
         }
@@ -243,10 +267,10 @@ export const getSpecificBill = asyncHandler(
 export const updateSpecificBill = asyncHandler(
     async (req: ICustomRequest<any>, res: TypedResponse<CustomerBillResponse>) => {
         try {
-            const {items, totalAmount, id, date} = updatePattuBookRequestSchema.parse(req.body);
+            const {id, date, ...rest} = updatePattuBookRequestSchema.parse(req.body);
 
-            const bill = await CustomerBill
-                .findByIdAndUpdate(id, {items, totalAmount, date:date ?  new Date(date) : undefined}, {new: true})
+            const bill = await CustomerBillModel
+                .findByIdAndUpdate(id, {...rest , date:date ?  new Date(date) : undefined}, {new: true})
                 .lean();
 
             if(!bill) {
@@ -271,7 +295,7 @@ export const deleteSelectedBills = asyncHandler(
             const {billIds} = z.object({
                 billIds: z.array(ObjectIdSchema)
             }).parse(req.body);
-            const bills = await CustomerBill.deleteMany({_id: {$in: billIds}});
+            const bills = await CustomerBillModel.deleteMany({_id: {$in: billIds}});
             if(!bills) {
                 res.status(404).json({message: "Bill not found"});
                 return;

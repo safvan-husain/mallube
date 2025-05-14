@@ -42,7 +42,7 @@ import {
   rePublishRequestAnAdvertisement
 } from "../controllers/advertisement/advertisementController";
 import { createNote, deleteNote, getNotesForStore, updateNote } from "../controllers/store/notes_controller";
-import { createBillForCustomer, createCustomer, deleteCustomer, deleteSelectedBills, getAllCustomers, getCustomerPurchaseHistory, getSpecificBill, markRecievedPayment, updateCustomer, updateSpecificBill } from "../controllers/store/pattu_book_controller";
+import { createBillForCustomer, createCustomer, deleteCustomer, deleteSelectedBills, getAllCustomers, getCustomerPurchaseHistory, getSpecificBill, markReceivedPayment, updateCustomer, updateSpecificBill } from "../controllers/store/pattu_book_controller";
 import {getBookingHistory, getTodayBookings,
   confirmBookingV2,
 } from "../controllers/store/store-booking-timeslot-Controller";
@@ -86,7 +86,7 @@ router.route('/customer/history')
 router.route('/booking-history').get(store, getBookingHistory);
 router.route('/booking-v3').get(store, getTodayBookings);
 
-router.route('/customer/mark-recieved-payment').post(store, markRecievedPayment)
+router.route('/customer/mark-recieved-payment').post(store, markReceivedPayment)
 
 router.route('/push-notification-status').put(store, changeStorePushNotificationStatus);
 
