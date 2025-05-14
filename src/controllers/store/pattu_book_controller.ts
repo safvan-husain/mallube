@@ -52,7 +52,7 @@ export const createCustomer = asyncHandler(
 export const getAllCustomers = asyncHandler(
     async (req: ICustomRequest<any>, res: TypedResponse<CustomerResponse[]>) => {
         try {
-            const storeId = req.store!._id;
+            const storeId = Types.ObjectId.createFromHexString(req.store!._id.toString());
 
             // Use a lookup aggregation to join customer and bill data in a single database operation
             const customers = await Customer.aggregate([
